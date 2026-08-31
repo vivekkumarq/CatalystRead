@@ -1,0 +1,43 @@
+---
+title: "Managing Technical Debt Deliberately"
+slug: "managing-technical-debt-deliberately"
+description: "Technical debt taken on deliberately with a repayment plan gets paid back; debt that accumulates silently almost never does."
+publishedAt: "2025-11-25"
+category: "Software Engineering"
+tags:
+  - Software Engineering
+  - Engineering Practices
+  - Software Architecture
+  - Team Culture
+---
+
+"Technical debt" gets used for two different things that need opposite responses: debt taken on knowingly to hit a deadline, with a plan to repay it, and debt that accumulated because nobody was watching. Treating both the same way — as an ever-growing backlog item nobody prioritizes — is why most technical debt never gets paid down; it's also why teams that do manage it well track the two separately from the start.
+
+## Debt Has an Interest Rate
+
+The metaphor is more useful if you take the finance analogy seriously instead of just borrowing the word. Some debt is low-interest: a slightly awkward module boundary that's mildly annoying to work in but isn't actively slowing anything down. Some is high-interest: a shared utility function with no tests that three teams now depend on, where every change to it risks breaking something invisible until it ships. The high-interest debt is the kind that compounds — it makes *future* work slower, not just this one piece of code uglier — and it's the kind worth prioritizing even when nothing is currently on fire.
+
+```text
+Low interest:  awkward but stable — pay down opportunistically
+High interest: actively slowing every change nearby — schedule deliberately
+```
+
+## Make It Visible, Not Just Known
+
+Debt that lives only in engineers' heads competes for prioritization against features that have tickets, stakeholders, and deadlines — and loses, every time, because it's invisible to whoever is setting priorities. The fix is mechanical: debt gets a ticket like anything else, with a concrete description of the cost it's currently imposing ("this migration script has no rollback, last incident took 6 hours to recover from because of it") rather than a vague "clean this up" — a cost statement is arguable and prioritizable in a way "this is messy" never is.
+
+## Budget for It Instead of Fighting for It
+
+Teams that keep debt under control tend to share one mechanism: a standing allocation, not a one-off negotiation every sprint. Common versions:
+
+- A fixed percentage of each sprint (10-20% is a common range) reserved for debt work, defended the same way an SLA is defended.
+- A "boy scout rule" norm — every PR touching a file leaves it slightly better than it found it — for the low-interest debt that doesn't deserve its own ticket.
+- A recurring dedicated week or sprint, for debt too large to fit inside the boy-scout model but not urgent enough to interrupt a roadmap.
+
+Whichever mechanism, the point is the same: debt paydown stops being a negotiation that happens from scratch every planning cycle, which is the negotiation debt reliably loses against a shipping deadline with a name attached to it.
+
+## Say No to the Debt You Can't Afford
+
+The other half of "deliberate" is refusing debt at the point it's taken on, not just repaying it later — a genuine conversation at the time a shortcut is proposed: what does skipping this cost us, when do we plan to pay it back, and who owns making sure that happens. Debt taken on with an explicit repayment plan and an owner gets repaid at meaningfully higher rates than debt that accumulates silently, because it was never a *decision* — a decision can be tracked; an accident can't.
+
+The teams that manage debt well aren't the ones with less of it. They're the ones who can tell you, for any piece of debt in the system, why it's there, what it costs, and when it's scheduled to go away.

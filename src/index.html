@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CatalystRead — Catalyzing ideas into understanding</title>
+    <base href="/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="CatalystRead is a personal technology publication covering Java, Spring Boot, Angular, React, system design, and software engineering."
+    />
+    <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg" />
+    <script>
+      (function () {
+        var classes = document.documentElement.classList;
+        try {
+          var stored = localStorage.getItem('catalystread-theme');
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (dark) classes.add('dark');
+        } catch (e) {
+          /* storage unavailable; default to light */
+        }
+        try {
+          var prefs = JSON.parse(localStorage.getItem('catalystread-prefs') || '{}');
+          if (['serif', 'classic', 'sans', 'modern', 'mono'].indexOf(prefs.font) !== -1) {
+            classes.add('pref-font-' + prefs.font);
+          }
+          if (prefs.size === 'sm') classes.add('pref-size-sm');
+          if (prefs.size === 'lg') classes.add('pref-size-lg');
+        } catch (e) {
+          /* storage unavailable; defaults apply */
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
+</html>

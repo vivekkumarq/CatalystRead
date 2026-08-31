@@ -1,0 +1,85 @@
+---
+title: "Configuration Profiles and Externalized Config, Done Right"
+slug: "spring-boot-configuration-profiles-externalized-config"
+description: "A pragmatic approach to Spring profiles and externalized configuration that avoids property sprawl and keeps environment differences honest."
+publishedAt: "2025-04-29"
+category: "Spring Boot"
+tags:
+  - Spring Boot
+  - DevOps
+  - Configuration
+  - Backend Engineering
+---
+
+Every Spring Boot project starts with one `application.yml` and, within a year, tends to accumulate five profile-specific files, a handful of environment variables nobody documented, and at least one property that only works because of the order two config sources happen to load in. None of that is inevitable — Spring's configuration model is more disciplined than most teams end up using it.
+
+## Layering, Not Duplicating
+
+The instinct to copy the entire config file per environment and edit a few lines is the single biggest source of drift. Profile-specific files should contain only the values that actually differ; everything else stays in the base file and applies everywhere.
+
+```yaml
+# application.yml — shared defaults
+spring:
+  jpa:
+    open-in-view: false
+  jackson:
+    default-property-inclusion: non_null
+
+logging:
+  level:
+    root: INFO
+```
+
+```yaml
+# application-prod.yml — only what changes
+spring:
+  datasource:
+    url: ${DB_URL}
+    hikari:
+      maximum-pool-size: 20
+
+logging:
+  level:
+    root: WARN
+```
+
+If a value is identical across every environment file, that's a signal it belongs in the base file, not a coincidence to leave alone.
+
+## Precedence Is a Feature, Use It Deliberately
+
+Spring Boot's property source precedence — command-line args, then environment variables, then profile-specific files, then the base file — exists so you can override without editing. The mistake teams make is fighting the order instead of using it: hardcoding an environment-specific value in a profile file when it should be an environment variable injected at deploy time.
+
+```java
+@ConfigurationProperties(prefix = "app.payments")
+public record PaymentsProperties(
+        String providerUrl,
+        Duration timeout,
+        int maxRetries) {
+}
+```
+
+```yaml
+app:
+  payments:
+    provider-url: ${PAYMENTS_PROVIDER_URL}
+    timeout: 5s
+    max-retries: 3
+```
+
+`@ConfigurationProperties` over scattered `@Value` injections gives you type-safe, validated, IDE-autocompletable configuration, and it fails fast at startup if a required property is missing rather than throwing a null pointer three requests into production traffic. Add `@Validated` with Bean Validation annotations on the record components for properties that have real constraints, like a positive retry count.
+
+## Secrets Don't Belong in Any Profile File
+
+Regardless of how carefully profiles are organized, actual secrets — database passwords, API keys, signing keys — should never sit in a committed YAML file, profile-specific or not, even encrypted-at-rest in the repo. Pull them from environment variables backed by a secrets manager (Vault, AWS Secrets Manager, Kubernetes Secrets) at deploy time:
+
+```yaml
+spring:
+  datasource:
+    password: ${DB_PASSWORD}
+```
+
+For local development, a `.env` file loaded outside of version control, or `application-local.yml` git-ignored entirely, keeps real credentials off of every developer's machine's git history without adding friction.
+
+## Naming Profiles for What They Are
+
+Resist naming profiles after infrastructure (`server1`, `blue`) when they should be named after purpose (`dev`, `staging`, `prod`, `test`). Infrastructure changes; the meaning of "production configuration" doesn't. It's also worth keeping a `default` profile lean and treating it as the safety net for local development and tests, not as a dumping ground — a `spring.profiles.active` that silently falls back to values nobody intended for production is a subtle way to ship the wrong connection pool size or logging level. Configuration should be boring enough that a new engineer can trace exactly which value wins for a given environment in under a minute; if that takes longer, the layering has gotten away from you.
