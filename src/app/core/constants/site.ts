@@ -6,7 +6,7 @@ export const SITE = {
   author: 'Vivek Kumar',
   /** Where reader submissions are sent for review. */
   contributeEmail: 'aarshivsingh@gmail.com',
-  /** Set after the repository is pushed to GitHub to enable PR-based submissions. */
-  repoUrl: '',
-  githubUrl: '',
+  /** Enables PR-based submissions on the Contribute page. */
+  repoUrl: 'https://github.com/vivekkumarq/CatalystRead',
+  githubUrl: 'https://github.com/vivekkumarq',
 } as const;
