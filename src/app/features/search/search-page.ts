@@ -16,13 +16,18 @@ import { ArticleCard } from '../../shared/components/article-card/article-card';
   imports: [ArticleCard],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="animate-page mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-      <header class="max-w-2xl">
-        <h1 class="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Search</h1>
-        <p class="mt-3 text-ink-soft">Find articles by title, description, topic, or tag.</p>
-      </header>
+    <div class="animate-page">
+      <section class="cr-band">
+        <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+          <h1 class="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Search</h1>
+          <p class="mt-3 text-[15px] text-ink-soft">
+            Find articles by title, description, topic, or tag.
+          </p>
+        </div>
+      </section>
 
-      <div class="mt-8 max-w-2xl">
+      <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
+      <div class="max-w-2xl">
         <label class="flex items-center gap-3 rounded-2xl border border-edge bg-surface px-5 focus-within:border-accent">
           <svg class="size-5 shrink-0 text-ink-faint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
@@ -45,7 +50,7 @@ import { ArticleCard } from '../../shared/components/article-card/article-card';
           {{ results().length }} {{ results().length === 1 ? 'result' : 'results' }} for
           "{{ query().trim() }}"
         </p>
-        <div class="mt-4 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="stagger mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           @for (post of results(); track post.slug) {
             <app-article-card [post]="post" />
           }
@@ -53,6 +58,7 @@ import { ArticleCard } from '../../shared/components/article-card/article-card';
       } @else {
         <p class="mt-10 text-ink-faint">Start typing to search — at least two characters.</p>
       }
+      </div>
     </div>
   `,
 })

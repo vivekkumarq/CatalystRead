@@ -3,10 +3,15 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ------------------------------------------------------------------ */
-/* Semantic design tokens                                              */
+/* Themes                                                              */
+/*                                                                     */
+/* Each theme sets the same ten base tokens; everything else is         */
+/* derived from them, so adding a theme means adding one block.         */
 /* ------------------------------------------------------------------ */
 
-:root {
+/* Paper — warm editorial light (default) */
+:root,
+[data-theme='paper'] {
   --cr-paper: #faf8f5;
   --cr-surface: #ffffff;
   --cr-surface-raised: #f3efe9;
@@ -16,8 +21,115 @@
   --cr-edge: #e7e2d9;
   --cr-accent: #c2410c;
   --cr-accent-strong: #9a3412;
-  --cr-accent-soft: rgba(194, 65, 12, 0.09);
-  --cr-code-bg: #f4f1eb;
+  --cr-code-bg: #f5f2ec;
+}
+
+/* Frost — crisp cool light */
+[data-theme='frost'] {
+  --cr-paper: #f7f9fc;
+  --cr-surface: #ffffff;
+  --cr-surface-raised: #eef2f8;
+  --cr-ink: #0f172a;
+  --cr-ink-soft: #475569;
+  --cr-ink-faint: #94a3b8;
+  --cr-edge: #dfe6f0;
+  --cr-accent: #2563eb;
+  --cr-accent-strong: #1d4ed8;
+  --cr-code-bg: #f1f5fb;
+}
+
+/* Sepia — warm low-glare reading light */
+[data-theme='sepia'] {
+  --cr-paper: #f5ecd9;
+  --cr-surface: #fdf7ea;
+  --cr-surface-raised: #ece0c7;
+  --cr-ink: #3a2f21;
+  --cr-ink-soft: #6b5a44;
+  --cr-ink-faint: #a4917a;
+  --cr-edge: #ddceb0;
+  --cr-accent: #a1571f;
+  --cr-accent-strong: #7c4315;
+  --cr-code-bg: #efe4cd;
+}
+
+/* Mint — fresh light with teal accent */
+[data-theme='mint'] {
+  --cr-paper: #f4faf8;
+  --cr-surface: #ffffff;
+  --cr-surface-raised: #e8f4f0;
+  --cr-ink: #10241f;
+  --cr-ink-soft: #40605a;
+  --cr-ink-faint: #8aa8a1;
+  --cr-edge: #d6e8e2;
+  --cr-accent: #0f766e;
+  --cr-accent-strong: #115e59;
+  --cr-code-bg: #ecf5f2;
+}
+
+/* Carbon — neutral dark with amber accent */
+[data-theme='carbon'] {
+  --cr-paper: #161311;
+  --cr-surface: #1d1916;
+  --cr-surface-raised: #26211c;
+  --cr-ink: #ece7e0;
+  --cr-ink-soft: #a8a099;
+  --cr-ink-faint: #6e675f;
+  --cr-edge: #2e2924;
+  --cr-accent: #fb923c;
+  --cr-accent-strong: #fdba74;
+  --cr-code-bg: #201c18;
+}
+
+/* Midnight — deep navy dark */
+[data-theme='midnight'] {
+  --cr-paper: #0b1220;
+  --cr-surface: #111c30;
+  --cr-surface-raised: #17253d;
+  --cr-ink: #e2e8f4;
+  --cr-ink-soft: #9aabc4;
+  --cr-ink-faint: #64748b;
+  --cr-edge: #1f314d;
+  --cr-accent: #56b6f5;
+  --cr-accent-strong: #93ccfa;
+  --cr-code-bg: #101b2d;
+}
+
+/* Nord — cool slate dark */
+[data-theme='nord'] {
+  --cr-paper: #2e3440;
+  --cr-surface: #343b49;
+  --cr-surface-raised: #3d4351;
+  --cr-ink: #eceff4;
+  --cr-ink-soft: #c2cad8;
+  --cr-ink-faint: #8891a3;
+  --cr-edge: #434c5e;
+  --cr-accent: #88c0d0;
+  --cr-accent-strong: #a9d4e0;
+  --cr-code-bg: #333a47;
+}
+
+/* Forest — deep green dark */
+[data-theme='forest'] {
+  --cr-paper: #0d1a14;
+  --cr-surface: #12241b;
+  --cr-surface-raised: #182f24;
+  --cr-ink: #e3ede6;
+  --cr-ink-soft: #9db3a6;
+  --cr-ink-faint: #647a6d;
+  --cr-edge: #1e3a2c;
+  --cr-accent: #4ade80;
+  --cr-accent-strong: #86efac;
+  --cr-code-bg: #112017;
+}
+
+/* Derived tokens — shared by every theme */
+:root {
+  --cr-accent-soft: color-mix(in srgb, var(--cr-accent) 12%, transparent);
+  --cr-accent-glow: color-mix(in srgb, var(--cr-accent) 16%, transparent);
+  --cr-dot: color-mix(in srgb, var(--cr-ink) 9%, transparent);
+  --cr-line: color-mix(in srgb, var(--cr-ink) 5%, transparent);
+  --cr-veil: color-mix(in srgb, var(--cr-paper) 82%, transparent);
+  --cr-shadow: color-mix(in srgb, var(--cr-ink) 10%, transparent);
 
   --hl-comment: #6a737d;
   --hl-keyword: #d73a49;
@@ -29,18 +141,6 @@
 }
 
 .dark {
-  --cr-paper: #161311;
-  --cr-surface: #1d1916;
-  --cr-surface-raised: #26211c;
-  --cr-ink: #ece7e0;
-  --cr-ink-soft: #a8a099;
-  --cr-ink-faint: #6e675f;
-  --cr-edge: #2e2924;
-  --cr-accent: #fb923c;
-  --cr-accent-strong: #fdba74;
-  --cr-accent-soft: rgba(251, 146, 60, 0.12);
-  --cr-code-bg: #201c18;
-
   --hl-comment: #8b949e;
   --hl-keyword: #ff7b72;
   --hl-string: #7ee787;
@@ -48,6 +148,10 @@
   --hl-title: #d2a8ff;
   --hl-attr: #ffa657;
   --hl-meta: #a5d6ff;
+
+  --cr-dot: color-mix(in srgb, var(--cr-ink) 12%, transparent);
+  --cr-line: color-mix(in srgb, var(--cr-ink) 7%, transparent);
+  --cr-shadow: rgba(0, 0, 0, 0.45);
 }
 
 @theme inline {
@@ -108,6 +212,125 @@ html[class*='pref-font-'] .article-body {
 }
 
 /* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  background-color: var(--cr-paper);
+  color: var(--cr-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--cr-accent);
+  color: var(--cr-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--cr-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Ambient background                                                  */
+/*                                                                     */
+/* A fixed blueprint texture — dot grid, faint rules, and soft accent   */
+/* washes — painted from theme tokens, so it recolors with the theme    */
+/* and costs zero network requests.                                     */
+/* ------------------------------------------------------------------ */
+
+.cr-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      circle at 12% 4%,
+      var(--cr-accent-glow) 0%,
+      transparent 42%
+    ),
+    radial-gradient(
+      circle at 88% 0%,
+      color-mix(in srgb, var(--cr-accent) 9%, transparent) 0%,
+      transparent 38%
+    ),
+    radial-gradient(circle at 50% 100%, var(--cr-accent-soft) 0%, transparent 55%),
+    radial-gradient(var(--cr-dot) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    26px 26px;
+  opacity: 0.9;
+}
+
+/* Blueprint band used behind page headers */
+.cr-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-bottom: 1px solid var(--cr-edge);
+  background-color: color-mix(in srgb, var(--cr-surface) 55%, transparent);
+}
+
+.cr-band::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(var(--cr-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--cr-line) 1px, transparent 1px),
+    radial-gradient(var(--cr-dot) 1.5px, transparent 1.5px);
+  background-size:
+    72px 72px,
+    72px 72px,
+    72px 72px;
+  background-position:
+    0 0,
+    0 0,
+    36px 36px;
+  mask-image: linear-gradient(to bottom, #000 10%, transparent 92%);
+}
+
+.cr-band::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -45%;
+  right: -12%;
+  width: 46rem;
+  height: 46rem;
+  border-radius: 9999px;
+  background: radial-gradient(circle, var(--cr-accent-glow) 0%, transparent 68%);
+  filter: blur(28px);
+}
+
+/* ------------------------------------------------------------------ */
 /* Motion — subtle, professional, reduced-motion aware                 */
 /* ------------------------------------------------------------------ */
 
@@ -160,6 +383,13 @@ html[class*='pref-font-'] .article-body {
   }
 }
 
+@keyframes cr-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
 .animate-fade {
   animation: cr-fade 0.2s ease-out both;
 }
@@ -168,8 +398,22 @@ html[class*='pref-font-'] .article-body {
   animation: cr-pop 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.15) both;
 }
 
+.animate-slide-down {
+  animation: cr-slide-down 0.24s ease-out both;
+}
+
 .theme-icon {
   animation: cr-icon-in 0.35s ease-out both;
+}
+
+/* Theme swaps ease rather than snap */
+body,
+.cr-surface-tint,
+.cr-band {
+  transition:
+    background-color 0.35s ease,
+    border-color 0.35s ease,
+    color 0.35s ease;
 }
 
 /* Scroll-reveal (class applied by the Reveal directive, browser only) */
@@ -215,8 +459,14 @@ html[class*='pref-font-'] .article-body {
   .stagger > *,
   .animate-fade,
   .animate-pop,
+  .animate-slide-down,
   .theme-icon {
     animation: none;
+  }
+
+  body,
+  .cr-band {
+    transition: none;
   }
 }
 
@@ -273,48 +523,15 @@ html[class*='pref-font-'] .article-body {
   }
 }
 
-/* ------------------------------------------------------------------ */
-/* Base                                                                */
-/* ------------------------------------------------------------------ */
-
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
+/* Horizontal chip strips scroll on small screens without a visible bar */
+.cr-scroll-x {
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-body {
-  background-color: var(--cr-paper);
-  color: var(--cr-ink);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
-::selection {
-  background-color: var(--cr-accent);
-  color: var(--cr-paper);
-}
-
-:focus-visible {
-  outline: 2px solid var(--cr-accent);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* Form fields signal focus through their container styling instead of the
-   global outline ring, which otherwise draws a harsh box around them. */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: none;
-}
-
-input[type='search']::-webkit-search-decoration,
-input[type='search']::-webkit-search-cancel-button,
-input[type='search']::-webkit-search-results-button {
-  -webkit-appearance: none;
-  appearance: none;
+.cr-scroll-x::-webkit-scrollbar {
+  display: none;
 }
 
 /* ------------------------------------------------------------------ */
@@ -326,6 +543,13 @@ input[type='search']::-webkit-search-results-button {
   font-size: 1.125rem;
   line-height: 1.85;
   color: var(--cr-ink);
+}
+
+@media (max-width: 640px) {
+  .article-body {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
 }
 
 .article-body > * + * {
@@ -354,6 +578,16 @@ input[type='search']::-webkit-search-results-button {
 
 .article-body h4 {
   font-size: 1.1rem;
+}
+
+@media (max-width: 640px) {
+  .article-body h2 {
+    font-size: 1.4rem;
+  }
+
+  .article-body h3 {
+    font-size: 1.2rem;
+  }
 }
 
 .article-body a {
@@ -418,12 +652,14 @@ input[type='search']::-webkit-search-results-button {
   color: var(--cr-accent-strong);
   border-radius: 0.3rem;
   padding: 0.15em 0.4em;
+  overflow-wrap: anywhere;
 }
 
 .article-body .cr-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--cr-edge);
   border-radius: 0.75rem;
+  background-color: var(--cr-surface);
 }
 
 .article-body table {
@@ -438,6 +674,7 @@ input[type='search']::-webkit-search-results-button {
   font-weight: 600;
   background-color: var(--cr-surface-raised);
   padding: 0.6rem 1rem;
+  white-space: nowrap;
 }
 
 .article-body td {
@@ -501,6 +738,16 @@ input[type='search']::-webkit-search-results-button {
   font-size: 0.875rem;
   line-height: 1.7;
   background: transparent;
+}
+
+@media (max-width: 640px) {
+  .cr-code code {
+    font-size: 0.8rem;
+  }
+
+  .cr-code pre {
+    padding: 0.85rem 1rem;
+  }
 }
 
 .hljs-comment,

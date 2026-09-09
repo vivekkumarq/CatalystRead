@@ -17,6 +17,7 @@ import { BackToTop } from './shared/components/back-to-top/back-to-top';
     >
       Skip to content
     </a>
+    <div class="cr-ambient" aria-hidden="true"></div>
     <app-header />
     <main id="main-content" class="min-h-[70vh]">
       <router-outlet />

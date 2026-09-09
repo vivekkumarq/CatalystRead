@@ -4,22 +4,27 @@ import { PostsService } from '../../core/services/posts.service';
 import { SeoService } from '../../core/services/seo.service';
 import { SITE } from '../../core/constants/site';
 import { TopicChip } from '../../shared/components/topic-chip/topic-chip';
+import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcrumbs';
 
 @Component({
   selector: 'app-about',
-  imports: [RouterLink, TopicChip],
+  imports: [RouterLink, TopicChip, Breadcrumbs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="animate-page mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <header>
-        <p class="text-sm font-bold uppercase tracking-[0.2em] text-accent">About</p>
-        <h1 class="mt-3 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-          {{ site.name }}
-        </h1>
-        <p class="mt-4 text-lg italic leading-relaxed text-ink-soft">{{ site.tagline }}</p>
-      </header>
+    <div class="animate-page">
+      <section class="cr-band">
+        <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+          <app-breadcrumbs [crumbs]="crumbs" />
+          <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">About</p>
+          <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+            {{ site.name }}
+          </h1>
+          <p class="mt-4 text-lg italic leading-relaxed text-ink-soft">{{ site.tagline }}</p>
+        </div>
+      </section>
 
-      <div class="article-body mt-10">
+      <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12">
+      <div class="article-body">
         <p>
           In chemistry, a catalyst accelerates a reaction without being consumed by it. That is the
           bar for every article published here: writing that speeds up the reaction between a hard
@@ -47,24 +52,26 @@ import { TopicChip } from '../../shared/components/topic-chip/topic-chip';
 
       <section class="mt-12 border-t border-edge pt-10" aria-label="Topics covered">
         <h2 class="text-xl font-bold tracking-tight text-ink">Topics covered</h2>
-        <div class="mt-5 flex flex-wrap gap-2.5">
-          @for (category of posts.categories; track category.slug) {
+        <div class="mt-5 flex flex-wrap gap-2">
+          @for (category of posts.techCategories; track category.slug) {
             <app-topic-chip [name]="category.name" [slug]="category.slug" [count]="category.count" />
           }
         </div>
         <a
           routerLink="/articles"
-          class="mt-8 inline-block rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+          class="mt-8 inline-block rounded-xl bg-accent px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-accent-soft transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-strong"
         >
           Start reading
         </a>
       </section>
+      </div>
     </div>
   `,
 })
 export class About {
   protected readonly posts = inject(PostsService);
   protected readonly site = SITE;
+  protected readonly crumbs: Crumb[] = [{ label: 'About' }];
 
   constructor() {
     inject(SeoService).page('About');

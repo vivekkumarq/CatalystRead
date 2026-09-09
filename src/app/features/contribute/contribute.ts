@@ -10,25 +10,33 @@ import { PostsService } from '../../core/services/posts.service';
 import { SeoService } from '../../core/services/seo.service';
 import { SITE } from '../../core/constants/site';
 import { slugify } from '../../core/utilities/slugify';
+import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcrumbs';
 
 @Component({
   selector: 'app-contribute',
+  imports: [Breadcrumbs],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="animate-page mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-      <header>
-        <p class="text-sm font-bold uppercase tracking-[0.2em] text-accent">Contribute</p>
-        <h1 class="mt-3 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
-          Write for {{ site.name }}
-        </h1>
-        <p class="mt-4 text-lg leading-relaxed text-ink-soft">
-          Have a technical idea worth catalyzing? Guest articles are welcome. Fill in the form
-          below — it generates a ready-to-submit article file. Every submission is personally
-          reviewed before it's published.
-        </p>
-      </header>
+    <div class="animate-page">
+      <section class="cr-band">
+        <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+          <app-breadcrumbs [crumbs]="crumbs" />
+          <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+            Contribute
+          </p>
+          <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+            Write for {{ site.name }}
+          </h1>
+          <p class="mt-4 text-[15px] leading-relaxed text-ink-soft sm:text-lg">
+            Have a technical idea worth catalyzing? Guest articles are welcome. Fill in the form
+            below — it generates a ready-to-submit article file. Every submission is personally
+            reviewed before it's published.
+          </p>
+        </div>
+      </section>
 
-      <ol class="stagger mt-8 grid gap-3 text-sm sm:grid-cols-3">
+      <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12">
+      <ol class="stagger grid gap-3 text-sm sm:grid-cols-3">
         @for (step of steps; track step.title; let i = $index) {
           <li class="rounded-2xl border border-edge bg-surface p-4">
             <span class="text-xs font-bold text-accent">Step {{ i + 1 }}</span>
@@ -182,12 +190,14 @@ import { slugify } from '../../core/utilities/slugify';
           <pre class="overflow-x-auto border-t border-edge px-5 py-4 font-mono text-xs leading-relaxed text-ink-soft">{{ markdown() }}</pre>
         </details>
       }
+      </div>
     </div>
   `,
 })
 export class Contribute {
   protected readonly posts = inject(PostsService);
   protected readonly site = SITE;
+  protected readonly crumbs: Crumb[] = [{ label: 'Contribute' }];
   private readonly document = inject(DOCUMENT);
 
   protected readonly authorName = signal('');

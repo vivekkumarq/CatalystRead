@@ -10,8 +10,8 @@ import { BrandMark } from '../brand-mark/brand-mark';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <footer class="border-t border-edge bg-surface">
-      <div class="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-        <div class="flex flex-col gap-10 sm:flex-row sm:justify-between">
+      <div class="mx-auto max-w-6xl px-4 pb-24 pt-12 sm:px-6 sm:pb-12">
+        <div class="flex flex-col gap-10 lg:flex-row lg:justify-between">
           <div class="max-w-sm">
             <a routerLink="/" class="group flex items-center gap-2 text-lg font-extrabold tracking-tight">
               <app-brand-mark />
@@ -21,9 +21,10 @@ import { BrandMark } from '../brand-mark/brand-mark';
             <p class="mt-2 text-sm leading-relaxed text-ink-faint">{{ site.description }}</p>
           </div>
 
+          <div class="grid grid-cols-2 gap-8 sm:gap-16 lg:flex lg:gap-16">
           <nav aria-label="Topics" class="text-sm">
             <h2 class="mb-3 text-xs font-bold uppercase tracking-wider text-ink-faint">Topics</h2>
-            <ul class="grid grid-cols-2 gap-x-8 gap-y-2">
+            <ul class="grid gap-x-8 gap-y-2 sm:grid-cols-2">
               @for (category of posts.techCategories.slice(0, 10); track category.slug) {
                 <li>
                   <a [routerLink]="['/topics', category.slug]" class="text-ink-soft transition-colors hover:text-accent">
@@ -46,6 +47,7 @@ import { BrandMark } from '../brand-mark/brand-mark';
               <li><a href="feed.xml" class="text-ink-soft transition-colors hover:text-accent">RSS feed</a></li>
             </ul>
           </nav>
+          </div>
         </div>
 
         <div class="mt-10 flex flex-col gap-2 border-t border-edge pt-6 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">

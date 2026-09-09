@@ -17,45 +17,62 @@ import { ArticleCard } from '../../shared/components/article-card/article-card';
 import { ReadingProgress } from '../../shared/components/reading-progress/reading-progress';
 import { TableOfContents } from '../../shared/components/table-of-contents/table-of-contents';
 import { TopicChip } from '../../shared/components/topic-chip/topic-chip';
+import { Breadcrumbs } from '../../shared/components/breadcrumbs/breadcrumbs';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { Reveal } from '../../shared/directives/reveal.directive';
 
 @Component({
   selector: 'app-article-detail',
-  imports: [RouterLink, ArticleCard, ReadingProgress, TableOfContents, TopicChip, FormatDatePipe, Reveal],
+  imports: [
+    RouterLink,
+    ArticleCard,
+    ReadingProgress,
+    TableOfContents,
+    TopicChip,
+    Breadcrumbs,
+    FormatDatePipe,
+    Reveal,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <app-reading-progress />
 
     @if (post(); as post) {
-      <div class="animate-page mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-16">
-        <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_230px] lg:gap-12">
-          <div class="mx-auto w-full max-w-3xl">
-            <header>
+      <div class="animate-page">
+        <section class="cr-band">
+          <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
+            <div class="max-w-3xl">
+              <app-breadcrumbs [crumbs]="crumbs()" />
+
               <a
                 [routerLink]="['/topics', post.categorySlug]"
-                class="text-sm font-bold uppercase tracking-wider text-accent hover:text-accent-strong"
+                class="mt-5 inline-block rounded-md bg-accent-soft px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-accent transition-colors hover:text-accent-strong"
               >
                 {{ post.category }}
               </a>
-              <h1 class="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-ink sm:text-4xl">
+
+              <h1 class="mt-4 text-[1.75rem] font-extrabold leading-[1.18] tracking-tight text-ink sm:text-4xl lg:text-[2.6rem]">
                 {{ post.title }}
               </h1>
-              <p class="mt-4 text-lg leading-relaxed text-ink-soft">{{ post.description }}</p>
-              <div class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-edge py-3 text-sm text-ink-faint">
+
+              <p class="mt-4 text-[15px] leading-relaxed text-ink-soft sm:text-lg">
+                {{ post.description }}
+              </p>
+
+              <div class="mt-6 flex flex-wrap items-center gap-x-2.5 gap-y-3 border-t border-edge/70 pt-4 text-sm text-ink-faint">
                 <time [attr.datetime]="post.publishedAt">{{ post.publishedAt | formatDate }}</time>
                 @if (post.updatedAt && post.updatedAt !== post.publishedAt) {
-                  <span aria-hidden="true">·</span>
+                  <span aria-hidden="true" class="size-0.5 rounded-full bg-current"></span>
                   <span>Updated {{ post.updatedAt | formatDate }}</span>
                 }
-                <span aria-hidden="true">·</span>
+                <span aria-hidden="true" class="size-0.5 rounded-full bg-current"></span>
                 <span>{{ post.readingTimeMinutes }} min read</span>
 
-                <span class="ml-auto flex items-center gap-1">
+                <span class="flex w-full items-center gap-1.5 sm:ml-auto sm:w-auto">
                   <button
                     type="button"
                     (click)="copyLink()"
-                    class="flex h-8 items-center gap-1.5 rounded-lg border border-edge px-2.5 text-xs font-medium text-ink-soft transition-colors hover:border-accent hover:text-accent"
+                    class="flex h-8 items-center gap-1.5 rounded-lg border border-edge bg-surface/60 px-2.5 text-xs font-medium text-ink-soft transition-colors hover:border-accent hover:text-accent"
                     [attr.aria-label]="linkCopied() ? 'Link copied' : 'Copy link to this article'"
                   >
                     @if (linkCopied()) {
@@ -74,7 +91,7 @@ import { Reveal } from '../../shared/directives/reveal.directive';
                   <button
                     type="button"
                     (click)="shareOn('x')"
-                    class="grid size-8 place-items-center rounded-lg border border-edge text-ink-soft transition-colors hover:border-accent hover:text-accent"
+                    class="grid size-8 place-items-center rounded-lg border border-edge bg-surface/60 text-ink-soft transition-colors hover:border-accent hover:text-accent"
                     aria-label="Share on X"
                   >
                     <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -84,7 +101,7 @@ import { Reveal } from '../../shared/directives/reveal.directive';
                   <button
                     type="button"
                     (click)="shareOn('linkedin')"
-                    class="grid size-8 place-items-center rounded-lg border border-edge text-ink-soft transition-colors hover:border-accent hover:text-accent"
+                    class="grid size-8 place-items-center rounded-lg border border-edge bg-surface/60 text-ink-soft transition-colors hover:border-accent hover:text-accent"
                     aria-label="Share on LinkedIn"
                   >
                     <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -93,37 +110,46 @@ import { Reveal } from '../../shared/directives/reveal.directive';
                   </button>
                 </span>
               </div>
-            </header>
+            </div>
+          </div>
+        </section>
 
-            <div class="article-body mt-10" [innerHTML]="safeHtml()" (click)="onBodyClick($event)"></div>
+        <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-14">
+          <div class="lg:grid lg:grid-cols-[minmax(0,1fr)_230px] lg:gap-12">
+            <div class="w-full max-w-3xl">
+              <div class="article-body" [innerHTML]="safeHtml()" (click)="onBodyClick($event)"></div>
 
-            <footer class="mt-12">
-              <div class="flex flex-wrap gap-2">
-                @for (tag of tagChips(); track tag.slug) {
-                  <app-topic-chip [name]="tag.name" [slug]="tag.slug" />
-                }
-              </div>
-            </footer>
-
-            @if (related().length > 0) {
-              <section appReveal class="mt-16 border-t border-edge pt-10" aria-label="Related articles">
-                <h2 class="text-xl font-bold tracking-tight text-ink">Keep reading</h2>
-                <div class="mt-6 grid gap-6 sm:grid-cols-2">
-                  @for (relatedPost of related(); track relatedPost.slug) {
-                    <app-article-card [post]="relatedPost" />
+              <footer class="mt-12">
+                <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+                  Tagged
+                </p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  @for (tag of tagChips(); track tag.slug) {
+                    <app-topic-chip [name]="tag.name" [slug]="tag.slug" />
                   }
                 </div>
-              </section>
-            }
-          </div>
+              </footer>
 
-          <aside class="hidden lg:block" aria-label="Article navigation">
-            @if (content().headings.length > 1) {
-              <div class="sticky top-24">
-                <app-table-of-contents [headings]="content().headings" />
-              </div>
-            }
-          </aside>
+              @if (related().length > 0) {
+                <section appReveal class="mt-14 border-t border-edge pt-10" aria-label="Related articles">
+                  <h2 class="text-xl font-bold tracking-tight text-ink">Keep reading</h2>
+                  <div class="mt-6 grid gap-5 sm:grid-cols-2">
+                    @for (relatedPost of related(); track relatedPost.slug) {
+                      <app-article-card [post]="relatedPost" />
+                    }
+                  </div>
+                </section>
+              }
+            </div>
+
+            <aside class="hidden lg:block" aria-label="Article navigation">
+              @if (content().headings.length > 1) {
+                <div class="sticky top-24">
+                  <app-table-of-contents [headings]="content().headings" />
+                </div>
+              }
+            </aside>
+          </div>
         </div>
       </div>
     }
@@ -153,6 +179,15 @@ export class ArticleDetail {
     return post.tags
       .map((name) => this.postsService.tags.find((tag) => tag.name === name))
       .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
+  });
+
+  protected readonly crumbs = computed(() => {
+    const post = this.post();
+    return [
+      { label: 'Articles', link: '/articles' },
+      { label: post?.category ?? '', link: ['/topics', post?.categorySlug ?? ''] },
+      { label: post?.title ?? '' },
+    ];
   });
 
   /* The HTML is authored in this repository and rendered at build time,

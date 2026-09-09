@@ -8,28 +8,40 @@
     <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
-      content="CatalystRead is a personal technology publication covering Java, Spring Boot, Angular, React, system design, and software engineering."
+      content="CatalystRead is a personal technology publication covering AI, Java, Spring Boot, Angular, React, system design, and software engineering."
     />
     <link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg" />
     <script>
       (function () {
-        var classes = document.documentElement.classList;
+        var root = document.documentElement;
+        var DARK = ['carbon', 'midnight', 'nord', 'forest'];
+        var LIGHT = ['paper', 'frost', 'sepia', 'mint'];
+        var theme;
         try {
           var stored = localStorage.getItem('catalystread-theme');
-          var dark =
-            stored === 'dark' ||
-            (stored !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-          if (dark) classes.add('dark');
+          if (DARK.indexOf(stored) !== -1 || LIGHT.indexOf(stored) !== -1) {
+            theme = stored;
+          } else if (stored === 'dark') {
+            theme = 'carbon';
+          } else if (stored === 'light') {
+            theme = 'paper';
+          }
         } catch (e) {
-          /* storage unavailable; default to light */
+          /* storage unavailable; fall through to the system preference */
         }
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'carbon' : 'paper';
+        }
+        root.setAttribute('data-theme', theme);
+        if (DARK.indexOf(theme) !== -1) root.classList.add('dark');
+
         try {
           var prefs = JSON.parse(localStorage.getItem('catalystread-prefs') || '{}');
           if (['serif', 'classic', 'sans', 'modern', 'mono'].indexOf(prefs.font) !== -1) {
-            classes.add('pref-font-' + prefs.font);
+            root.classList.add('pref-font-' + prefs.font);
           }
-          if (prefs.size === 'sm') classes.add('pref-size-sm');
-          if (prefs.size === 'lg') classes.add('pref-size-lg');
+          if (prefs.size === 'sm') root.classList.add('pref-size-sm');
+          if (prefs.size === 'lg') root.classList.add('pref-size-lg');
         } catch (e) {
           /* storage unavailable; defaults apply */
         }
