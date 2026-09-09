@@ -31,15 +31,24 @@ import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcru
           technical idea and a working mental model — and stays useful long after the first read.
         </p>
         <p>
-          {{ site.name }} is a personal technology publication by {{ site.author }}. It covers the
-          craft of building software end to end: the JVM and Java, Spring Boot and backend
-          engineering, Angular and React on the frontend, and the system design, architecture, and
-          engineering judgment that tie it all together.
+          {{ site.name }} is a technology publication written by {{ site.author }} for working
+          software engineers. It covers the craft end to end: the JVM and Java, Spring Boot and
+          backend engineering, Angular and React on the frontend, databases, AI and machine
+          learning, DevOps and cloud, security and performance — plus the system design and
+          architecture judgment that ties it all together.
+        </p>
+        <h2 id="who-its-for">Who it's for</h2>
+        <p>
+          Engineers who want to know <em>why</em> something works, not just which method to call.
+          Whether you are debugging a memory leak at 2am, choosing between a queue and a stream,
+          reviewing someone else's migration plan, or preparing for a system design interview, the
+          goal is that an article here leaves you able to reason about the problem on your own.
         </p>
         <h2 id="what-to-expect">What to expect</h2>
         <ul>
-          <li><strong>Depth over breadth</strong> — fewer articles, each built around a mental model, not a changelog.</li>
+          <li><strong>Depth over breadth</strong> — each article is built around a mental model, not a changelog.</li>
           <li><strong>Real code</strong> — examples that resemble production systems, not toy demos.</li>
+          <li><strong>Documented history</strong> — the Engineering at Scale series retells how companies like Netflix, Google and Stripe actually solved their hardest problems, and what you can borrow from them.</li>
           <li><strong>Plain language</strong> — jargon only where it earns its place.</li>
         </ul>
         <h2 id="how-this-site-works">How this site works</h2>

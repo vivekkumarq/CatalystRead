@@ -4,7 +4,9 @@
 
 **🌐 Live site → [vivekkumarq.github.io/CatalystRead](https://vivekkumarq.github.io/CatalystRead/)**
 
-CatalystRead is a personal technology publication covering AI, machine learning, Java, Spring Boot, Angular, React, system design, databases, DevOps, security, and how the world's best product companies engineer at scale — built as a **fully static, Markdown-driven site** with no backend, no database, and no CMS. Every article is a Markdown file; publishing is a git push.
+CatalystRead publishes in-depth engineering articles that explain how things actually work — the JVM, Spring Boot, Angular, React, databases, AI, DevOps, security, system design, and how the world's best product companies engineer at scale. The goal for every article: understand the concept properly, solve the problem in front of you, and walk into a design interview prepared.
+
+It is built as a **fully static, Markdown-driven site** with no backend, no database, and no CMS. Every article is a Markdown file; publishing is a git push.
 
 ![CatalystRead home page](docs/screenshots/home-light.png)
 

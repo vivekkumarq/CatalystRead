@@ -26,7 +26,7 @@ import { Reveal } from '../../shared/directives/reveal.directive';
               Catalyzing ideas into <span class="text-accent">understanding</span>.
             </h1>
             <p class="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-ink-soft sm:text-lg">
-              {{ site.description }}
+              {{ site.pitch }}
             </p>
             <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <a
@@ -60,8 +60,25 @@ import { Reveal } from '../../shared/directives/reveal.directive';
       </section>
 
       <div class="mx-auto max-w-6xl px-4 sm:px-6">
+        <section appReveal class="py-12 sm:py-16" aria-label="What this site is for">
+          <div class="grid gap-5 sm:grid-cols-3">
+            @for (use of uses; track use.title) {
+              <div class="rounded-2xl border border-edge bg-surface/70 p-6 backdrop-blur-sm">
+                <span class="grid size-9 place-items-center rounded-xl bg-accent-soft text-accent" aria-hidden="true">
+                  <svg class="size-[18px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path [attr.d]="use.icon" />
+                  </svg>
+                </span>
+                <h2 class="mt-4 font-bold tracking-tight text-ink">{{ use.title }}</h2>
+                <p class="mt-2 text-sm leading-relaxed text-ink-soft">{{ use.detail }}</p>
+              </div>
+            }
+          </div>
+        </section>
+
         @if (hero(); as hero) {
-          <section class="py-12 sm:py-16" aria-label="Featured article">
+          <section class="border-t border-edge py-12 sm:py-16" aria-label="Featured article">
+            <h2 class="mb-6 text-xl font-bold tracking-tight text-ink sm:text-2xl">Start here</h2>
             <app-featured-article [post]="hero" />
           </section>
         }
@@ -151,6 +168,28 @@ export class Home {
     const heroSlug = this.hero()?.slug;
     return this.posts.posts.filter((post) => post.slug !== heroSlug).slice(0, 6);
   });
+
+  /** Answers "what would I actually use this site for?" above the fold. */
+  protected readonly uses = [
+    {
+      title: 'Understand a concept properly',
+      detail:
+        'Mental models rather than tutorials. Each article explains why something works the way it does, so the understanding outlives the next framework release.',
+      icon: 'M12 3 2 8l10 5 10-5-10-5ZM2 16l10 5 10-5M2 12l10 5 10-5',
+    },
+    {
+      title: 'Solve the problem on your desk',
+      detail:
+        'Concrete patterns for caching, error handling, migrations, query tuning, performance triage and security — with code you can adapt today.',
+      icon: 'm8 9-3 3 3 3M16 9l3 3-3 3M13.5 6.5l-3 11',
+    },
+    {
+      title: 'Prepare for design interviews',
+      detail:
+        'System design fundamentals plus the real architecture stories behind Netflix, Uber, Stripe and thirteen other companies that built at scale.',
+      icon: 'M3 3v16a2 2 0 0 0 2 2h16M7 15l4-5 3 3 5-7',
+    },
+  ];
 
   protected readonly stats = computed(() => [
     { label: 'Articles', value: this.posts.posts.length },
