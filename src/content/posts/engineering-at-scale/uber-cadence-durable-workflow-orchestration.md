@@ -9,6 +9,10 @@ tags:
   - Uber
   - Workflow Orchestration
   - Distributed Systems
+sources:
+  - title: "Cadence – Uber Engineering's Workflow Orchestration Solution"
+    publisher: "Uber Engineering Blog"
+    url: "https://www.uber.com/blog/engineering/"
 ---
 
 Long-running business processes are miserable to code correctly by hand. A trip lifecycle, a driver onboarding flow, a multi-step background check — each involves calling several services, waiting on external responses that might take seconds or days, handling partial failures at any step, and resuming correctly even if the machine running the process crashes and restarts somewhere in the middle. The naive approach — a state machine hand-coded with a database table tracking "current step," plus retry logic sprinkled through every step — works, but it's tedious, error-prone, and every team ends up reinventing a slightly different, slightly buggy version of the same pattern. Uber built Cadence to give developers a better abstraction: write the workflow as ordinary-looking code, and let the platform guarantee it executes durably regardless of failures.

@@ -9,6 +9,10 @@ tags:
   - LinkedIn
   - Machine Learning Infrastructure
   - Data Systems
+sources:
+  - title: "LinkedIn Engineering Blog"
+    publisher: "LinkedIn"
+    url: "https://engineering.linkedin.com"
 ---
 
 A huge share of what LinkedIn serves to members isn't raw data at all — it's derived data: features computed offline in Hadoop for a machine learning model, aggregates computed by a Samza streaming job, embeddings produced by an overnight batch pipeline. All of that computation is worthless if there's no fast way to get the results in front of a live request with single-digit-millisecond latency. For years, teams solved this problem independently, pushing batch output into whatever key-value store they were already using and writing custom ingestion pipelines to keep it fresh. LinkedIn built Venice specifically to be the standard serving layer for this pattern — a system whose entire job is taking data computed elsewhere and making it servable online — rather than adding "also serve batch output" as a side feature bolted onto a general-purpose database.

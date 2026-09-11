@@ -9,6 +9,10 @@ tags:
   - Meta
   - Databases
   - Storage
+sources:
+  - title: "MyRocks: A space- and write-optimized MySQL database"
+    publisher: "Facebook Engineering"
+    url: "https://engineering.fb.com"
 ---
 
 Facebook has long run one of the largest MySQL deployments in the world, and at that scale, storage efficiency isn't a nice-to-have — every percentage point of storage overhead multiplies across an enormous fleet into real hardware cost and real operational burden. InnoDB, MySQL's default storage engine, uses a B-tree structure that's well suited to general-purpose read-write workloads but carries overhead — page fragmentation, the space consumed by indexes, and write amplification from in-place updates — that becomes expensive precisely at Facebook's scale, where the workloads in question (like storing social graph data via TAO's persistence layer) are heavily write-oriented and enormous in aggregate size.

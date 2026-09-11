@@ -9,6 +9,10 @@ tags:
   - Meta
   - React
   - Frontend
+sources:
+  - title: "React"
+    publisher: "Meta Open Source"
+    url: "https://react.dev"
 ---
 
 Before React, building a UI that stayed correct as data changed generally meant writing imperative code: when this value updates, find that DOM node and mutate it, then remember to update the three other places on the page that also depended on it. Facebook's Ads team, dealing with an interface where a single change — like editing a targeting rule — could ripple into needing updates in a dozen different places on screen, felt this pain directly. Keeping all the manual DOM mutations in sync as the app's complexity grew was a losing battle: it was easy to update most of the affected DOM but miss one, leaving the UI silently out of sync with the underlying data.

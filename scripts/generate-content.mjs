@@ -21,7 +21,8 @@ for (const post of posts) {
   const module =
     HEADER +
     `export const POST_HTML = ${JSON.stringify(post.html)};\n\n` +
-    `export const POST_HEADINGS = ${JSON.stringify(post.headings)};\n`;
+    `export const POST_HEADINGS = ${JSON.stringify(post.headings)};\n\n` +
+    `export const POST_SOURCES = ${JSON.stringify(post.sources)};\n`;
   await writeFile(file, module, 'utf8');
 }
 
@@ -50,11 +51,11 @@ const loaders = posts
 
 const index =
   HEADER +
-  `import type { PostMeta, TocHeading, TopicInfo } from '../core/models/post.model';\n\n` +
+  `import type { ArticleSource, PostMeta, TocHeading, TopicInfo } from '../core/models/post.model';\n\n` +
   `export const POSTS: readonly PostMeta[] = ${JSON.stringify(metas, null, 2)};\n\n` +
   `export const CATEGORIES: readonly TopicInfo[] = ${JSON.stringify(categories, null, 2)};\n\n` +
   `export const TAGS: readonly TopicInfo[] = ${JSON.stringify(tags, null, 2)};\n\n` +
-  `export const POST_LOADERS: Record<string, () => Promise<{ POST_HTML: string; POST_HEADINGS: TocHeading[] }>> = {\n${loaders}\n};\n`;
+  `export const POST_LOADERS: Record<\n  string,\n  () => Promise<{ POST_HTML: string; POST_HEADINGS: TocHeading[]; POST_SOURCES: ArticleSource[] }>\n> = {\n${loaders}\n};\n`;
 
 await writeFile(path.join(GENERATED_DIR, 'posts.generated.ts'), index, 'utf8');
 

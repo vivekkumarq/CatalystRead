@@ -9,6 +9,10 @@ tags:
   - Uber
   - Geospatial
   - Algorithms
+sources:
+  - title: "H3: Uber's Hexagonal Hierarchical Spatial Index"
+    publisher: "Uber Engineering Blog"
+    url: "https://www.uber.com/blog/engineering/"
 ---
 
 At the center of Uber's business is a marketplace problem: match riders who want a car to drivers who are nearby, price that match fairly given current supply and demand, and do it continuously across every city Uber operates in. All of that depends on answering spatial questions fast — which drivers are near this pickup point, how is demand distributed across a neighborhood, where should surge pricing boundaries fall — at a volume that makes brute-force distance calculations impractical. Uber's engineering team needed a way to divide the map into indexable regions that could be queried, aggregated, and compared cheaply.

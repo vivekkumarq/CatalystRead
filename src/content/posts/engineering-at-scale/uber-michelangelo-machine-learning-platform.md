@@ -9,6 +9,11 @@ tags:
   - Uber
   - Machine Learning
   - MLOps
+sources:
+  - title: "Meet Michelangelo: Uber's Machine Learning Platform"
+    author: "Jeremy Hermann and Mike Del Balso"
+    publisher: "Uber Engineering Blog"
+    url: "https://www.uber.com/blog/engineering/"
 ---
 
 Before Michelangelo, machine learning at Uber worked the way it does at most companies before they build dedicated ML infrastructure: every team that wanted a model — for ETA prediction, fraud detection, demand forecasting, restaurant recommendations for UberEats — solved data pipelines, training infrastructure, and production serving mostly from scratch, on their own. That meant duplicated infrastructure work across teams, inconsistent practices for things like feature computation, and models that were hard to reproduce or hand off. Uber built Michelangelo, its internal ML platform, to turn "train and deploy a model" into a supported, repeatable workflow instead of a bespoke project every time.

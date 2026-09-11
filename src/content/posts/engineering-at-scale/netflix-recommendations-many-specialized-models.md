@@ -9,6 +9,13 @@ tags:
   - Netflix
   - Recommendation Systems
   - Machine Learning
+sources:
+  - title: "The Netflix Recommender System: Algorithms, Business Value, and Innovation"
+    author: "Carlos A. Gomez-Uribe and Neil Hunt"
+    publisher: "ACM Transactions on Management Information Systems, 2015"
+  - title: "Netflix Technology Blog"
+    publisher: "Netflix"
+    url: "https://netflixtechblog.com"
 ---
 
 Open the Netflix homepage and what looks like one personalized page is actually the output of many independent algorithms, each solving a narrower problem and getting combined at render time. Netflix has been public about this architecture for years, notably in its "Netflix Recommendations: Beyond the 5 Stars" writeup, and the underlying philosophy — decompose personalization into specialized components rather than one monolithic model — has only deepened since.

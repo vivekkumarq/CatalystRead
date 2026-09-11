@@ -9,6 +9,10 @@ tags:
   - LinkedIn
   - Experimentation
   - Data Infrastructure
+sources:
+  - title: "LinkedIn Engineering Blog"
+    publisher: "LinkedIn"
+    url: "https://engineering.linkedin.com"
 ---
 
 At LinkedIn's scale, nearly every product change — a new ranking model for the feed, a redesigned notification, a tweak to the connection recommendation algorithm — needed to be validated against real member behavior before it could be trusted. Running that many experiments safely and honestly is a much harder problem than it sounds: you need consistent, collision-free bucketing of members into treatment and control groups across dozens of concurrent tests, a metrics pipeline that can compute statistically valid results at scale without engineers hand-rolling analysis each time, and enough scar tissue built into the platform to stop people from accidentally shipping changes based on noise. LinkedIn built an internal experimentation platform, referred to internally as T-REX, to make trustworthy experimentation something teams could self-serve rather than something that required a statistician's involvement every time.

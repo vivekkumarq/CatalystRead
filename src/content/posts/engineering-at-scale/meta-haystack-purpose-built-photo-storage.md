@@ -9,6 +9,11 @@ tags:
   - Meta
   - Storage
   - Distributed Systems
+sources:
+  - title: "Finding a needle in Haystack: Facebook's photo storage"
+    author: "Doug Beaver et al."
+    publisher: "OSDI 2010"
+    url: "https://research.facebook.com"
 ---
 
 In the mid-2000s, Facebook stored photos the obvious way: on NFS-mounted commodity file servers, one file per photo, fronted by a caching tier and a CDN for the popular ones. That worked while photo volume was modest. As Facebook's user base and photo uploads exploded — described in Facebook's own engineering writing as growing into the tens of billions of images, each stored at several resolutions — this straightforward approach started falling over for a specific, unglamorous reason: metadata.

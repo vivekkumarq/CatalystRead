@@ -9,6 +9,15 @@ tags:
   - LinkedIn
   - Kafka
   - Streaming
+sources:
+  - title: "Kafka: A Distributed Messaging System for Log Processing"
+    author: "Jay Kreps, Neha Narkhede and Jun Rao"
+    publisher: "NetDB 2011"
+    url: "https://engineering.linkedin.com"
+  - title: "The Log: What every software engineer should know about real-time data's unifying abstraction"
+    author: "Jay Kreps"
+    publisher: "LinkedIn Engineering Blog"
+    url: "https://engineering.linkedin.com"
 ---
 
 Around 2010, LinkedIn's data infrastructure had a shape that will feel familiar to any engineer who has worked at a fast-growing company: every system that produced data — the main database, search indexing, the recommendation engine, monitoring — had grown its own custom, point-to-point integration with every system that needed to consume it. That's an integration problem that grows roughly with the square of the number of systems, and LinkedIn was adding new systems constantly. Existing message queues like ActiveMQ and RabbitMQ weren't a natural fit either: they weren't designed for the sheer throughput of LinkedIn's activity data — page views, clicks, and other high-volume events — or for the durability and replay semantics needed to feed batch systems like Hadoop reliably.

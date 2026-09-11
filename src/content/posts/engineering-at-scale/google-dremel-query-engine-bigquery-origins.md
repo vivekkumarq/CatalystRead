@@ -9,6 +9,11 @@ tags:
   - Google
   - Data Engineering
   - Query Engines
+sources:
+  - title: "Dremel: Interactive Analysis of Web-Scale Datasets"
+    author: "Sergey Melnik et al."
+    publisher: "VLDB 2010"
+    url: "https://research.google"
 ---
 
 By the late 2000s, Google engineers had a recurring complaint: MapReduce was excellent for large batch transformations, but running an exploratory query over a huge dataset and waiting minutes-to-hours for a MapReduce job to finish made interactive analysis painful. You couldn't ask a follow-up question in a reasonable amount of time, which meant analysts and engineers avoided asking follow-up questions at all. The 2010 VLDB paper "Dremel: Interactive Analysis of Web-Scale Datasets" described the system Google built to close that gap: SQL-like queries over datasets with trillions of rows, returning in seconds rather than requiring a separate batch job.

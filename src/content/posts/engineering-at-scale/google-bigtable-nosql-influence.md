@@ -9,6 +9,11 @@ tags:
   - Google
   - NoSQL
   - Databases
+sources:
+  - title: "Bigtable: A Distributed Storage System for Structured Data"
+    author: "Fay Chang et al."
+    publisher: "OSDI 2006"
+    url: "https://research.google"
 ---
 
 By the mid-2000s, Google was running into a problem relational databases weren't built for: storing structured data at a scale where a single machine, or even a traditional sharded relational cluster, couldn't keep up — web crawl data, satellite imagery for Google Earth, per-user data for personalized search, analytics data — much of it sparse, much of it needing to scale to petabytes across thousands of commodity machines. The 2006 OSDI paper "Bigtable: A Distributed Storage System for Structured Data," by Fay Chang and coauthors, described the system Google built to solve it, and its data model went on to shape nearly every wide-column NoSQL database that followed.

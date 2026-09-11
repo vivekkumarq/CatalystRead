@@ -9,6 +9,11 @@ tags:
   - Meta
   - Caching
   - Distributed Systems
+sources:
+  - title: "Scaling Memcache at Facebook"
+    author: "Rajesh Nishtala et al."
+    publisher: "NSDI 2013"
+    url: "https://research.facebook.com"
 ---
 
 By the early 2010s, Facebook was running one of the largest memcached deployments in the world — thousands of servers holding trillions of items and serving billions of requests per second. Memcached itself is a simple, single-machine, in-memory key-value store. The interesting engineering wasn't the cache; it was everything Facebook had to build around it to make a fleet of independent caches behave like one coherent, low-latency system in front of a much slower MySQL tier. Much of this was documented in Facebook's 2013 NSDI paper "Scaling Memcache at Facebook."

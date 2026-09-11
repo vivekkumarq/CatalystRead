@@ -1,3 +1,10 @@
+export interface ArticleSource {
+  title: string;
+  author?: string;
+  publisher?: string;
+  url?: string;
+}
+
 export interface TocHeading {
   id: string;
   text: string;
@@ -25,6 +32,7 @@ export interface PostMeta {
 export interface PostContent {
   html: string;
   headings: TocHeading[];
+  sources: ArticleSource[];
 }
 
 export interface TopicInfo {

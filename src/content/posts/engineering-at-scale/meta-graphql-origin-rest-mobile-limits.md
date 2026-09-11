@@ -9,6 +9,11 @@ tags:
   - Meta
   - GraphQL
   - Mobile
+sources:
+  - title: "GraphQL: A data query language"
+    author: "Lee Byron"
+    publisher: "Facebook Engineering"
+    url: "https://engineering.fb.com"
 ---
 
 Facebook's 2012 mobile push — famously accompanied by Mark Zuckerberg's admission that betting on HTML5 for the mobile app had been a mistake — forced a rewrite of the News Feed as a native app. That rewrite ran straight into a data-fetching problem that REST, as Facebook had been using it, wasn't built to solve well: a single feed screen needed data shaped very differently from what the existing REST endpoints returned, and mobile networks made every extra round trip expensive in a way that didn't matter as much on the web.

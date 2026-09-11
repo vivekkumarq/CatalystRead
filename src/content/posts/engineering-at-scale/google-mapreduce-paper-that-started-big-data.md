@@ -9,6 +9,11 @@ tags:
   - Google
   - Distributed Systems
   - Data Engineering
+sources:
+  - title: "MapReduce: Simplified Data Processing on Large Clusters"
+    author: "Jeffrey Dean and Sanjay Ghemawat"
+    publisher: "OSDI 2004"
+    url: "https://research.google"
 ---
 
 In 2004, Jeffrey Dean and Sanjay Ghemawat published "MapReduce: Simplified Data Processing on Large Clusters" at OSDI, describing a programming model Google had already been using internally to process the enormous datasets behind web search — building the index, analyzing link graphs, processing logs across thousands of machines. The paper's real contribution wasn't a new algorithm; it was a simplification that let engineers who weren't distributed-systems experts write large-scale parallel jobs without personally solving fault tolerance, scheduling, and data movement every time.

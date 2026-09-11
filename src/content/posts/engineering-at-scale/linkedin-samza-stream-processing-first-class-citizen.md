@@ -9,6 +9,13 @@ tags:
   - LinkedIn
   - Kafka
   - Stream Processing
+sources:
+  - title: "Apache Samza"
+    publisher: "Apache Software Foundation"
+    url: "https://samza.apache.org"
+  - title: "LinkedIn Engineering Blog"
+    publisher: "LinkedIn"
+    url: "https://engineering.linkedin.com"
 ---
 
 Once Kafka existed as LinkedIn's central log, a new problem showed up almost immediately: dozens of teams wanted to compute something continuously from those streams — enriching an event with profile data, computing rolling counts for relevance models, joining two topics together — and they were all solving the same infrastructure problems from scratch. Checkpointing progress, recovering from failure without reprocessing everything or dropping events, and managing local state that could grow larger than memory were being reinvented team by team, usually badly. LinkedIn built Samza to make stream processing a first-class piece of infrastructure with the same seriousness that Kafka gave to the log itself, rather than treating it as an afterthought bolted onto whatever compute framework happened to be handy.

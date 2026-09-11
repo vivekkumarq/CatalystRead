@@ -9,6 +9,10 @@ tags:
   - LinkedIn
   - Databases
   - Distributed Systems
+sources:
+  - title: "Espresso: LinkedIn's Distributed, Timeline Consistent Document Store"
+    publisher: "ICDE 2013"
+    url: "https://engineering.linkedin.com"
 ---
 
 For years, LinkedIn's primary online data store for member-facing features was a sharded Oracle deployment, and by the early 2010s it was straining under the site's growth. Oracle licensing costs scaled painfully with data volume, schema changes required careful coordinated migrations across shards, and the relational model didn't map naturally onto how product teams actually thought about data — as documents like a member's profile, a set of connections, or a stream of updates. LinkedIn built Espresso as a distributed, document-oriented database designed specifically for these online, low-latency, high-availability workloads, rather than trying to keep stretching a relational system built for a different era of the product.

@@ -9,6 +9,10 @@ tags:
   - LinkedIn
   - APIs
   - Service Architecture
+sources:
+  - title: "LinkedIn Engineering Blog"
+    publisher: "LinkedIn"
+    url: "https://engineering.linkedin.com"
 ---
 
 As LinkedIn broke its original monolith apart into hundreds of independent services, a new kind of chaos emerged that had nothing to do with data storage or stream processing: every service team was inventing its own conventions for how to expose an API. Some returned XML, some JSON with inconsistent field naming, some encoded errors as HTTP status codes and others as payload fields, and pagination, filtering, and batching were all reinvented independently per service. Client code calling into these services ended up full of one-off logic to handle each service's quirks, and there was no reliable way to generate a client automatically or to reason about a service's contract without reading its implementation. LinkedIn built Rest.li to make API design a solved problem rather than something each team relitigated from scratch.

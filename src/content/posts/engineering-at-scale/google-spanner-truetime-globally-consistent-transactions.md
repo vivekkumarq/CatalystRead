@@ -9,6 +9,11 @@ tags:
   - Google
   - Distributed Systems
   - Databases
+sources:
+  - title: "Spanner: Google's Globally-Distributed Database"
+    author: "James C. Corbett et al."
+    publisher: "OSDI 2012"
+    url: "https://research.google"
 ---
 
 Distributed databases have long faced a hard tradeoff: spread data across multiple datacenters for availability and locality, and you generally give up strong consistency, because there's no cheap way to know the true global order of transactions happening on opposite sides of the planet at nearly the same instant. Google needed both — global distribution for products like AdWords billing, and strict consistency because billing systems can't tolerate ambiguity about transaction order. Their answer, described in the 2012 OSDI paper "Spanner: Google's Globally-Distributed Database," was to attack the problem at its root: clock uncertainty.

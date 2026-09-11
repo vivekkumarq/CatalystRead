@@ -9,6 +9,10 @@ tags:
   - Google
   - SRE
   - Reliability
+sources:
+  - title: "Site Reliability Engineering: How Google Runs Production Systems"
+    publisher: "Google SRE"
+    url: "https://sre.google"
 ---
 
 Ben Treynor Sloss, who founded Google's Site Reliability Engineering function around 2003, described SRE with a line that's become the discipline's unofficial motto: "SRE is what happens when you ask a software engineer to design an operations function." Instead of a traditional ops team that reacts to whatever breaks, Google staffed reliability work with software engineers and gave them a mandate to solve operational problems the way you'd solve any other engineering problem — by building systems and setting policies that reduce the need for human intervention, rather than by adding more humans to intervene.

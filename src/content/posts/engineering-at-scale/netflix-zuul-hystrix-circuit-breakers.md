@@ -9,6 +9,13 @@ tags:
   - Netflix
   - Microservices
   - Resilience
+sources:
+  - title: "Netflix Technology Blog"
+    publisher: "Netflix"
+    url: "https://netflixtechblog.com"
+  - title: "Netflix Open Source"
+    publisher: "Netflix"
+    url: "https://netflix.github.io"
 ---
 
 Netflix's migration off a monolith and onto AWS produced a fleet of hundreds, then thousands, of microservices calling each other over the network. That architecture solved the scaling and deployment-velocity problems the monolith couldn't, but it introduced a new one: any single slow or failing service could tie up threads in every service that called it, and that congestion could ripple backward until the whole request path collapsed. Two pieces of Netflix's own tooling, Zuul and Hystrix, became the standard answer.

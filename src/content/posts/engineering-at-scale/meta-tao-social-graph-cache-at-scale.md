@@ -9,6 +9,11 @@ tags:
   - Meta
   - Caching
   - Databases
+sources:
+  - title: "TAO: Facebook's Distributed Data Store for the Social Graph"
+    author: "Nathan Bronson et al."
+    publisher: "USENIX ATC 2013"
+    url: "https://research.facebook.com"
 ---
 
 Facebook's social graph — people, posts, comments, likes, friendships — has always been read far more often than it's written. A single post might be read thousands of times for every time it's created, and a friendship is checked constantly but changes rarely. Facebook's early architecture handled this the standard way: MySQL as the source of truth, memcache in front of it to absorb read traffic. That worked for years, but as the graph grew, the mismatch between memcache's generic key-value model and the actual shape of graph data started to show.

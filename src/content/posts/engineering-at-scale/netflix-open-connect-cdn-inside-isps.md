@@ -9,6 +9,13 @@ tags:
   - Netflix
   - CDN
   - Networking
+sources:
+  - title: "Netflix Technology Blog"
+    publisher: "Netflix"
+    url: "https://netflixtechblog.com"
+  - title: "Netflix Open Connect"
+    publisher: "Netflix"
+    url: "https://openconnect.netflix.com"
 ---
 
 Streaming video is mostly a bandwidth problem wearing a UX costume. By the early 2010s Netflix was already a meaningful share of North American internet traffic during peak hours, and leaning entirely on third-party CDNs meant every bad peering link, every congested transit point, and every provider's own outages became Netflix's problem too. The response was Open Connect: a purpose-built content delivery network, with hardware Netflix designs itself, that Netflix gives away to internet service providers for free.

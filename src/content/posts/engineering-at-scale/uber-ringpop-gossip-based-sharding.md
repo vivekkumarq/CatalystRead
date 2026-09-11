@@ -9,6 +9,10 @@ tags:
   - Uber
   - Distributed Systems
   - Sharding
+sources:
+  - title: "Ringpop: Application-Layer Sharding for Node.js Applications"
+    publisher: "Uber Engineering Blog"
+    url: "https://www.uber.com/blog/engineering/"
 ---
 
 Stateless services scale by just adding more instances behind a load balancer, but stateful services — the kind that hold in-memory state a specific request needs to reach consistently, like Uber's early dispatch and matching systems — don't get that luxury. Route the wrong request to the wrong node and it either can't find the state it needs or has to fetch it over the network, defeating the point of holding it in memory in the first place. Uber built Ringpop to solve that problem: a library that gives an application-level cluster the ability to shard work across its own nodes without depending on an external coordination service.

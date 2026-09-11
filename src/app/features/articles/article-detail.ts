@@ -119,6 +119,42 @@ import { Reveal } from '../../shared/directives/reveal.directive';
             <div class="w-full max-w-3xl">
               <div class="article-body" [innerHTML]="safeHtml()" (click)="onBodyClick($event)"></div>
 
+              @if (content().sources.length > 0) {
+                <section class="mt-12 rounded-2xl border border-edge bg-surface/70 p-6 backdrop-blur-sm" aria-labelledby="sources-heading">
+                  <h2 id="sources-heading" class="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+                    Sources &amp; further reading
+                  </h2>
+                  <ul class="mt-4 space-y-3">
+                    @for (source of content().sources; track source.title) {
+                      <li class="text-sm leading-relaxed">
+                        @if (source.url) {
+                          <a
+                            [href]="source.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="font-medium text-accent underline decoration-1 underline-offset-2 hover:text-accent-strong"
+                          >
+                            {{ source.title }}
+                          </a>
+                        } @else {
+                          <span class="font-medium text-ink">{{ source.title }}</span>
+                        }
+                        @if (source.author) {
+                          <span class="text-ink-soft"> — {{ source.author }}</span>
+                        }
+                        @if (source.publisher) {
+                          <span class="text-ink-faint"> · {{ source.publisher }}</span>
+                        }
+                      </li>
+                    }
+                  </ul>
+                  <p class="mt-4 text-xs leading-relaxed text-ink-faint">
+                    This article summarises publicly documented engineering work. Credit for the
+                    original research and writing belongs to the authors and teams listed above.
+                  </p>
+                </section>
+              }
+
               <footer class="mt-12">
                 <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
                   Tagged

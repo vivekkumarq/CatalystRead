@@ -9,6 +9,10 @@ tags:
   - Netflix
   - Data Engineering
   - Stream Processing
+sources:
+  - title: "Netflix Technology Blog"
+    publisher: "Netflix"
+    url: "https://netflixtechblog.com"
 ---
 
 Every play, pause, rebuffer, rating, and scroll on Netflix generates an event, and those events feed everything from personalization models to operational dashboards to A/B test analysis. Handling that volume in something close to real time — not next-day batch — is the job of Keystone, Netflix's stream processing data platform. It's less a single tool than a managed pipeline connecting hundreds of producers to hundreds of consumers, each with different latency and durability needs.

@@ -9,6 +9,14 @@ tags:
   - Netflix
   - Video Encoding
   - Streaming
+sources:
+  - title: "Netflix Technology Blog"
+    publisher: "Netflix"
+    url: "https://netflixtechblog.com"
+  - title: "Toward A Practical Perceptual Video Quality Metric"
+    author: "Zhi Li et al."
+    publisher: "Netflix Technology Blog"
+    url: "https://netflixtechblog.com"
 ---
 
 For years, Netflix encoded every piece of video content into the same fixed set of resolution-bitrate pairs — the same "bitrate ladder" whether the source was a dialogue-heavy drama with mostly static shots or a fast-cutting action movie full of motion and detail. That approach was simple to operate, but it treated a cartoon with flat colors and simple motion exactly like a grain-heavy, high-motion film, even though the cartoon needs a fraction of the bits to look just as good. Around 2015, Netflix's encoding team set out to fix that with per-title encoding.

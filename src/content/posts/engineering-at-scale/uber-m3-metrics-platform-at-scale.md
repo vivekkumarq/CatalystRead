@@ -9,6 +9,10 @@ tags:
   - Uber
   - Observability
   - Time Series
+sources:
+  - title: "M3: Uber's Open Source, Large-scale Metrics Platform for Prometheus"
+    publisher: "Uber Engineering Blog"
+    url: "https://www.uber.com/blog/engineering/"
 ---
 
 Every service Uber runs emits metrics — request latency, error rates, queue depths, business metrics like trip counts by city — and as the number of services and hosts grew into the thousands, the volume of distinct time series being written and queried grew right along with it. Uber's engineers found that existing open source time-series databases weren't built for that combination of write volume, cardinality, and long-term retention at once, and rather than keep patching around those limits, they built M3: a metrics platform designed from the start for very large scale.

@@ -9,6 +9,11 @@ tags:
   - Google
   - Kubernetes
   - Cluster Management
+sources:
+  - title: "Large-scale cluster management at Google with Borg"
+    author: "Abhishek Verma et al."
+    publisher: "EuroSys 2015"
+    url: "https://research.google"
 ---
 
 Long before Kubernetes existed as an open source project, Google was running essentially all of its production workloads — search, Gmail, internal infrastructure, everything — on a cluster management system called Borg. Google didn't describe it publicly in detail until a 2015 EuroSys paper, "Large-scale cluster management at Google with Borg," but by then Borg had already been running for roughly a decade at a scale most companies still haven't reached: hundreds of thousands of jobs, across many clusters, each cluster spanning tens of thousands of machines.

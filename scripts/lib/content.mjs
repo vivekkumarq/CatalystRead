@@ -147,11 +147,50 @@ export function validateFrontmatter(data, file) {
     errors.push(`${file}: "coverImage" must be a string path`);
   }
 
+  if (data.sources !== undefined) {
+    if (!Array.isArray(data.sources) || data.sources.length === 0) {
+      errors.push(`${file}: "sources" must be a non-empty list when present`);
+    } else {
+      data.sources.forEach((source, index) => {
+        if (typeof source !== 'object' || source === null || Array.isArray(source)) {
+          errors.push(`${file}: sources[${index}] must be a mapping with a "title"`);
+          return;
+        }
+        if (typeof source.title !== 'string' || source.title.trim() === '') {
+          errors.push(`${file}: sources[${index}] needs a non-empty "title"`);
+        }
+        for (const key of ['author', 'publisher', 'url']) {
+          if (source[key] !== undefined && typeof source[key] !== 'string') {
+            errors.push(`${file}: sources[${index}].${key} must be a string`);
+          }
+        }
+        if (typeof source.url === 'string' && !/^https?:\/\//i.test(source.url)) {
+          errors.push(`${file}: sources[${index}].url must start with http:// or https://`);
+        }
+      });
+    }
+  }
+
   return errors;
 }
 
 function toDateString(value) {
   return value instanceof Date ? value.toISOString().slice(0, 10) : String(value);
+}
+
+/** Drops blank optional fields so the generated modules stay tidy. */
+function normalizeSources(sources) {
+  if (!Array.isArray(sources)) {
+    return [];
+  }
+  return sources.map((source) => {
+    const entry = { title: source.title.trim() };
+    for (const key of ['author', 'publisher', 'url']) {
+      const value = typeof source[key] === 'string' ? source[key].trim() : '';
+      if (value) entry[key] = value;
+    }
+    return entry;
+  });
 }
 
 export async function loadPosts() {
@@ -209,6 +248,7 @@ export async function loadPosts() {
       coverImage: parsed.data.coverImage,
       readingTimeMinutes: readingTimeMinutes(parsed.content),
       headings,
+      sources: normalizeSources(parsed.data.sources),
       sourceFile: file,
       html,
     });

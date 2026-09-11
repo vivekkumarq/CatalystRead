@@ -57,6 +57,10 @@ export class PostsService {
       throw new Error(`No article found for slug "${slug}"`);
     }
     const module = await loader();
-    return { html: module.POST_HTML, headings: module.POST_HEADINGS };
+    return {
+      html: module.POST_HTML,
+      headings: module.POST_HEADINGS,
+      sources: module.POST_SOURCES,
+    };
   }
 }

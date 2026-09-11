@@ -9,6 +9,10 @@ tags:
   - Uber
   - Databases
   - MySQL
+sources:
+  - title: "Designing Schemaless, Uber Engineering's Scalable Datastore Using MySQL"
+    publisher: "Uber Engineering Blog"
+    url: "https://www.uber.com/blog/engineering/"
 ---
 
 As Uber's trip volume grew, its early datastores hit the scaling wall that eventually catches every fast-growing company: a single relational database, or even a simply sharded one, couldn't keep up with write volume and dataset size, and the operational team that had to run it was spending too much time on manual resharding and capacity firefighting. The industry-standard answer at the time was "migrate to a NoSQL database," but Uber's engineers made a different call: keep MySQL, and build a scalable datastore layer, called Schemaless, on top of it.

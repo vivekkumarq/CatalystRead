@@ -9,6 +9,12 @@ tags:
   - Netflix
   - Chaos Engineering
   - Distributed Systems
+sources:
+  - title: "Netflix Technology Blog"
+    publisher: "Netflix"
+    url: "https://netflixtechblog.com"
+  - title: "Principles of Chaos Engineering"
+    publisher: "principlesofchaos.org"
 trending: true
 ---
 
