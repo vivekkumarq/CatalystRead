@@ -3,6 +3,7 @@ title: "LSM Trees versus B-Trees: Why Your Database Writes the Way It Does"
 slug: "lsm-trees-vs-b-trees"
 description: "How B-trees update pages in place and LSM trees turn writes into sorted flushes, with the read/write/space trade-offs that show up in MySQL, Postgres, RocksDB, and Cassandra."
 publishedAt: "2026-08-28"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -48,3 +49,19 @@ Deletes are tombstones. They occupy space until compaction drops them. A workloa
 - Hybrid exists (MyRocks, WiredTiger's LSM option, Umbra-style designs). "We use RocksDB" is not a personality. It is a bet on write shape and operational skill at tuning stalls.
 
 When a p99 graph explodes every 30 minutes, look at flush and compaction threads before you add another cache. The storage engine is often the scheduler you did not know you had.
+
+## A worked example
+
+A write-heavy metrics table: LSM (Cassandra, RocksDB) batches writes to WAL + memtable, flushes SSTables, compacts. A read-modify-write OLTP of rows: B-tree (Postgres) updates pages in place. You measure write amplification vs read amplification: LSM may read many levels; B-tree may random-write the same page.
+
+Tuning compaction when space blows up is the LSM tax.
+
+## Failure modes
+
+Point reads on a deep LSM without blooms. Compaction storms. B-tree index bloat from random updates. Using LSM like a queue without TTL. Comparing engines without a WAL fsync policy.
+
+Assuming LSM is always faster.
+
+## When this is the wrong tool
+
+If your load is a typical CRUD app, Postgres B-trees are the default. LSM is the wrong tool for huge range scans that want clustered row locality like a B-tree heap — know the engine. Do not pick Cassandra because of an LSM blog when you need joins. In-memory data is neither. Hybrid engines exist; do not cargo-cult a 2012 talk.

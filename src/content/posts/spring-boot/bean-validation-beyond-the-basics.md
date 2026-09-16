@@ -3,6 +3,7 @@ title: "Bean Validation Beyond @NotNull: Groups, Custom Constraints, and Cross-F
 slug: "bean-validation-beyond-the-basics"
 description: "Moving past @NotBlank and @Email to validation groups, custom constraint annotations, and cross-field rules that Bean Validation can express cleanly."
 publishedAt: "2025-07-02"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -93,3 +94,19 @@ public class DateRangeValidator implements ConstraintValidator<ValidDateRange, B
 ```
 
 For anything more elaborate than two or three fields interacting, a class-level constraint starts to feel like it's fighting the framework — at that point, plain validation code in the service layer, called explicitly and unit-tested directly, is more readable than a constraint annotation trying to do too much. Bean Validation is at its best expressing rules a reviewer can understand from the annotation alone; once a validator needs comments to explain itself, it's earned a home outside the annotation system.
+
+## A worked example
+
+A `CreateOrderRequest` uses `@NotBlank` on `sku`, `@Min(1)` on `qty`, and a class-level `@ValidOrder` that checks `qty * unitPrice` against a max. A `groups = OnCreate.class` skips `@Null` on id during create vs `@NotNull` on update. `@Validated` on the controller plus `@Valid` on the body. A test with `LocalValidatorFactoryBean` asserts the cross-field message.
+
+`@Constraint(validatedBy = ...)` reads a Spring bean via `ConstraintValidatorFactory` so you can look up SKUs.
+
+## Failure modes
+
+Validating after business logic mutated the object. Service-layer `@Validated` without a Spring proxy (self-invocation). Groups never specified so all groups run. `@NotNull` on an `Optional`. Hibernate Validator and JSON `null` vs missing field. Expensive validators that hit the DB on every field.
+
+Returning 500 instead of 400 when `MethodArgumentNotValidException` is unhandled.
+
+## When this is the wrong tool
+
+Bean Validation is not authorization. Do not validate HTML for XSS here — different layer. Complex graphs may want a dedicated validator class or a JSON schema at the edge. Database constraints still required. If the rules need a transaction's worth of data, put them in the domain. Skipping `@Valid` on nested objects silently accepts junk.

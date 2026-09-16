@@ -3,6 +3,7 @@ title: "Rate Limiting Algorithms: Token Bucket, Sliding Window, and What Actuall
 slug: "rate-limiting-algorithms-explained"
 description: "Fixed window, sliding window, token bucket, and leaky bucket rate limiters compared, with the burst and fairness trade-offs each one hides."
 publishedAt: "2025-03-04"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -82,3 +83,19 @@ A pragmatic middle ground: give each instance a local token bucket sized at limi
 ## Picking One
 
 Match the algorithm to the traffic shape you're actually defending against: fixed window for cheap, approximate protection where bursts don't matter; sliding window counter as the default for public APIs; token bucket when legitimate clients burst and you want to allow it gracefully; leaky bucket when the thing behind you truly cannot absorb spikes. The mistake isn't picking the "wrong" one — it's not naming which failure mode (overshoot, unfairness, added latency) you're willing to live with before traffic tells you.
+
+## A worked example
+
+Token bucket 100 rps burst 200 per API key in Redis (`INCR` + TTL or a proper token script). Sliding window log for a stricter UX. Gateway returns 429 and `Retry-After`. You apply limits per key, not globally, plus a global ceiling. A load test shows burst allowed then smooth reject.
+
+Fail-open vs fail-closed when Redis is down is an explicit decision.
+
+## Failure modes
+
+In-memory limits per pod (N times the limit). Clock skew in sliding windows. Costly limits that hit Redis more than the API. Limits on IP behind a NAT. No jitter on client retries. Token bucket that never refills due to a bug in last-refill timestamp.
+
+Logging every reject at info for a bot flood.
+
+## When this is the wrong tool
+
+Rate limits are not auth. They will not stop a clever distributed botnet alone. Do not rate-limit health checks. For fairness among tenants, a quota system with credits may fit better than a generic 100 rps. Client-side rate limits are advisory. If the bottleneck is one SQL query, fix the query; a 429 is a bandage.

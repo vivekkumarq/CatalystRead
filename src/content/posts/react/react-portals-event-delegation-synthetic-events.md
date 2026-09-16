@@ -3,6 +3,7 @@ title: "Portals, Event Delegation, and the Synthetic Event System in React"
 slug: "react-portals-event-delegation-synthetic-events"
 description: "How React portals render outside the DOM tree while events still bubble through React's component hierarchy, and what that means for event handling."
 publishedAt: "2026-06-02"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -66,3 +67,19 @@ React wraps native events in a `SyntheticEvent` object with a consistent, cross-
 ## Practical implication: outside-click detection
 
 Because delegated events follow React's tree, a naive `document.addEventListener('click', ...)` outside-click handler needs to check against the actual rendered DOM node — `ref.current.contains(event.target)` — rather than relying on React bubbling semantics, since that listener was registered directly on the DOM, bypassing React's delegation system entirely. Mixing native listeners with React's synthetic system works, but only if you're clear about which bubbling model you're reasoning with at any given point.
+
+## A worked example
+
+A modal renders through `createPortal(..., document.body)` so `overflow: hidden` on a parent does not clip it. Click-outside uses a listener that checks `event.target` against the portal node. React 17+ delegates to the root, not `document`; a portal still participates in React's tree for context. A `stopPropagation` on an inner button does not stop a native listener on `document` that you added yourself — know which system you are in.
+
+Tooltip portals need `aria-describedby` still pointing at the trigger.
+
+## Failure modes
+
+Assuming parent `onClick` on a div does not fire for portal children — in React it does bubble through the React tree. Z-index wars with multiple portals. Focus trap forgotten. SSR: `document.body` missing. Portaling a controlled input and losing focus on parent rerender.
+
+Native `addEventListener` on document vs React's root delegation double-firing.
+
+## When this is the wrong tool
+
+Do not portal a row of a table just to change stacking — fix CSS. Portals are the wrong tool for "render this later"; use state. If you need a true top-layer, native `popover` / `<dialog>` may be enough. Avoid portals for SSR-critical SEO content that should stay in the article flow. Event delegation confusion is not a reason to copy React source — prefer the docs' bubbling model.

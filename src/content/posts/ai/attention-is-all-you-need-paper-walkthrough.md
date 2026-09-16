@@ -3,6 +3,7 @@ title: "Attention Is All You Need: What the 2017 Paper Actually Changed"
 slug: "attention-is-all-you-need-paper-walkthrough"
 description: "A field reading of Vaswani et al.: why dropping recurrence unlocked GPU training, and which pieces of the original transformer teams still keep."
 publishedAt: "2026-07-21"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -45,3 +46,19 @@ None of that contradicts the paper's thesis. The thesis was architectural: globa
 Read section 3 and table 1, then the ablation in section 5. The ablations are the antidote to mysticism — heads, depth, and key size are treated as knobs with measured BLEU, not as philosophy. When a vendor slide says "we use a transformer," ask which of those knobs they moved and what they measured. That is the same scientific habit the paper is asking for.
 
 If you only remember one sentence from the introduction: replacing recurrence with attention was a systems decision about hardware utilization as much as a modeling decision about long-range dependencies. Both readings are correct, and both still govern why inference is expensive today (attention is still quadratic in naive form) and why GPUs are the default (the remaining work is dense linear algebra).
+
+## A worked example
+
+A 2-layer toy transformer: embed, add positional encodings, multi-head attention (`softmax(QK^T / sqrt(d_k)) V`), residual+norm, FFN. You implement one head, then split `d_model` across heads. Teacher-forcing a tiny translation pair. You compare a causal mask vs none to see cheating on future tokens.
+
+Count parameters vs an RNN of similar depth on the same task — attention's win was quality at scale and parallelism, not a 10-line demo.
+
+## Failure modes
+
+Forgetting the scale `sqrt(d_k)` (softmax saturates). No mask on decoder self-attention. Mixing up encoder-decoder cross-attention queries vs keys. Positional encoding omitted then wondering why order dies. Treating "attention is all you need" as "no FFN."
+
+Copying 2017 dropout rates into a 2024 LLM recipe.
+
+## When this is the wrong tool
+
+Tabular data with 20 features: gradient boosting. Tiny sequences where an LSTM is enough. The paper's architecture is the wrong tool if you need strictly linear time at 1M tokens without approximations. CNNs still win some vision backbones (even if ViTs exist). Do not cite the paper to skip evaluation. RNNs remain fine for tiny on-device models with no GPU.

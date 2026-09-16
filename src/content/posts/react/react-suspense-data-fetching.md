@@ -3,6 +3,7 @@ title: "Suspense for Data Fetching: The Part That Isn't Just Loading Spinners"
 slug: "react-suspense-data-fetching"
 description: "Suspense is a coordination mechanism for async UI, not a spinner component. Understanding what it actually catches changes how you structure data fetching."
 publishedAt: "2026-02-05"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -95,3 +96,19 @@ Suspense handles the "not ready yet" case; it says nothing about the "failed" ca
 ## Don't Roll Your Own Resource Cache
 
 The `resource.read()` pattern above is illustrative, but hand-rolling a correct suspending cache — one that dedupes concurrent reads, handles cache invalidation, and doesn't leak — is genuinely hard to get right. In practice, reach for a library built for this (React Query's Suspense mode, SWR's `suspense: true`, or a framework's built-in data layer like Next.js's `fetch` integration) rather than writing the throw-a-promise plumbing by hand in application code.
+
+## A worked example
+
+A Server Component awaits `fetch` with cache. A client child `use(promise)` suspends to the nearest fallback. The comments section has its own boundary so the article shows first. You do not fetch in an effect and then throw a promise without a cache — that loops.
+
+For client-only, a Query library plus `suspense: true` can throw, but you still need boundaries per widget.
+
+## Failure modes
+
+One giant boundary around the app. Fetching in render without dedupe. Waterfalls: parent await then child await when they could be parallel. Showing fallback on every keystroke. Mixing Suspense with `isLoading` flags that fight. Error vs empty vs pending collapsed into one spinner.
+
+SSR that waits for the slowest child anyway, undoing streaming.
+
+## When this is the wrong tool
+
+Suspense is not error handling. It is the wrong tool to debounce inputs. A single-page with one fetch can use `async` in an effect and local state. Do not wrap every button in Suspense. For polling dashboards, a Query interval may be clearer. If you cannot stream (old host), Suspense still helps client-side but you will not get HTML streaming benefits.

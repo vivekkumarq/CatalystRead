@@ -3,6 +3,7 @@ title: "Designing Immutable Classes Properly"
 slug: "designing-immutable-classes-properly"
 description: "Marking fields final is not the same as making a class immutable. Here's what full immutability actually requires and where it usually leaks."
 publishedAt: "2025-05-03"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -92,3 +93,19 @@ The thread-safety benefit alone is usually the strongest argument in a service h
 ## A Practical Default
 
 For value objects — configuration, DTOs, domain value types — default to immutable and require a specific reason to introduce mutability, rather than the other way around. Use `List.copyOf`, `Map.copyOf`, and `Set.copyOf` at construction boundaries as a habit, not an afterthought reached for only after a bug report. The cost is a handful of copy calls; the payoff is an entire category of concurrency and aliasing bugs that simply can't happen.
+
+## A worked example
+
+`final` class, `final` fields, no setters, defensive copy of a mutable `Date` or use `Instant`. `List.copyOf` for collections. `equals`/`hashCode` on values. Records for the boring cases. A builder if there are 8 fields.
+
+A test: mutate the list you passed in after construction; the object does not change.
+
+## Failure modes
+
+Exposing a live `ArrayList`. Subclassing to add mutation. Lazy init without care for publication. `java.util.Date` fields. Arrays returned directly. `Collections.unmodifiableList` wrapping a list you still mutate.
+
+Calling it immutable because there is no setter but a `getMap()` returns the raw map.
+
+## When this is the wrong tool
+
+A 1 GB buffer you cannot copy. Entities with JPA identity and dirty checking. Builders for two fields. If performance requires mutation in a hot loop, mutate locally then publish an immutable result. Do not freeze objects that are DTOs for a single thread. Kotlin `data class` val is a different language's tool — in Java, records cover many cases.

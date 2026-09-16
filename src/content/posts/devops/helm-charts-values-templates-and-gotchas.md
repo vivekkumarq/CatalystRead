@@ -3,6 +3,7 @@ title: "Helm Charts: Values, Templates, and the Gotchas That Bite in Production"
 slug: "helm-charts-values-templates-and-gotchas"
 description: "A practical look at how Helm's values and templating actually resolve, plus the recurring mistakes that turn a simple chart into a debugging session."
 publishedAt: "2025-09-29"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - Kubernetes
@@ -84,3 +85,19 @@ image:
 ```
 
 Combine that with `helm template --values prod-values.yaml | kubectl apply --dry-run=server -f -` in CI, and most of the classic Helm surprises get caught before they reach a real cluster instead of during an incident.
+
+## A worked example
+
+A chart with `values.yaml` defaults, `values.prod.yaml` in the env repo. Templates use `required` for must-set values. `helm template` in CI diffs against a golden render. You pin chart version. `lookup` is avoided so CI can render.
+
+A gotcha: `toYaml | nindent` whitespace breaking ConfigMaps.
+
+## Failure modes
+
+Logic-heavy templates (Turing-complete YAML). `latest` tags. Subcharts with conflicting CRDs. `helm upgrade --force` as a habit. Values that are entire files pasted. Random `nindent` bugs. Installing CRDs in hooks that never upgrade.
+
+Two sources of values, neither documented.
+
+## When this is the wrong tool
+
+A single static manifest. Kustomize may be enough. Helm is the wrong tool to generate 500 slightly different charts by copy-paste — use a library chart or an operator. If you need real programming, an operator or cdk8s may be clearer. Do not use Helm as a Terraform replacement for cloud resources.

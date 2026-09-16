@@ -3,6 +3,7 @@ title: "ESM vs CommonJS in 2026: What Actually Matters Now"
 slug: "esm-vs-commonjs-in-2026"
 description: "A practical look at where ESM and CommonJS interop still breaks in 2026, and how to pick a module format for a new library or app without regret."
 publishedAt: "2025-10-19"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - ESM
@@ -59,3 +60,19 @@ Webpack, esbuild, and Rollup each have their own interop shims for CJS/ESM bound
 For a new app: use `"type": "module"` and don't look back. Nearly every actively maintained dependency has an ESM path in 2026, and the ergonomic wins (top-level await, static analysis for tree-shaking, no `__dirname` weirdness once you adopt `import.meta.url`) are worth it.
 
 For a new library aimed at broad consumption: publish ESM-only unless you have concrete evidence a meaningful slice of your users are stuck on old CJS-only tooling. Dual-publishing is a maintenance tax and a hazard-generator; only pay it when you've measured the demand, not preemptively.
+
+## A worked example
+
+A library `"type": "module"` with `exports` for `import` and a thin CJS wrapper only if you must. Node `require(esm)` may work in new Node; you still test both. An app is ESM-only: `node --experimental-strip-types` or a bundler. You set `"moduleResolution": "bundler"` in TS for the app and `"Node16"` for the library.
+
+CI runs `node --input-type=module` on a smoke import.
+
+## Failure modes
+
+Dual packages that fake ESM with `esm.mjs` importing CJS that then imports ESM (cycle). `__dirname` in ESM without `import.meta.filename`. Default import interop (`mod.default`). TypeScript `esModuleInterop` masking runtime failure. `exports` missing `require` condition. Jest configs stuck on CJS.
+
+Shipping `"type": "module"` with `.js` files that use `require`.
+
+## When this is the wrong tool
+
+A 50-line CLI already in CJS does not need a conversion project. Do not rewrite Next.js internals. Bundled browser apps already flatten modules — the dual-package problem is for Node libraries. Avoid "universal" packages that use `eval` to detect the system. If all consumers are bundlers, ship ESM only.

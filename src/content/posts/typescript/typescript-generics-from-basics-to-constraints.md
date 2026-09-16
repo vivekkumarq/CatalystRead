@@ -3,6 +3,7 @@ title: "TypeScript Generics: From First Principles to Real Constraints"
 slug: "typescript-generics-from-basics-to-constraints"
 description: "Generics keep the type information any throws away — how to write them, constrain them with extends, and know when a plain union is the better call."
 publishedAt: "2025-06-15"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - Generics
@@ -89,3 +90,19 @@ function setStatus(s: "idle" | "loading" | "error"): void {}
 ```
 
 The generic version buys you nothing here because there's no relationship between the input and some other part of the signature that needs preserving. That's the real test for whether you need a generic: does the type of one thing — an argument, a return value, a property — depend on the type of another? If yes, reach for `<T>`. If you're just trying to look flexible, a plain union or a smaller, non-generic signature will read better and catch more mistakes.
+
+## A worked example
+
+`function pluck<T, K extends keyof T>(obj: T, key: K): T[K]`. A React component `function List<T>({ items, render }: { items: T[]; render: (t: T) => ReactNode })`. Constraints: `T extends { id: string }`. Default type params `T = unknown` for containers. Inference from arguments, not from return, in most call sites.
+
+A test of types: `pluck({ a: 1 }, 'a')` is `number`.
+
+## Failure modes
+
+Over-generic APIs (`T` on everything). Constraints too wide (`T extends any`). Generic inference failing so callers pass 4 type args. Variance mistakes in callbacks (`(x: T) => void` vs contravariance). `T[]` vs `Array<T>` confusion with `readonly`. Recursion limits.
+
+`as T` inside the generic function hiding bugs.
+
+## When this is the wrong tool
+
+If there is only one type, write it. Codegen is better than 8 type params for a client. Do not genericize a function to avoid a union of two members. Runtime polymorphism (interfaces) may be clearer for plugins. Generics will not validate JSON. If inference always needs manual params, the signature is wrong — simplify.

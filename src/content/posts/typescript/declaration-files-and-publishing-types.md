@@ -3,6 +3,7 @@ title: "Declaration Files and Publishing Types Other People Will Actually Use"
 slug: "declaration-files-and-publishing-types"
 description: "How .d.ts files, module augmentation, and package.json exports maps work together, and the mistakes that quietly break your library's consumers."
 publishedAt: "2026-01-25"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -88,3 +89,19 @@ Two common breakages to check for before publishing:
 - **Leaking overly narrow inferred types.** If you don't annotate a function's return type explicitly and TypeScript infers something like a private internal class instance, consumers can get a type they can't even name in their own code, or errors referencing a type they have no import path to. Explicitly annotate public API return types rather than trusting inference for anything crossing your package boundary — inference is great internally and risky at the edge you don't control.
 
 Test the published output with `npm pack` and installing the tarball in a throwaway project before shipping — `npm link` and local monorepo resolution hide exports-map bugs that only surface once someone installs your package for real.
+
+## A worked example
+
+A library `package.json` has `"types": "./dist/index.d.ts"` and `"exports"` with `types` and `import` conditions. You ship `.d.ts` next to ESM. `typesVersions` only if you must support old TS. A sample consumer repo in CI does `npm pack` and compiles. You export types for public API only; internals stay unexported.
+
+For a dual CJS/ESM package, `exports` maps `.d.cts` / `.d.ts` correctly so `moduleResolution: bundler` works.
+
+## Failure modes
+
+Publishing `src` types that import `.ts` paths. Missing `types` in exports so Node 20 resolution fails. `export =` in an ESM-only package. Version skew: types for v3 shipped with v4 runtime. Ambient `declare module` that overrides user modules. Generating `any` from `noImplicitAny` off in the library tsconfig.
+
+Forgetting to include `.d.ts` in `files`.
+
+## When this is the wrong tool
+
+Apps do not need published declarations. Do not hand-write `.d.ts` for your own TS source — `declaration: true` is the tool. DefinitelyTyped is for packages you do not own. Shipping types-only packages for a JSON API is weaker than generating from OpenAPI. If consumers are all in-repo, project references beat npm types.

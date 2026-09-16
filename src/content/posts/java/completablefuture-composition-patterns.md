@@ -3,6 +3,7 @@ title: "CompletableFuture Composition Patterns That Actually Work"
 slug: "completablefuture-composition-patterns"
 description: "CompletableFuture's API surface is huge and easy to misuse. These are the composition patterns that hold up in real asynchronous pipelines."
 publishedAt: "2025-03-04"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -84,3 +85,19 @@ For anything doing blocking work — a JDBC call, a synchronous HTTP client — 
 ## A Practical Rule of Thumb
 
 Compose futures declaratively end to end, and call `.get()` or `.join()` exactly once, at the outermost boundary of your code — a controller method, a test, a `main`. Every intermediate `.join()` inside a composition chain is a sign the pipeline should have used `thenCompose` instead.
+
+## A worked example
+
+`thenCompose` to flatten `CompletableFuture<CompletableFuture<T>>`. `thenCombine` for two independent calls. `exceptionally` to a default. `orTimeout` (Java 9+). You pass an executor, not the common ForkJoinPool, for blocking IO. `allOf` then join.
+
+A test uses `completeExceptionally` to prove the fallback.
+
+## Failure modes
+
+`get()` on a request thread. Nested `supplyAsync` without compose. Lost exceptions (`thenAccept` vs `whenComplete`). Blocking inside `thenApply`. Forgetting to cancel. Thread-local not propagating.
+
+`join()` in a stream on hundreds of futures without a bound.
+
+## When this is the wrong tool
+
+A single blocking JDBC call. Structured concurrency on a new JDK. Reactive streams for a firehose. Do not CompletableFuture a CPU loop that should be sequential. If you need a timeout around a legacy API that ignores interrupts, CF will not save you. Virtual threads + sequential code may be clearer.

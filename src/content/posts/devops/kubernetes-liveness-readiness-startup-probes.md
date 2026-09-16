@@ -3,6 +3,7 @@ title: "Kubernetes Liveness, Readiness, and Startup Probes, Explained Properly"
 slug: "kubernetes-liveness-readiness-startup-probes"
 description: "The difference between liveness, readiness, and startup probes in Kubernetes, and the common misconfigurations that cause restart loops and dropped traffic."
 publishedAt: "2025-09-15"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - Kubernetes
@@ -69,3 +70,19 @@ readinessProbe:
 If a liveness probe's `failureThreshold` and `periodSeconds` are too aggressive relative to how long a legitimate slow operation (a GC pause, a burst of load) can take, you get pods killed mid-request under normal conditions. A common production incident pattern: a service does fine under light load, then gets restarted repeatedly the moment traffic spikes because GC pauses exceed the liveness timeout. The fix is almost never "make the probe more lenient forever" — it's separating startup slowness (startup probe), transient unavailability (readiness probe), and genuine deadlock detection (liveness probe, with a wide enough margin that normal load variance never trips it).
 
 As a starting point: set `initialDelaySeconds` on liveness to zero and let the startup probe own the boot period instead, keep liveness checks cheap and dependency-free, and make readiness the only probe allowed to fail because of external systems.
+
+## A worked example
+
+Startup probe: HTTP `/startup` until migrations-or-warm done, `failureThreshold` high. Liveness: cheap `/live` that does not touch the DB. Readiness: `/ready` checks DB. A wedged deadlock fails liveness and restarts; a DB blip fails readiness and drops from the Service without restart.
+
+Probes on the management port.
+
+## Failure modes
+
+Liveness that hits the DB: restart storm during a DB outage. Same URL for all three. Too aggressive timeouts. No startup probe on a slow JVM, liveness kills it while booting. Exec probes that fork too much. Readiness never true due to a dependency you do not own.
+
+gRPC without a grpc probe.
+
+## When this is the wrong tool
+
+A Job/CronJob that should run to completion — do not liveness-loop it into infinity. DaemonSets on every node may still want probes, but restarting kube-proxy-equivalents is special. If the app cannot provide a cheap live endpoint, fix the app. Probes are not SLOs. Sidecars need their own probe story or a shared delay.

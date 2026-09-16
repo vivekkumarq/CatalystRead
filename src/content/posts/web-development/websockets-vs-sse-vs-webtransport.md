@@ -3,6 +3,7 @@ title: "WebSockets vs. Server-Sent Events vs. WebTransport"
 slug: "websockets-vs-sse-vs-webtransport"
 description: "A practical comparison of WebSockets, Server-Sent Events, and WebTransport to help pick the right real-time transport for a given use case."
 publishedAt: "2026-07-21"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -75,3 +76,19 @@ For something like real-time multiplayer position updates, losing an occasional 
 ## Picking one
 
 Server-to-client only, and simplicity matters: SSE. Bidirectional and both sides send regularly, over infrastructure you're confident supports it: WebSockets — still the safer default given near-universal proxy and load balancer support. Bidirectional with tolerance for occasional loss and a need for genuinely low latency, on infrastructure that supports HTTP/3: WebTransport, though verify your CDN and proxy layer actually support it in production before betting critical infrastructure on it, since HTTP/3 support is still less universal than HTTP/2.
+
+## A worked example
+
+Stock ticks to 50k browsers: SSE from a fanout service, one-way, HTTP/2 friendly, automatic reconnect with `Last-Event-ID`. A collaborative editor: WebSocket with a message schema and heartbeat. A game with unreliable datagrams: WebTransport when the browser matrix allows, else WebSocket.
+
+You load-test SSE vs WS on your proxy; some CDNs buffer SSE badly.
+
+## Failure modes
+
+WebSockets through a proxy that times out idle connections. SSE in HTTP/1.1 eating a browser connection slot. Using WS for a one-shot request. No backpressure: server sends faster than the client parses. Sticky sessions required but the load balancer is round-robin. WebTransport blocked on corporate networks.
+
+JSON-per-message without a size cap.
+
+## When this is the wrong tool
+
+Polling every 30s is enough for a badge count. SSE cannot push binary easily or client-to-server. WebSockets are the wrong tool for request/response CRUD — use HTTP. WebTransport is the wrong default for a CRUD dashboard in 2026 if Safari support or intermediaries are unknown. Do not use any of them to replace a job queue between services; use a broker.

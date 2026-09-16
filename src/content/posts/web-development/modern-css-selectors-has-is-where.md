@@ -3,6 +3,7 @@ title: "Modern CSS Selectors: :has(), :is(), and :where()"
 slug: "modern-css-selectors-has-is-where"
 description: "How :has(), :is(), and :where() let CSS express parent-based and grouped selectors that used to require JavaScript or repetitive rules."
 publishedAt: "2026-08-04"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - CSS
@@ -89,3 +90,19 @@ Library and design-system authors lean on `:where()` heavily for exactly this re
 ## Performance note on :has()
 
 `:has()` is more expensive to evaluate than a simple selector because, depending on the browser's implementation, it may need to check descendants to determine whether the ancestor matches at all. It's well-optimized in current engines for typical use, but avoid attaching it to extremely broad selectors — `body:has(.some-rare-class)` evaluated against every state change is a different cost profile than a scoped `.form-group:has(input:invalid)`.
+
+## A worked example
+
+`.card:has(input:invalid) { border-color: red }` styles a parent when a child is invalid — no JS. `:is(h1, h2, h3) a` groups without repeating. `:where(.nav a)` keeps specificity at 0 for easy overrides. You use `:has(+ .tooltip)` for adjacent UI.
+
+A test in Playwright asserts the card class computed border after typing an invalid email.
+
+## Failure modes
+
+`:has` that is too broad (`:has(*)`) and slow. Specificity surprises with `:is()` taking the highest in the list. Nesting plus `:has` creating unreadability. Using `:has` where a class on the parent from JS is cheaper on a 10k-node table. Missing old-browser fallbacks if you still support them.
+
+`:where` making it too easy to lose a needed override war you actually needed for a third-party widget.
+
+## When this is the wrong tool
+
+`:has` is not a replacement for accessibility state (`aria-invalid` still matters). Do not use selectors as a database query over the whole document every frame. If the relationship is not in the DOM (portal), CSS cannot see it. JS is required for the actual validation. Shadow DOM: `:has` will not cross the shadow root the way you hope.

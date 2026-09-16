@@ -3,6 +3,7 @@ title: "Profiling React Apps with the DevTools Profiler"
 slug: "react-devtools-profiler-guide"
 description: "A practical guide to using the React DevTools Profiler to find unnecessary re-renders and expensive commits before reaching for memoization."
 publishedAt: "2026-06-16"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -52,3 +53,19 @@ Instead of a single commit's flame graph, the ranked view lists every component 
 ## A workflow that avoids wasted memoization
 
 Record before touching code, identify the actual slow commit and the actual slow component within it (not just the widest bar), check the "why did this render" reason, and only then decide between `memo`, `useMemo`, moving state down closer to where it's used, or splitting a component so unrelated state doesn't force sibling re-renders. Re-record after the change and confirm the specific commit actually got faster — profiling before and after is what turns a plausible-sounding optimization into a verified one.
+
+## A worked example
+
+You record a click on "Sort". The flamegraph shows `App` then `Table` then 500 `Row`s. Ranked view puts `Row` at the top of commit time. You see props as "changed" because `style={{}}` is new. You hoist the style, re-profile, and Row commits drop. Why-did-you-render or the compiler then confirm.
+
+For INP, you also look at the browser performance panel; DevTools Profiler is React commits, not paint.
+
+## Failure modes
+
+Profiling with React DevTools extension in production mode without profiling build — missing info. Recording 60s of idle. Interpreting yellow as "slow" without reading ms. Comparing two profiles with different data sizes. Ignoring the commit that happened because of Strict Mode double render in dev.
+
+Using the profiler to argue about 0.2ms.
+
+## When this is the wrong tool
+
+It will not show CSS layout or network. For allocation, use the memory panel. For server render time, use server logs. If the app is not React, this is the wrong profiler. Do not profile a Redux DevTools time-travel session as if it were user traffic. Lighthouse is the wrong substitute for a commit flamegraph when the question is "why did Table render."

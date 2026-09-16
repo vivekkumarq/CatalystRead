@@ -3,6 +3,7 @@ title: "Fetching Async Data with Angular's resource() and httpResource APIs"
 slug: "angular-resource-httpresource-apis"
 description: "A practical look at how resource() and httpResource replace ad-hoc RxJS pipelines for loading, error, and reload state around async data in Angular."
 publishedAt: "2026-05-11"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -74,3 +75,19 @@ async function saveName(name: string) {
 ## Where RxJS still wins
 
 Resources are built for request/response data tied to reactive parameters — they are not a replacement for RxJS operators like `debounceTime`, `merge`, or WebSocket streams. For a live ticking price feed or a debounced autocomplete that needs `switchMap` semantics with cancellation windows, keep the Observable and convert only at the template boundary with `toSignal`. Reach for `resource()` when the shape of the problem is "fetch this thing when these params change," and keep RxJS for genuinely event-driven streams — mixing the two idiomatically is far more maintainable than forcing everything through one abstraction.
+
+## A worked example
+
+`order = resource({ request: () => this.id(), loader: ({ request }) => fetchOrder(request) })`. Template uses `order.value()`, `order.isLoading()`, `order.error()`. Changing `id` reloads. `httpResource` wraps `HttpClient` with the same shape. You abort in-flight loads when the request key changes.
+
+A unit test stubs the loader and asserts that setting id twice with the same value does not double-fetch if you configured equality.
+
+## Failure modes
+
+Using `resource` for POST/DELETE mutations. Ignoring errors so the UI shows an empty value. Race: slow response for id=1 overwrites id=2 if abort is missing. Calling the loader outside Angular's notification so the view stays stale in zoneless mode. Mixing `async` pipe on Observables and `resource` on the same screen without a single loading story.
+
+`httpResource` with interceptors that retry POST accidentally if someone reuses it.
+
+## When this is the wrong tool
+
+TanStack Query-style shared caches across many screens may still want a dedicated library. `resource` is the wrong tool for WebSocket streams (use `toSignal`). Do not replace a simple `signal` plus one `http.get` in a tiny widget if you do not need reload-on-key. Server-side mutation belongs in an action, not a resource loader. If you need optimistic lists with rollback, you will write extra code; a mutation library may fit better.

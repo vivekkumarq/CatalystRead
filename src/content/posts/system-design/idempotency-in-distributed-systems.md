@@ -3,6 +3,7 @@ title: "Idempotency in Distributed Systems: Making Retries Safe"
 slug: "idempotency-in-distributed-systems"
 description: "Idempotency keys, atomic check-and-write, and why PUT being idempotent by spec doesn't make it the right tool for a retried write."
 publishedAt: "2025-06-02"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -53,3 +54,19 @@ A common misconception is that `PUT` is idempotent and `POST` isn't, full stop, 
 - **Downstream calls inside a saga step**: if a step itself calls an external API, that call needs its own idempotency key, independent of the saga's — a saga retry shouldn't fan out into duplicate calls to a third party.
 
 Idempotency isn't a property you add at the edge once and forget — it has to be threaded through every hop that might retry, because the guarantee is only as strong as its weakest link.
+
+## A worked example
+
+Client sends `Idempotency-Key: uuid` with POST `/charges`. Server stores key → response in a table with unique constraint. Retry with the same key returns the stored 200 without a second charge. Different body with the same key is 409. TTL 24h. The handler commits the key and the side effect in one transaction (or outbox).
+
+A test: two parallel POSTs with the same key, one charge row.
+
+## Failure modes
+
+Keys only in memory. Not storing the response, so retries 500 after success. Keying only on user id. GET treated as non-idempotent in docs but POSTs retried by gateways. Unique constraint missing under race. Side effects outside the transaction (email sent twice).
+
+Reusing keys for different operations.
+
+## When this is the wrong tool
+
+Pure GETs should already be idempotent without a key. Do not add keys to every internal call if a natural key exists (`order_id`). At-most-once with acceptable loss may be enough for metrics. Idempotency will not fix a non-deterministic handler that stores "now()" as part of the resource identity. For fully exactly-once with brokers, you still need transactional outbox plus consumer idempotency — a header alone is not a bus.

@@ -3,6 +3,7 @@ title: "S3 and Object Storage Design Patterns That Scale"
 slug: "object-storage-design-patterns"
 description: "Key design patterns for using S3-style object storage well, from key naming schemes to lifecycle policies, and the mistakes that cause throttling at scale."
 publishedAt: "2025-09-22"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - AWS
@@ -80,3 +81,19 @@ Rules:
 ```
 
 Pair versioning with MFA delete for genuinely critical buckets, and treat cross-region replication as the actual disaster-recovery mechanism — versioning handles "someone overwrote the wrong key," replication handles "the primary region is gone."
+
+## A worked example
+
+Keys: `tenant/id/yyyy/mm/uuid`. Multipart upload over a size threshold. Presigned PUT from the client with content-type and length limits. Server-side encryption. Lifecycle to IA after 30 days. Listing is not a query API — you keep an index in a DB.
+
+A virus scan on a workflow after PUT, not in the hot path of the presign.
+
+## Failure modes
+
+Unbounded `ListObjects` as a database. Public buckets. Guessable keys. Presign with `*` content type. Small files as millions of objects without partitioning. Cross-region replication lag assumed zero. Eventual listing after PUT.
+
+Using object storage for a queue.
+
+## When this is the wrong tool
+
+POSIX workloads that need append and rename atomicity. Low-latency tiny KV — use Redis/Dynamo. Databases of record that need transactions. If you need SQL over objects, you will build a warehouse. Block storage for databases; object storage for blobs. Do not store the only copy of a legal record without immutability/compliance settings you understand.

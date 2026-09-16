@@ -3,6 +3,7 @@ title: "Spring's Caching Annotations: Where They Bite"
 slug: "spring-caching-annotations-sharp-edges"
 description: "The gap between what @Cacheable looks like it does and what it actually does, including key collisions, exception handling, and self-invocation."
 publishedAt: "2025-03-11"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -86,3 +87,19 @@ spring:
 ```
 
 Caching pays off fastest on read-heavy, slow-changing data — reference tables, computed aggregates, third-party lookups. Applying `@Cacheable` reflexively to anything that "feels slow" without thinking through key uniqueness, null handling, and eviction is how caches become the thing on-call engineers distrust most.
+
+## A worked example
+
+`@Cacheable("orders")` on `find(id)` with key `#id`. `@CacheEvict` on update. Redis cache manager with JSON values and a TTL. A test uses `SimpleCacheManager`. Self-invocation: `this.find` does not hit the cache — you inject self or move to another bean.
+
+Unless you set `sync=true`, two threads miss together.
+
+## Failure modes
+
+Mutable cached entities shared across threads. Caching `null` forever. Unbounded Caffeine. Keys that omit tenant. `@CachePut` vs evict confusion. Serialization of JPA proxies. TTL longer than the correctness budget.
+
+Calling cached methods from the same class.
+
+## When this is the wrong tool
+
+`@Cacheable` is awkward for lists with many filter params (key explosion). A dedicated cache service is clearer for complex invalidation. Do not cache security decisions without a plan. Local cache on 20 pods is 20 worlds — Redis or no cache. If the DB query is 1ms, skip it. HTTP caching may be the right layer for public GETs.

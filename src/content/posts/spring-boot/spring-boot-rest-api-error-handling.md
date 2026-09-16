@@ -3,6 +3,7 @@ title: "Consistent Error Handling in Spring Boot REST APIs"
 slug: "spring-boot-rest-api-error-handling"
 description: "Design one error contract for your whole API using @RestControllerAdvice, ProblemDetail, and validation groups."
 publishedAt: "2026-08-10"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -108,3 +109,19 @@ If a new exception doesn't fit a bucket, that's a design conversation — not an
 - Treat your exception taxonomy as part of the API contract and document it.
 
 An API with boring, predictable errors is a joy to integrate against — and it takes about one afternoon to set up.
+
+## A worked example
+
+`@RestControllerAdvice` maps `MethodArgumentNotValidException` to 400 with field errors, `EntityNotFoundException` to 404, `AccessDeniedException` to 403, unknown to 500 with a correlation id. Body: `{ "code": "ORDER_NOT_FOUND", "message": "...", "requestId": "..." }`. You do not leak stack traces. A test with MockMvc expects JSON and status.
+
+Domain exceptions, not HTTP exceptions, in the service layer.
+
+## Failure modes
+
+Swallowing exceptions. Different shapes per controller. 200 with an error flag. i18n messages that help attackers enumerate users. Advice order vs Security. Not handling `AsyncRequestTimeoutException`. Logging PII in the error payload.
+
+`@ExceptionHandler(Exception)` that hides 404s.
+
+## When this is the wrong tool
+
+gRPC and GraphQL have their own error models. HTML apps may want a view, not JSON. Do not use REST advice for Kafka consumers. Validation libraries that already render RFC 7807 — use that instead of a custom parallel schema if you can. If the client is internal and you have a typed SDK, still keep a stable code enum.

@@ -3,6 +3,7 @@ title: "BERT: Why Bidirectional Pretraining Changed How We Fine-Tune Language Mo
 slug: "bert-pretraining-what-changed-after-gpt"
 description: "Masked language modeling versus left-to-right GPT, next-sentence prediction, and what still matters when you fine-tune encoder models in products."
 publishedAt: "2026-07-24"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -41,3 +42,19 @@ Where teams get hurt:
 - **Using BERT as a chatbot.** Encoder-only models are the wrong tool for open generation. Use them for retrieve, classify, extract; generate with a decoder.
 
 Read the paper's GLUE numbers as history, not as a promise that "BERT" on a model card means those numbers. The useful inheritance is the training idea: if the downstream task is understanding a span in context, train the model to need both sides of the span.
+
+## A worked example
+
+Masked LM: 15% tokens masked, predict them from both sides. NSP (later questioned) vs sentence-order. Fine-tune with a classification head on `[CLS]`. You compare a frozen embedding mean-pool vs full fine-tune on a 2k-label set. Modern cousins: RoBERTa (no NSP, more data), encoder-only still useful for retrieval and classification cheaper than a decoder LLM.
+
+A confusion matrix after fine-tune beats "BERT is magic."
+
+## Failure modes
+
+Using BERT decoder-style for long generation. Fine-tuning on leaked test text. `[CLS]` pooling when mean pooling works better for similarity (or vice versa). Max 512 tokens ignored. Domain mismatch (wiki → legal) without continued pretrain.
+
+Evaluating generative chat with a masked LM.
+
+## When this is the wrong tool
+
+Open-ended chat and agents: decoder LLMs. BERT is the wrong tool for 100k context. If you only need bag-of-words search, BM25 first. Tiny labels: a linear model on TF-IDF may win. Do not BERT-encode images. For RAG, a dedicated embedding model (often BERT-descended) is the tool, not a chat checkpoint.

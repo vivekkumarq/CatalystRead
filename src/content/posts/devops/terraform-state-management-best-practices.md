@@ -3,6 +3,7 @@ title: "Terraform State Management Best Practices"
 slug: "terraform-state-management-best-practices"
 description: "Why Terraform state is the most fragile part of most infrastructure setups, and the locking, backend, and workspace patterns that keep it from becoming a liability."
 publishedAt: "2025-11-10"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - Terraform
@@ -68,3 +69,19 @@ resource "aws_db_instance" "main" {
 ```
 
 Mitigate this by enabling backend encryption at rest (as in the S3 example above), restricting state bucket access as tightly as production database access itself, and preferring resources that reference secrets managers over ones that embed generated secrets directly. `terraform state show` should be treated as a command that can leak credentials, not a harmless inspection tool.
+
+## A worked example
+
+Remote state S3 + Dynamo lock (or Terraform Cloud). State split per env/account. CI applies with OIDC. `terraform plan` in PRs. You never commit `terraform.tfstate`. Sensitive outputs marked. A drift job weekly.
+
+Moving resources: `moved` blocks, not delete/create.
+
+## Failure modes
+
+Local state on a laptop. One state for the whole company. Manual applies with different versions. Force-unlock as habit. Storing secrets as plain state attributes (they still end up in state — minimize). Parallel applies. Editing state JSON by hand.
+
+`terraform destroy` in prod from muscle memory.
+
+## When this is the wrong tool
+
+ClickOps for a one-off experiment you will throw away today. Terraform is the wrong tool to deploy app versions (GitOps). Not every SaaS needs a provider — a script may be less fiction. If the API has no idempotency, TF will hurt. Do not manage Kubernetes Deployments in TF while also using Argo on the same objects.

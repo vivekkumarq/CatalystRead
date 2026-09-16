@@ -3,6 +3,7 @@ title: "Message Queues vs. Event Streams: Picking the Right Backbone"
 slug: "message-queues-vs-event-streams"
 description: "Message queues and event streams solve different problems — a practical comparison of consumption models, ordering, replay, and backpressure."
 publishedAt: "2025-03-21"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -44,3 +45,19 @@ Streams make fan-out free — any number of consumer groups read independently �
 - Many real architectures use both: a stream as the durable backbone of record, with queues downstream of specific consumers for task-style work that stream semantics don't fit (e.g., a Kafka topic feeding an SQS queue that drives a worker pool with strict per-item retry and DLQ semantics).
 
 The question that actually resolves the choice isn't throughput or latency — most modern systems can handle either. It's: does more than one system need to read this event, and do you ever need to replay it? Answer yes to either, and you're building a stream whether or not you call it one.
+
+## A worked example
+
+Work queue: SQS / Rabbit — each order email is consumed once, then deleted. Competing consumers. Stream: Kafka — many consumer groups independently read the same order-placed topic; retention 7 days; replay for a new projector. You do not replay SQS.
+
+A billing service uses a queue. An analytics indexer uses a stream.
+
+## Failure modes
+
+Using Kafka as a queue without compaction or with a single consumer group and then wondering about disk. Using SQS as an event log (no replay). Poison messages without DLQ. Ordering assumed on a queue that does not have FIFO. Fan-out via multiple queues vs a stream — ops cost.
+
+Huge payloads in the broker.
+
+## When this is the wrong tool
+
+Synchronous HTTP is enough for a user-facing request that must complete now. Do not put a queue in front of a single-threaded worker "for scale" without measuring. Streams are the wrong tool for 10 messages a day. RPC with timeout is simpler for request/response. If you need transactions across DB and message, outbox first, tool second.

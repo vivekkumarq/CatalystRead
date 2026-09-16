@@ -3,6 +3,7 @@ title: "Server-Side Rendering and Incremental Hydration in Angular"
 slug: "angular-ssr-incremental-hydration"
 description: "How Angular's SSR pipeline and incremental hydration reduce time-to-interactive by rehydrating the DOM in stages instead of all at once."
 publishedAt: "2026-04-02"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -55,3 +56,19 @@ Angular then destroys and re-renders that subtree on the client instead of tryin
 ## Measuring the payoff
 
 The metric that moves is Interaction to Next Paint on initial load, not LCP — LCP is usually already fine with SSR since the paint happens server-side. Instrument with `PerformanceObserver` on `event` entries, or just watch the Angular DevTools hydration overlay, which flags mismatched nodes in red. Mismatches are the real risk here: if server and client render different content for the same node — a `Date.now()` call inside a template, or content behind an `isPlatformBrowser` check — hydration falls back to full re-render for that subtree and you lose the benefit entirely. Keep template output deterministic between server and client, push browser-only logic into `afterNextRender`, and incremental hydration stays cheap instead of becoming a silent tax you never notice until a profiler shows it.
+
+## A worked example
+
+SSR emits HTML for the article. Hydration is deferred for comments `@defer` until viewport. The article body hydrates immediately so links work. You enable incremental hydration so untouched regions stay server HTML. A mismatch test fails CI if a `Date.now()` in the template differs server vs client — you move it to `afterNextRender`.
+
+Transfer state for the article JSON so the client does not refetch on boot.
+
+## Failure modes
+
+Invalid HTML that breaks hydration. `Math.random()` in templates. Browser-only APIs in constructors. Hydrating a huge tree at once on mobile. Incremental hydration never firing because of a wrong trigger. Auth-only blocks that SSR as logged-out then hydrate as logged-in — flash and mismatch.
+
+Caching SSR HTML that includes a user name for the wrong user.
+
+## When this is the wrong tool
+
+A behind-login app with no SEO need may skip SSR. Incremental hydration will not fix a 3 MB client bundle. Do not SSR canvas games. If the page is a single dashboard that is fully interactive immediately, full hydration is simpler. Static generation plus client islands may beat Angular SSR for a docs site. Skip SSR for internal admin tools.

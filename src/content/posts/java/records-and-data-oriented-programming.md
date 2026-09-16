@@ -3,6 +3,7 @@ title: "Records and Data-Oriented Programming in Java"
 slug: "records-and-data-oriented-programming"
 description: "Records aren't just less boilerplate — they push Java toward modeling data as data, separate from behavior. Here's how to use them well."
 publishedAt: "2025-01-22"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -76,3 +77,19 @@ Records are not a replacement for every class. A few practical limits worth know
 | Class needing inheritance | No | Records are implicitly final and can't extend a class |
 
 For JPA and other frameworks that expect mutable, proxyable entities, stick with regular classes. For everything that's genuinely a snapshot of data passed between layers — API responses, event payloads, configuration — records should be the default, not the exception. If you find yourself writing a manual `equals` next to a record, something has gone wrong upstream.
+
+## A worked example
+
+`record Money(long cents, Currency currency) { public Money plus(Money o) { ... } }` with a compact constructor that rejects negative cents. Nested records for a JSON DTO. Pattern matching `if (x instanceof Money(var c, var cur))`. You keep behavior that belongs with the data, not a 0-method "anemic" record plus a 400-line helper unless the helper is a real policy.
+
+A test of `equals` on two records with the same components.
+
+## Failure modes
+
+Mutable list components without copy. Records as JPA `@Entity` (limited). Giant records with 20 components. Inheritance (records cannot extend). Assuming they are beans with setters. Circular references and `toString` blowups.
+
+Using records for objects with identity (sessions).
+
+## When this is the wrong tool
+
+JPA entities with lazy graphs. JavaBeans the framework must mutate. Types that need a hierarchy beyond sealed+records. If you need a builder and withers for 15 fields, a class may still be clearer. Do not record a type that is not a value. Spring proxies and records can fight — know your version.

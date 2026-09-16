@@ -3,6 +3,7 @@ title: "A Mental Model for Angular Signals"
 slug: "angular-signals-mental-model"
 description: "Signals are not just a new API — they change how change detection works. Here is the model that makes signal, computed, and effect click."
 publishedAt: "2026-08-18"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -82,3 +83,19 @@ Coming from RxJS, the instinct is to translate: `BehaviorSubject` becomes `signa
 RxJS still owns the asynchronous domain: debounced searches, websockets, retries, cancellation. Signals own synchronous derived state. `toSignal` and `toObservable` bridge the two worlds cleanly at the boundary.
 
 Keep the graph in your head — values pulling from values, with effects only at the edges — and every signals API decision becomes predictable.
+
+## A worked example
+
+`price = signal(10)`, `qty = signal(2)`, `total = computed(() => price() * qty())`. An `effect` writes `console.log(total())` in dev. Updating `qty` recomputes `total` and the effect. A template that only reads `price()` does not re-run when `qty` changes if it did not read `qty` or `total`.
+
+`linkedSignal` for a writable view of a computed default that the user can override until the source changes.
+
+## Failure modes
+
+`computed` with side effects. Reading signals in a `sort` comparator inside computed without listing them by reading. Cyclic updates: effect writes a signal that the effect's computed reads. `untracked` forgotten when logging. Equality function that always returns true, freezing the UI.
+
+Assuming signal updates are synchronous with the DOM before CD runs.
+
+## When this is the wrong tool
+
+Signals are not a replacement for the router or for RxJS time-based operators (`debounceTime` on raw pointer events). Do not put a signal on every mouse move without sampling. They are the wrong tool for sharing state across browser tabs (use storage events). If you need a time-travel debug log of every event, an event reducer may still be clearer. Keep `BehaviorSubject` at a websocket boundary if you want.

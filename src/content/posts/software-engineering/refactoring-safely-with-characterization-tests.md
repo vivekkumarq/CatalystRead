@@ -3,6 +3,7 @@ title: "Refactoring Safely With Characterization Tests"
 slug: "refactoring-safely-with-characterization-tests"
 description: "Characterization tests pin down what legacy code actually does, bugs included, so you can refactor safely without a real specification."
 publishedAt: "2025-11-07"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -51,3 +52,19 @@ With characterization tests green, the refactor itself follows ordinary rules: s
 ## Retire Them Deliberately
 
 Characterization tests are scaffolding, not a permanent test suite — once the refactor lands and the code has a real specification (design doc, well-understood contract, proper unit tests asserting intended behavior), the characterization tests that pinned known bugs should be replaced, not left forever asserting that a bug is a feature. Leaving them in place indefinitely quietly turns "this is what currently happens" into "this is intentional," which is precisely the confusion they were meant to avoid.
+
+## A worked example
+
+Legacy tax function, no tests. You record outputs for 50 production-like inputs (golden files). Refactor internals. Tests still pass. Then you add a few intent-revealing tests. Approval tests for HTML/PDF.
+
+A characterization suite runs in CI on the module you are touching.
+
+## Failure modes
+
+Goldens that include timestamps. Tests so brittle any format change fails. Refactoring and changing behavior in one PR. No coverage of error paths. Generating goldens from a buggy run and locking the bug in.
+
+Throwing away goldens because they are "ugly."
+
+## When this is the wrong tool
+
+New code should have intent tests first. Characterization will not tell you the spec is wrong. Do not use it to freeze a UI you want to redesign. If you can extract a pure function and specify it, do that. Snapshot tests of entire pages are a cousin — use with care. Skip if the code is 20 lines and you can read it.

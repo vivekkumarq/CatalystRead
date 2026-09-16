@@ -3,6 +3,7 @@ title: "Sealed Classes and Exhaustive Pattern Matching"
 slug: "sealed-classes-exhaustive-pattern-matching"
 description: "Sealed classes let the compiler enforce that you've handled every case, turning a class of runtime bugs into compile-time errors."
 publishedAt: "2025-02-05"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -66,3 +67,19 @@ public non-sealed interface PluginNotification extends Notification {}
 ```
 
 Now `switch` statements over `Notification` still need a `default` (or a `case PluginNotification n` catch-all), because the compiler correctly can't prove exhaustiveness anymore. Use this sparingly — every `non-sealed` branch is a place where you've deliberately given up the compiler's help, and it should be a conscious design decision, not a default you reach for because sealing felt restrictive.
+
+## A worked example
+
+`sealed interface Payment permits Card, Cash, Wire`. A switch over `Payment` that does not compile if a new permit is added (with exhaustive switch). Records as permits. You keep the permits in one module so exhaustiveness is a feature.
+
+A test: adding a `Crypto` type fails compilation of the switch — that is the point.
+
+## Failure modes
+
+`default` that hides exhaustiveness. Permits list in another package you always forget. Mixing with non-sealed extension points accidentally. Using sealed for a plugin SPI that third parties must implement (they cannot). Pattern matching on null.
+
+Switch on `String` of the type name instead of the type.
+
+## When this is the wrong tool
+
+Open plugin systems. JPA polymorphic entities with unknown subclasses. If there is only one implementation, skip sealed. Enums may be enough for a closed set of constants without data. Do not sealed a type just to look modern. Visitor pattern on an open hierarchy is the opposite problem.

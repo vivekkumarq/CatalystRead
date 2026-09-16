@@ -3,6 +3,7 @@ title: "Browser Memory Profiling and Leak Hunting"
 slug: "browser-memory-profiling-and-leak-hunting"
 description: "A practical workflow for finding and fixing JavaScript memory leaks in browser apps using heap snapshots, detached DOM detection, and retainer analysis."
 publishedAt: "2026-02-18"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -48,3 +49,19 @@ Global caches and singletons that grow unbounded are a frequent culprit — a `M
 ## A repeatable hunting process
 
 Reproduce the suspected leak with a tight, repeatable action loop rather than general app usage — leaks are much easier to spot as a clear staircase pattern in the memory timeline than as noise in normal browsing. Force garbage collection before each snapshot (DevTools has a GC button) so you're comparing genuinely unreachable memory being retained, not just objects awaiting the next collection cycle. Use the allocation timeline recording for leaks that build up gradually over many actions rather than a single repeated one, since it shows exactly which call stack allocated memory that persisted past its expected lifetime. Fix one leak at a time and re-run the comparison — leaks compound, and fixing the biggest retainer sometimes exposes a smaller one that was previously hidden in its shadow.
+
+## A worked example
+
+Chrome Memory: take a heap snapshot after using a dashboard, interact, snapshot again. Compare. A detached `HTMLDivElement` with a listener from a chart library stays after "close." You dispose the chart in `useEffect` cleanup. Allocation sampling finds a hot `Array` copy per scroll. You confirm with three snapshots so the leak is monotonic, not noise.
+
+A test that opens/closes a modal 50 times and asserts node count via Playwright + a debug hook is optional but gold.
+
+## Failure modes
+
+Profiling with DevTools open changing GC. Blaming React for a Map you fill and never clear. `WeakMap` assumed to collect instantly. Retaining closures over the whole Redux store. Detached nodes that are still in a cache keyed by id. Snapshots on a page that just loaded — no baseline.
+
+Heaps from production that you cannot open because of size.
+
+## When this is the wrong tool
+
+CPU jank is a performance panel / flame graph issue. Server memory is JFR, not Chrome. Do not hunt leaks on a 5-minute session if the tab is supposed to be long-lived — reproduce duration. Memory tools will not fix a 200 MB image. If the leak is in a browser extension, profile a clean profile. Skip heap snapshots as a first step for a 400ms LCP.

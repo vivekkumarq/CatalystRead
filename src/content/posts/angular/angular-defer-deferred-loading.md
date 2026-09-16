@@ -3,6 +3,7 @@ title: "@defer: Lazy-Loading Angular Templates Without the Boilerplate"
 slug: "angular-defer-deferred-loading"
 description: "The @defer block turns lazy loading from a routing-level decision into a template-level one, with triggers that fit real UI patterns."
 publishedAt: "2026-01-27"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -79,3 +80,29 @@ The `minimum` on `@placeholder` prevents a skeleton from flickering in and out i
 The obvious win is initial bundle size on content-heavy pages — dashboards with widgets nobody scrolls to, product pages with reviews and Q&A sections below the fold, admin panels with rarely-used advanced settings. Less obvious: `@defer` also improves Largest Contentful Paint indirectly, because the main thread isn't parsing and evaluating JavaScript for components that aren't visible yet.
 
 The failure mode to watch for is deferring something above the fold or something the user needs immediately — a `@defer (on interaction)` around a form's submit button, for instance, adds a chunk-load delay to an action the user is actively trying to complete. Treat `@defer` as a tool for content that is genuinely optional at first paint, not a default wrapper for anything that feels big.
+
+## A worked example
+
+A below-fold comments widget:
+
+```html
+@defer (on viewport) {
+  <comments [postId]="id()" />
+} @placeholder {
+  <comments-skeleton />
+} @error {
+  <p>Comments failed to load.</p>
+}
+```
+
+The comments chunk is not in the initial bundle. Lighthouse shows a smaller JS payload. You add `prefetch on idle` for a widget that is likely needed. A test uses the defer fixture APIs to trigger the block without scrolling.
+
+## Failure modes
+
+Deferring something in the LCP path. Placeholder that shifts layout (no reserved height). Error block that cannot retry. `on interaction` on a control that must be SEO-visible. Nested `@defer` waterfalls. Prefetching so eagerly you undo the savings.
+
+Assuming `@defer` code-splits services provided in root — the chunk may still pull a large shared vendor.
+
+## When this is the wrong tool
+
+Tiny pipes and icons do not need defer. Do not defer legal text that must be in the HTML for crawlers unless you SSR it. Route-level lazy loading is the first split; `@defer` is intra-route. If the component is always above the fold on mobile, viewport defer may never fire as you expect. A feature flag plus `ngIf` is simpler for kill-switches than defer.

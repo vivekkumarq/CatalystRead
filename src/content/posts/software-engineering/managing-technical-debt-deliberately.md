@@ -3,6 +3,7 @@ title: "Managing Technical Debt Deliberately"
 slug: "managing-technical-debt-deliberately"
 description: "Technical debt taken on deliberately with a repayment plan gets paid back; debt that accumulates silently almost never does."
 publishedAt: "2025-11-25"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -41,3 +42,19 @@ Whichever mechanism, the point is the same: debt paydown stops being a negotiati
 The other half of "deliberate" is refusing debt at the point it's taken on, not just repaying it later — a genuine conversation at the time a shortcut is proposed: what does skipping this cost us, when do we plan to pay it back, and who owns making sure that happens. Debt taken on with an explicit repayment plan and an owner gets repaid at meaningfully higher rates than debt that accumulates silently, because it was never a *decision* — a decision can be tracked; an accident can't.
 
 The teams that manage debt well aren't the ones with less of it. They're the ones who can tell you, for any piece of debt in the system, why it's there, what it costs, and when it's scheduled to go away.
+
+## A worked example
+
+A debt register: item, trigger (why now), cost of delay, proposed slice. You pay debt when it blocks a feature, not as a 3-month rewrite. Characterization tests before a risky cleanup. Budget: 15% of a sprint named, with a demo of risk reduced.
+
+You delete a dead feature flag instead of "refactoring" around it.
+
+## Failure modes
+
+Endless rewrites. Tracking 400 items nobody reads. Calling every inconvenience debt. Never scheduling the payment. Confusing product debt (wrong feature) with technical debt. Gold-plating.
+
+Using debt as an excuse to skip tests.
+
+## When this is the wrong tool
+
+If the product is dying, do not pay debt. A greenfield rewrite is usually the wrong payment. Do not create a "debt sprint" with no user-visible risk reduction. Metrics like "TODO count" are the wrong KPI. When the issue is staffing or unclear ownership, a rewrite will not help. Skip architecture astronomy.

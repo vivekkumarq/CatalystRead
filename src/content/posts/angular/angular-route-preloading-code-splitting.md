@@ -3,6 +3,7 @@ title: "Route Preloading Strategies and Code Splitting in Angular"
 slug: "angular-route-preloading-code-splitting"
 description: "How Angular's router preloading strategies work under the hood, and how to combine them with lazy-loaded routes for faster perceived navigation."
 publishedAt: "2026-06-08"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -84,3 +85,19 @@ preload(route: Route, load: () => Observable<unknown>): Observable<unknown> {
 ## Pairing with @defer for sub-route granularity
 
 Route-level splitting handles navigation boundaries, but a single route can still ship a heavy component that isn't needed on first paint — a chart library behind a tab, for instance. `@defer` blocks split further within a route, so the two mechanisms aren't competing; router preloading gets the next screen's shell ready, and `@defer` trims what's inside it until it's actually visible or interacted with.
+
+## A worked example
+
+`loadChildren` on `/admin` and `/shop`. Preload strategy: `PreloadAllModules` on desktop broadband, custom strategy that preloads only routes with `data: { preload: true }` after `requestIdleCallback`. You measure the main bundle minus admin charts. A slow 3G test shows shop JS loading after first paint, not in the critical path.
+
+`canMatch` prevents preloading admin for users who cannot match the route.
+
+## Failure modes
+
+PreloadAll on a 40-route app on mobile data. Circular lazy modules. Sharing a giant `SharedModule` that pulls all of admin into shop. Preloading before auth is known. Service workers caching the wrong chunk hashes after deploy — users get old preloads.
+
+`loadComponent` without a loading UI so navigation feels broken.
+
+## When this is the wrong tool
+
+A five-screen app does not need a custom preloader. Do not split every component into a route to "micro-frontend" a monolith. Prefetch via Speculation Rules on the next URL may beat Angular preloading for content sites. If the bottleneck is an API, splitting JS will not help. Eager-load the above-the-fold route; splitting it is the wrong split.

@@ -3,6 +3,7 @@ title: "Generics Variance: Covariance, Wildcards, and PECS"
 slug: "generics-variance-covariance-wildcards-pecs"
 description: "Wildcard generics confuse most developers on sight, but the PECS rule turns a wall of question marks into a mechanical, memorable decision."
 publishedAt: "2025-08-25"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -73,3 +74,19 @@ public static <T> void copy(List<? super T> dest, List<? extends T> src)
 ```
 
 `src` only ever gets read from — it's a producer of `T`, so `extends`. `dest` only ever gets written to — it's a consumer of `T`, so `super`. Once you're naming parameters by the role they play (does this argument hand data *out*, or take data *in*?) rather than trying to reason about subtyping directly, PECS stops being a mnemonic you look up and becomes the obvious shape of the method signature.
+
+## A worked example
+
+PECS: `copy(List<? extends T> src, List<? super T> dst)`. You cannot add to `List<? extends Animal>` except `null`. Arrays are covariant and broken; prefer lists. A helper `Consumer<? super T>` for listeners.
+
+A compile error when you `add` a `Dog` to `List<? extends Animal>` is the lesson.
+
+## Failure modes
+
+Raw types. `List<List<?>>` confusion. Arrays of parameterized types. `Class<T>` vs wildcards. Heap pollution with varargs. Forcing `T` where a wildcard would allow reuse.
+
+`@SuppressWarnings("unchecked")` as architecture.
+
+## When this is the wrong tool
+
+If all types are the same concrete class, skip wildcards. Reflection-heavy code will fight generics. Do not PECS a public API into unreadability for one call site. Kotlin declaration-site variance is not Java — do not copy the syntax. If you need heterogeneous trees, visitors or sealed types may be clearer than `?`.

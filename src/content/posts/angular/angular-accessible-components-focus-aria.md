@@ -3,6 +3,7 @@ title: "Building Accessible Components in Angular: Focus Management and ARIA"
 slug: "angular-accessible-components-focus-aria"
 description: "Practical patterns for managing focus and applying ARIA attributes correctly when building custom interactive components in Angular."
 publishedAt: "2026-07-30"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -86,3 +87,19 @@ onKeydown(event: KeyboardEvent) {
 ## Test with a keyboard, not just axe-core
 
 Automated tools like `axe-core` catch missing attributes and contrast violations reliably, but they cannot tell you whether `Tab` order makes sense or whether focus visibly lands where you expect. Unplug the mouse periodically during development — it surfaces the class of bug that only shows up when you actually try to use what you built without a pointer, and it's the fastest way to build the habit of thinking in focus order rather than visual layout alone.
+
+## A worked example
+
+A modal opens from a button. On open you `focus()` the first focusable control inside the dialog. On close you return focus to the button. Tab cycles stay inside using CDK `FocusTrap` or a small keydown handler on Tab/Shift+Tab. The dialog has `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` pointing at the title id. A unit test with Testing Library's `userEvent.tab()` asserts the focus ring never lands on the page behind.
+
+For a custom select, `aria-expanded`, `aria-activedescendant`, and arrow keys matter more than a click-only list.
+
+## Failure modes
+
+Focus moved to the dialog container that is not focusable (`tabindex` missing). Restoring focus to a button that unmounted with the route. `*ngIf` destroying the trap before the restore runs. ARIA that contradicts native semantics (`button` plus `role="link"`). Live regions that announce every keystroke. Color-only error states.
+
+CDK overlay attaching to `body` without copying the active `aria-hidden` on the app root — screen readers still walk the page.
+
+## When this is the wrong tool
+
+Do not invent a focus trap for a native `<dialog>` that already has one. ARIA cannot fix a non-keyboardable canvas; provide a DOM alternative. If the control is a native checkbox, do not wrap it in a custom role. Accessibility overlays that "fix ARIA globally" are the wrong tool. For purely decorative motion, `aria-hidden` is enough — do not announce it.

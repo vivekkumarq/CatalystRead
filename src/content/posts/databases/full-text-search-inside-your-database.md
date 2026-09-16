@@ -3,6 +3,7 @@ title: "Full-Text Search Inside Your Database (Before You Reach for Elasticsearc
 slug: "full-text-search-inside-your-database"
 description: "How to use your database's built-in full-text search before reaching for a separate search cluster, and where it stops being enough."
 publishedAt: "2025-02-07"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -56,3 +57,19 @@ ORDER BY sim DESC;
 ## A reasonable decision rule
 
 If search is a supporting feature — filtering a support ticket list, searching your own blog posts, letting users find their own documents — Postgres's native full-text search plus `pg_trgm` for typo tolerance covers the large majority of real requirements, avoids a sync pipeline, and keeps search results transactionally consistent with the data that was just written. Reach for a dedicated search engine when search *is* the product: when you need faceted navigation across dozens of filterable attributes, sub-50ms latency at very high query volume independent of database load, or relevance tuning sophisticated enough that a dedicated query DSL earns its operational cost. Most applications never actually cross that line, even though the architecture diagram often assumes they will from day one.
+
+## A worked example
+
+Postgres `tsvector` generated column + GIN index. Queries `websearch_to_tsquery`. Ranking with `ts_rank`. You start here for a product catalog of 200k rows. Synonyms via a dictionary. A fallback ILIKE for SKUs that FTS tokenizes badly.
+
+Explain analyze shows the GIN used.
+
+## Failure modes
+
+No index (sequential parse). Stemming that kills SKUs. Language config mismatch. Updating tsvector in the app inconsistently. Ranking that ignores recency. Trying to search JSON blobs without extracting.
+
+Expecting typo-tolerance like Elasticsearch by default.
+
+## When this is the wrong tool
+
+100M documents, faceted search, per-user scoring: a search engine. Fuzzy log search. Need of near-real-time at huge ingest. Polyglot analyzers. If the "search" is an exact id lookup, use the PK. Do not FTS as a cache of another system of record you already query by id. Elasticsearch is also the wrong first tool for 2k rows.

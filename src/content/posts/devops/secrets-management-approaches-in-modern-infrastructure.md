@@ -3,6 +3,7 @@ title: "Secrets Management Approaches in Modern Infrastructure"
 slug: "secrets-management-approaches-in-modern-infrastructure"
 description: "A comparison of secrets management patterns, from environment variables to dedicated vaults, and how to pick the right one without overengineering a simple app."
 publishedAt: "2025-11-24"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - DevOps
@@ -63,3 +64,19 @@ Every consumer that requests credentials from this role gets a unique, time-boxe
 ## Matching the tool to the actual risk
 
 A small internal tool with a handful of secrets rarely justifies standing up Vault with its own HA cluster, unseal process, and audit logging pipeline — a managed secrets manager with IAM-based access control covers that case with far less operational burden. Vault (or an equivalent) earns its complexity when you need dynamic credentials, fine-grained per-team access policies, or secrets shared across multiple heterogeneous platforms (Kubernetes, VMs, CI runners) that a single cloud provider's secrets manager doesn't cleanly span. Pick based on the actual blast radius of a leaked credential, not on what the most sophisticated team in the industry uses.
+
+## A worked example
+
+App secrets in a vault / cloud SM, injected as env or a mounted file, rotated with a new revision and rolling restart (or a refresh API). CI uses OIDC to mint short-lived creds, not a static AWS key. Kubernetes: ExternalSecrets or CSI driver. Audit who read a secret.
+
+A break-glass role with logging.
+
+## Failure modes
+
+Secrets in git, images, and logs. Long-lived keys in GitHub. Everyone has vault admin. Rotation that is not tested. Copying secrets to laptops. `stringData` in YAML committed. Debug `env` endpoints.
+
+Two vaults, neither source of truth.
+
+## When this is the wrong tool
+
+Encrypting secrets in git with a passphrase in Slack. A secrets manager will not save hardcoded keys in the client app. For public config, use config not secrets. If you have one VM and one operator, a locked-down file may be fine until you grow. Do not put TLS private keys in the same rotation path as a feature flag without thinking about blast radius.

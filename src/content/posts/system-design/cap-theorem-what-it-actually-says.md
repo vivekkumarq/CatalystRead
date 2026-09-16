@@ -3,6 +3,7 @@ title: "The CAP Theorem: What It Actually Says, and What Teams Pretend It Says"
 slug: "cap-theorem-what-it-actually-says"
 description: "Brewer's conjecture, Gilbert and Lynch's proof, and why 'we picked AP' is usually a slogan rather than a design."
 publishedAt: "2026-07-11"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -52,3 +53,19 @@ Name the operation. "User profile display" and "debit this ledger" are different
 If you cannot describe the repair path — merge, rewind, human, or "this key is immutable" — you have not chosen AP. You have chosen undefined behavior with a marketing label.
 
 Brewer's 2012 retrospective is worth reading after the 2002 proof. He spends most of it walking back the slogan and talking about latency, overlapping operations, and systems that are mostly consistent except for a few carefully fenced writes. That is closer to how mature platforms actually run than a triangle drawn on a whiteboard.
+
+## A worked example
+
+A two-node register during a partition: AP: both accept writes, merge later (LWW or CRDT). CP: one side refuses writes (Raft leader unreachable). You pick CP for bank balances, AP for typing indicators. The theorem is about *linearizability vs availability during partition*, not "we chose Mongo so we cannot have consistency."
+
+A chaos test: pull the network cable and record which API still 200s and whether a subsequent read on the other side sees the write.
+
+## Failure modes
+
+Citing CAP to skip transactions on a single-node Postgres. Claiming CA as a third mode in a partition (you gave up partition tolerance, i.e. a single machine). Mixing "eventual consistency" as a lifestyle with no merge rule. Using CAP for liveness bugs that are just slow disks.
+
+"We're CP" while clients retry on a timeout and double-spend.
+
+## When this is the wrong tool
+
+CAP is the wrong slide for "should we use Kafka." It is not a capacity planning tool. Single-region RDBMS with synchronous replica in the same AZ is a different discussion (latency, not partition of the WAN). PACELC is a better follow-up when you care about latency vs consistency *without* a partition. Do not design from the acronym; design the conflict rule, then name it.

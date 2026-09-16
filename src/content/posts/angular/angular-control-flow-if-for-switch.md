@@ -3,6 +3,7 @@ title: "Angular's Built-in Control Flow: @if, @for, and @switch"
 slug: "angular-control-flow-if-for-switch"
 description: "The new block syntax replaces *ngIf and *ngFor with something faster to compile, easier to read, and harder to misuse."
 publishedAt: "2026-01-12"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -95,3 +96,19 @@ ng generate @angular/core:control-flow
 ```
 
 Run it, then read the diff carefully. The one case worth checking by hand is any `*ngFor` that relied on index-based tracking for correctness — you'll want to pick a real `track` key, usually an ID, rather than defaulting to `$index`, which reintroduces the exact bug the new syntax was designed to prevent.
+
+## A worked example
+
+A list uses `@for (item of items(); track item.id)` with `@empty { <p>None</p> }`. Nested `@if (item.alert())` shows a banner. `@switch (status())` maps `'ok'|'warn'|'err'` without a default that silently swallows new states — you add `@default` that logs in dev. Track by id so a reorder does not destroy inputs.
+
+Migrate one template at a time; `*ngFor` and `@for` can coexist during the PR.
+
+## Failure modes
+
+`track $index` reintroduces the identity bug. `@if` with an assignment that people expect to be a field (`@if (user = auth())` is not a thing). Forgetting `@empty` and showing a blank card. `@switch` comparing objects by reference. Using `@for` on an unbounded observable-backed array that reallocates every emission without `track`.
+
+Old structural directive microsyntax in the same view as the new control flow confusing readers.
+
+## When this is the wrong tool
+
+Control flow is not state management. Do not replace a stream of DOM-heavy tabs with nested `@switch` of 2,000 lines. `NgIf` else templates that are already clear can wait. The new syntax will not virtualize a 10k-row table. If you generate templates, update the generator before half-migrating by hand.

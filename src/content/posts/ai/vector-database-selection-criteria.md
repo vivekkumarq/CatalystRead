@@ -3,6 +3,7 @@ title: "Vector Database Selection Criteria for 2026"
 slug: "vector-database-selection-criteria"
 description: "The technical criteria that actually predict whether a vector database will hold up in production, beyond raw ANN benchmark numbers."
 publishedAt: "2026-06-17"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -53,3 +54,19 @@ A vector database with fewer exotic features but mature backup/restore, monitori
 ## Don't over-index on scale you don't have yet
 
 Below a few million vectors, most managed vector databases and even `pgvector` on a well-tuned Postgres instance perform comparably for typical RAG workloads — the differentiator at that scale is operational simplicity and how well it integrates with your existing stack, not raw throughput. Save the specialized, horizontally-scaled vector store for when you've actually measured a bottleneck, not because a blog post said you'd need it eventually.
+
+## A worked example
+
+Requirements: 20M vectors, dim 768, filter on `tenant_id`, p95 query < 30ms, ops team knows Postgres. You prototype pgvector vs a dedicated engine on the same embeddings. Measure recall vs `ef`/`nprobe`. Backup/restore drill. Cost at 5× growth.
+
+If filters are selective, check whether the engine applies metadata before or after ANN (recall cliff).
+
+## Failure modes
+
+Ignoring filters. No recall measurement (only latency). Single-node RAM that will not fit. Vendor lock-in of a proprietary index without export. Treating the vector DB as the system of record. Under-sharding. HNSW build time surprise.
+
+Mixing cosine/dot/L2 across writers.
+
+## When this is the wrong tool
+
+<100k vectors: numpy / FAISS local / even SQL. Exact KNN may be fine. If lexical search suffices, skip vectors. A vector DB will not replace Redis for sessions. Do not buy a cluster for a demo. When updates are the product (stock), a transactional store plus embeddings as derived data is the architecture — the ANN index is not the ledger.

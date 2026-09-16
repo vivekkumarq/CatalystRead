@@ -3,6 +3,7 @@ title: "Trunk-Based Development and Merge Queues"
 slug: "trunk-based-development-and-merge-queues"
 description: "How trunk-based development and merge queues reduce integration pain compared to long-lived feature branches, and what they require to work in practice."
 publishedAt: "2025-10-15"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -42,3 +43,19 @@ This matters more as team size and merge frequency grow. At low volume, the odds
 Teams moving from long-lived branches often worry trunk-based development means losing the isolation that let them work on something risky without affecting others. In practice, feature flags provide that isolation at the runtime level instead of the source control level, which is usually a better trade — the code is integrated and tested continuously even while the feature is dark, instead of accumulating merge debt in the dark.
 
 The real prerequisite most teams underestimate is investment in the test suite and CI infrastructure before adopting this workflow, not after. Trunk-based development doesn't create the discipline of small, frequent, well-tested changes — it requires that discipline already exist, or it just becomes a way to break trunk faster than a branch-heavy workflow ever could.
+
+## A worked example
+
+Main is always green. PRs small, merge queue rebases and runs CI, then merge. Feature flags for unfinished work. No GitFlow release branches for a SaaS. A broken main stops the queue.
+
+You measure time in review, not branch age of weeks.
+
+## Failure modes
+
+Queues that serialize the company (one slow test). Long-lived feature branches labeled "trunk." Merge queue without required checks. Skipping the queue with admin merge. Flags without cleanup. Requiring 10 approvals plus the queue.
+
+Nightly-only tests so the queue is theater.
+
+## When this is the wrong tool
+
+Regulated release trains that need a branch — still integrate to main often. Open source with infrequent maintainers may use GitHub flow with longer PRs. A solo hobby repo does not need a merge queue. TBD is the wrong fight while CI is 90 minutes and flaky — fix CI first. Do not trunk-based a binary you cannot flag if you have no other hiding technique.

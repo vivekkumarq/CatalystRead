@@ -3,6 +3,7 @@ title: "The Transactional Outbox Pattern"
 slug: "transactional-outbox-pattern"
 description: "How the transactional outbox pattern makes updating a database and publishing an event atomic, without a distributed transaction."
 publishedAt: "2025-08-29"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -52,3 +53,19 @@ The outbox table grows forever if nothing prunes it. Once a connector confirms a
 ## When It's Worth It
 
 The outbox pattern earns its place any time a service needs "update my database and notify the world" to be atomic — order confirmation, payment state changes, anything a saga's next step depends on. For infrequent, non-critical notifications where an occasional missed event is a shrug, direct publish-after-commit with a retry is simpler and the outbox's guarantees aren't worth the extra table and connector.
+
+## A worked example
+
+In the same Postgres transaction: insert order, insert `outbox` row with payload. A poller (or logical replication) publishes to Kafka and marks sent. Consumers are idempotent. You never `INSERT` then `http.post` in the app.
+
+A test with Testcontainers: commit, poller runs, topic receives one message; crash before mark still retries without double insert of the order.
+
+## Failure modes
+
+Outbox in a different DB. Poller without `FOR UPDATE SKIP LOCKED`. Giant payloads. Never deleting old outbox rows. Publishing before commit. Multiple pollers duplicating without idempotent keys. JSON that cannot deserialize after schema change.
+
+Using the outbox as a query model.
+
+## When this is the wrong tool
+
+If there is no message broker, just commit the row. Dual-write to two DBs is not fixed by an outbox in one of them unless the poller writes the second — then you still have a pipeline. CDC from WAL can replace a custom outbox for some stacks. For in-process events, Spring's transactional event listener may suffice. Do not outbox a high-frequency tick; batch or skip.

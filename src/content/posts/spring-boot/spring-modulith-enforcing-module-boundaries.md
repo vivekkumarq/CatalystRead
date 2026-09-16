@@ -3,6 +3,7 @@ title: "Enforcing Module Boundaries in Spring Boot with Spring Modulith"
 slug: "spring-modulith-enforcing-module-boundaries"
 description: "How Spring Modulith turns package structure into an enforced architectural boundary, catching the coupling that code review alone tends to miss."
 publishedAt: "2025-11-24"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -88,3 +89,19 @@ class CustomerLoyaltyListener {
 ## When This Is Worth Adopting
 
 Spring Modulith earns its place in a modular monolith specifically — a single deployable where the team wants microservice-style boundaries without microservice-style operational overhead. It's most valuable for a team of meaningful size (roughly five or more engineers touching the same codebase) where informal conventions about "don't reach into that package" have already started breaking down in practice. For a small team or a genuinely simple service, the enforcement is solving a coupling problem that hasn't materialized yet, and the module test failures will feel like friction rather than protection. The honest signal that it's time is a specific memory: someone recently found a cross-module import in review that shouldn't have existed, and everyone quietly agreed "we should catch that automatically" — Modulith is that automatic catch.
+
+## A worked example
+
+Packages `order`, `inventory`, `billing`. Modulith verifies no `order` → `billing` internals. Public API is a package `order.api`. Application events for cross-module after commit. A CI test `ApplicationModules.of(App.class).verify()`.
+
+You document allowed cycles (none).
+
+## Failure modes
+
+Dumping everything in `service`. Reflection and Spring beans bypassing package rules. Modulith tests disabled because of one violation. Shared `util` becoming a dumping ground. Events as a way to smuggle entities across modules.
+
+Multi-module Maven that still imports impl jars.
+
+## When this is the wrong tool
+
+A 6-class app. Modulith is not a mesh. If you already have real microservices, package rules in one repo are a different problem. Do not use it as a substitute for code review of API design. Hexagonal ports may overlap — pick a vocabulary. If the team ignores the failing ArchUnit/Modulith test, the tool is theater.

@@ -3,6 +3,7 @@ title: "Choosing and Evaluating Embedding Models for Retrieval"
 slug: "choosing-embedding-models"
 description: "How to pick an embedding model for your retrieval stack using benchmarks that actually correlate with your data, not just MTEB leaderboard rank."
 publishedAt: "2026-06-05"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -54,3 +55,19 @@ If you re-embed your corpus frequently — because documents update often or you
 ## Re-run the eval on every model swap
 
 Embedding models are not drop-in replacements for each other, even within the same vendor's lineup. A new version can shift the vector space enough that your reranker's calibration or your similarity thresholds stop making sense. Treat swapping the embedding model as a migration: re-embed the full corpus, re-run the golden-set eval, and compare recall@k side by side before cutting traffic over. Never run two embedding models against the same index — cosine similarity across incompatible vector spaces is meaningless, and you'll get retrieval results that look plausible but are actually noise.
+
+## A worked example
+
+You pick a candidate list (open vs API). Evaluate on *your* queries: recall@10 of a labeled set of 200 query-doc pairs. Measure dimensions, latency, cost, multilingual. Same chunking for all. A small fine-tune / adapter only after the baseline. You record that a 3% recall gain cost 4× latency.
+
+Normalize vectors if using cosine and the model expects it.
+
+## Failure modes
+
+Leaderboard-only selection. Mixing embedding spaces in one index. Changing chunk size when swapping models without re-embedding. Asymmetric query vs doc models used symmetrically. PII sent to a third-party embed API against policy.
+
+Assuming MTEB English equals your tickets.
+
+## When this is the wrong tool
+
+Keyword-only corpora with exact SKUs: lexical search. If documents are 20 tokens of structured IDs, a hash index wins. Do not embed every keystroke for autocomplete of known titles. A single giant LLM as "embeddings" via hidden states without a retrieval eval is guesswork. Skip weekly model shopping if the bottleneck is chunking and metadata filters.

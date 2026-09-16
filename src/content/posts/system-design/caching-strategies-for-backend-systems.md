@@ -3,6 +3,7 @@ title: "Caching Strategies Every Backend Engineer Should Know"
 slug: "caching-strategies-for-backend-systems"
 description: "Cache-aside, read-through, write-through, write-behind — when each pattern fits, and the invalidation trade-offs nobody escapes."
 publishedAt: "2026-07-15"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -71,3 +72,19 @@ When a popular key expires, every request misses at once and the database absorb
 | Popular keys, thundering herds | Coalescing + jitter |
 
 Caching decisions are consistency decisions wearing a performance costume. Name the staleness you can afford *first*, and the right pattern usually picks itself.
+
+## A worked example
+
+Read-through cache: miss loads DB, stores with TTL 60s plus jitter. Write-through on profile updates. Cache key `user:{id}:v2` includes a schema version. Stampede: singleflight / lock per key. You invalidate on write rather than waiting for TTL when the write path is yours.
+
+A metric: hit ratio *and* origin QPS. Hit ratio alone can rise while you serve stale money fields.
+
+## Failure modes
+
+Cache-aside with no TTL and no invalidation. Caching errors (empty 404 forever). Key explosion from unbounded query strings. Redis as a second database of record. Inconsistent TTL vs DB replica lag. Thundering herd without jitter.
+
+Caching personalized HTML with a shared key.
+
+## When this is the wrong tool
+
+If the DB is already in memory and local, a cache layer may add coherence bugs only. Do not cache uncommitted reads. Event-sourced systems may want projections, not a random Redis blob. Full-table scans are not a cache problem. For tiny static config, a process memory map with a watch is enough. CDN for public GET; application cache for private data — do not mix keys.

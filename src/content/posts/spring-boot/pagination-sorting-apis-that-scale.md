@@ -3,6 +3,7 @@ title: "Pagination and Sorting APIs That Actually Scale"
 slug: "pagination-sorting-apis-that-scale"
 description: "Why offset pagination falls apart under real data volume, and how to design keyset-based pagination and sorting APIs that stay fast at scale."
 publishedAt: "2025-09-09"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -68,3 +69,19 @@ Keyset pagination gives up two things offset pagination has for free: jumping di
 ```
 
 That's a real constraint for UIs built around numbered page links, and it's worth having that conversation with API consumers early rather than discovering it after the contract has shipped. In practice, a hybrid approach works well: offer offset pagination for the first handful of pages where it's cheap and the numbered-page UX is valuable, and require or strongly steer clients toward a cursor once they're paging deep enough that the offset cost starts to matter — feed and export-style endpoints are the ones that benefit most from going straight to keyset from day one.
+
+## A worked example
+
+`GET /orders?cursor=eyJpZCI6MTIzfQ&limit=20` keyset pagination on `(created_at, id)`. You reject `sort=random_sql`. Offset `page=50000` is documented as admin-only. Total count is optional (`X-Total-Count` on first page only) because `COUNT(*)` over filtered rows is the expensive part.
+
+An index on `(created_at, id)` matches the cursor.
+
+## Failure modes
+
+`OFFSET 10e6`. Client-controlled sort columns mapped to SQL identifiers without an allowlist. Cursors that leak PII. Inconsistent sort when `created_at` ties without id. Changing filters between cursor pages. Returning page size 0 forever on a bug.
+
+Loading all pages in the server to "simplify."
+
+## When this is the wrong tool
+
+Keyset is awkward for jumping to page 50 in a UI; offset may be OK with a cap. Search engines (OpenSearch) have their own search_after. If the set is tiny, `findAll` is fine. Realtime feeds may want since_id. Do not paginate an export — stream or async file. GraphQL connections have a spec; do not invent a third cursor format in the same app.

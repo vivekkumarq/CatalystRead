@@ -3,6 +3,7 @@ title: "Conditional and Mapped Types: Building Your Own Utility Types"
 slug: "conditional-and-mapped-types-in-typescript"
 description: "Partial, Pick, and Readonly aren't compiler magic — learn the conditional and mapped types they're built from, and use them to write your own."
 publishedAt: "2025-07-13"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - Conditional Types
@@ -99,3 +100,19 @@ type UserGetters = Getters<{ name: string; age: number }>;
 This is where mapped types start overlapping with template literal types — worth knowing exists, but reach for it only when a codebase genuinely needs generated-shape types like this, not as a default way to define an interface.
 
 Once these two features click, most "how do I express this type" problems in code review stop being blockers — you either extend an existing utility type or write a five-line one specific to the shape you actually have, instead of reaching for `any` because the built-ins don't quite fit.
+
+## A worked example
+
+`type OptionalNullable<T> = { [K in keyof T]: T[K] | null }` vs `Partial`. A `DeepReadonly<T>` mapped type recurses on objects but stops on built-ins. A conditional `T extends Function ? never : T` filters keys via `as` remapping: `{ [K in keyof T as T[K] extends Function ? never : K]: T[K] }` yields a data-only view.
+
+You test with `Expect<Equal<..., ...>>` in a types test file, not only by hovering.
+
+## Failure modes
+
+Distributing accidentally and producing `never`. Homomorphic mapped types that lose modifiers (`readonly`, optional) unless you copy them. Recursing into `Date` or arrays wrongly. Slow types from nested mapped conditionals on large unions. `keyof` of a union becoming the intersection of keys.
+
+Using `any` in a mapped type that infects outputs.
+
+## When this is the wrong tool
+
+If a runtime mapper exists, codegen or a function beats 40 lines of types. Do not map every JSON field into a branded type. Utility types in `lib` already cover `Pick`/`Omit`. When the checker lags, simplify the model. Mapped types cannot enforce runtime validation — pair with zod. Avoid publishing mapped types that leak `undefined` vs optional inconsistency.

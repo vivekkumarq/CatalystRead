@@ -3,6 +3,7 @@ title: "Building Overlays and Menus with the Angular CDK"
 slug: "angular-cdk-overlays-menus"
 description: "How to build positioned, dismissible overlays such as menus and popovers using the Angular CDK's OverlayModule instead of ad-hoc absolute positioning."
 publishedAt: "2026-05-25"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -78,3 +79,19 @@ The default `noop` scroll strategy leaves the overlay floating in place while th
 ## Cleanup discipline
 
 `OverlayRef` instances aren't garbage collected just because the component holding a reference is destroyed — dispose of them explicitly in `ngOnDestroy`, or you'll accumulate detached overlay panes in the DOM every time a component with an open overlay gets torn down mid-session, which is a surprisingly common source of "ghost" click targets in long-running SPAs.
+
+## A worked example
+
+A row action menu uses `CdkMenu` / overlay connected to the trigger with `FlexibleConnectedPositionStrategy`: below-start, then above-start if there is no space. Scroll strategy is `reposition`. Clicking outside dismisses. Keyboard: ArrowDown opens and focuses the first item; Escape closes. You provide a `ScrollDispatcher` so a scrolling parent not on `window` still repositions.
+
+A test opens the overlay, clicks the second item, and asserts the overlay is detached and the trigger is focused.
+
+## Failure modes
+
+Multiple overlays without a stack: a dialog opens a menu that paints behind. Not disposing the overlay ref on destroy leaks the pane. Position strategy that only considers viewport, not a clipped `overflow: hidden` parent. Using `block` scroll strategy on a small dropdown and freezing the whole app. Missing CDK a11y module so menus are mouse-only.
+
+`OnPush` parent not marking for check when overlay data changes — the menu shows yesterday's items.
+
+## When this is the wrong tool
+
+Native `<select>` and `<dialog>` beat CDK for simple cases. Do not use overlays to implement tooltips that should be CSS `title` or a small popover. If you need pixel-identical design-system popovers across React and Angular, a headless spec plus each platform's primitive may be better than forcing CDK in a non-Angular island. CDK is the wrong tool for canvas context menus inside WebGL — use a DOM overlay positioned from pointer coords, still, but not a menu attached to a missing trigger element.

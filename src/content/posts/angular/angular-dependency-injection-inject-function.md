@@ -3,6 +3,7 @@ title: "Angular DI After inject(): What Actually Changed"
 slug: "angular-dependency-injection-inject-function"
 description: "The inject() function didn't just shorten constructors — it decoupled dependency lookup from class instantiation entirely, and that changes what's possible."
 publishedAt: "2026-02-09"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -98,3 +99,19 @@ export class Bad {
 ## When to Still Use a Constructor
 
 `inject()` doesn't deprecate constructor injection — for a simple component with one or two dependencies, a constructor is still perfectly idiomatic and arguably more discoverable to newcomers. Reach for `inject()` when you're writing functional guards/resolvers/interceptors, when you want to extract composable logic, or when a large constructor's parameter list has become the least readable part of the file.
+
+## A worked example
+
+A functional interceptor calls `inject(AuthStore)` at the top of the factory, not later in the closure after an await. A helper `createRepo()` used from a constructor also calls `inject` in an injection context. Tests use `TestBed.runInInjectionContext(() => createRepo())`. A `DestroyRef` from `inject(DestroyRef)` registers an abort on destroy.
+
+Field initializers: `private api = inject(Api)` instead of constructor param lists of 12.
+
+## Failure modes
+
+`inject()` inside a `setTimeout` or after `await` — no context. Using `inject` in a plain exported function called from a click handler. Circular `inject()` between two `providedIn: 'root'` services. Overriding a token in a component provider and still getting the root instance because `inject` ran in the wrong injector (route vs component).
+
+`inject` in a library that must support Angular 13.
+
+## When this is the wrong tool
+
+Constructor injection is still fine and often clearer for required deps in a class with two parameters. Do not `inject` to hide a service locator in random utilities. `inject` is the wrong tool to get `document` in SSR without `DOCUMENT` token. If you need an optional dep, `inject(Foo, { optional: true })` beats try/catch. Avoid `inject` in tight loops; it is not a performance primitive.

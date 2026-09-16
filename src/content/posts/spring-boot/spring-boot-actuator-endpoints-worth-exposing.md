@@ -3,6 +3,7 @@ title: "The Actuator Endpoints Worth Exposing (and How to Lock Them Down)"
 slug: "spring-boot-actuator-endpoints-worth-exposing"
 description: "Which Spring Boot Actuator endpoints earn their place in production, and the security configuration that keeps them from becoming an attack surface."
 publishedAt: "2025-04-15"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -69,3 +70,19 @@ Running actuator on a separate port means it never needs to be reachable through
 ## A Reasonable Default Posture
 
 For most services: expose `health` (with liveness/readiness probes for Kubernetes) and `info` publicly or near-publicly, put `metrics` and `prometheus` behind network-level restriction to your monitoring infrastructure, and require authenticated operator access for everything else — `env`, `loggers`, `threaddump`, `mappings`, `beans`. Never expose `heapdump` or `shutdown` outside a locked-down operator boundary. The goal isn't zero exposure; it's making sure every exposed endpoint was a decision, not a default nobody revisited.
+
+## A worked example
+
+Expose `health` (liveness/readiness split), `info` (git sha), `prometheus` on a separate management port. `env` and `heapdump` off in prod or authenticated and network-restricted. Health groups: liveness = process, readiness = DB. K8s probes hit the management port, not the public 8080.
+
+A test: unauthenticated GET `/actuator/env` is 404/401.
+
+## Failure modes
+
+Actuator on the public internet with `*: *`. Health that touches a slow dependency and kills the liveness probe. `logfile` endpoint leaking secrets. Verbose `env` with passwords. Micrometer high-cardinality tags via actuator.
+
+Readiness including a downstream you cannot fix, causing a death spiral of pod restarts.
+
+## When this is the wrong tool
+
+Actuator is not an APM. Do not expose `shutdown` in prod. If you already have a dedicated metrics agent, duplicate prometheus scrape may be noise. Custom JSON "status" pages for executives are not health. Heapdump endpoints are the wrong tool on 32 GB heaps without a download plan. Skip `beans` in prod.

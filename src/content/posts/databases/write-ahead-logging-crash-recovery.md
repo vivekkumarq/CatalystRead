@@ -3,6 +3,7 @@ title: "Write-Ahead Logging: The Contract Between Crash Recovery and Your Commit
 slug: "write-ahead-logging-crash-recovery"
 description: "Why databases write the log before the page, how REDO and UNDO recover, and the fsync choices that turn a power loss into silent corruption or lost commits."
 publishedAt: "2026-08-30"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -43,3 +44,19 @@ Partial rollbacks (savepoints) and fine-grained locks are why ARIES was a big de
 Physical replication ships the same bytes. Logical replication decodes those bytes into row events. If you do not understand WAL, "replica lag" is a cloud dashboard; if you do, it is "the subscriber has not replayed up to this LSN." Tuning `max_wal_size`, slot retention, and archive_command is capacity planning for the log, not a side quest.
 
 When a postmortem says "we lost 3 seconds of writes," ask whether the log was on the same disk as a full table scan, whether fsync was disabled, and whether the cloud volume's flush actually reached media. WAL is only as honest as the storage underneath it.
+
+## A worked example
+
+Postgres: `COMMIT` returns after WAL is flushed (depending on `synchronous_commit`). Crash: replay WAL from the last checkpoint. A test: insert, commit, `kill -9`, restart, row still there. Uncommitted data gone. You see why a disk full on WAL stops writes.
+
+Replicas stream WAL; a lagging replica is a WAL consumer.
+
+## Failure modes
+
+`synchronous_commit=off` then a crash losing "committed" from the app's view. WAL on the same failing disk without a story. Checkpoints too rare (long recovery) or too often (IO). Truncating WAL too soon. App assuming fsync of a file it wrote without the DB WAL.
+
+Copying data files without WAL backup.
+
+## When this is the wrong tool
+
+WAL is not a product audit log (use a table or event store). Do not implement your own WAL for an app that should use a database. In-memory caches do not have WAL unless you built Redis AOF — that is a different durability knob. If you cannot afford fsync latency, you are choosing a durability tier; say so. Object storage versioning is not a WAL.

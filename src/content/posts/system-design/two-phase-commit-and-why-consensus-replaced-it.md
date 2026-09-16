@@ -3,6 +3,7 @@ title: "Two-Phase Commit, Blocking, and Why Consensus Took Over Coordination"
 slug: "two-phase-commit-and-why-consensus-replaced-it"
 description: "How 2PC actually runs, why a crashed coordinator freezes the world, and how Raft/Paxos-backed transaction coordinators changed the picture."
 publishedAt: "2026-07-18"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -54,3 +55,19 @@ If the commit decision itself is stored in Raft or Paxos, any majority of coordi
 This is also why "just use a transaction across two microservices" is expensive. You are buying a consensus group, prepared locks, and a recovery story — or you are buying a saga and accepting that money-shaped operations need idempotency keys and explicit compensation. Both are valid. Pretending HTTP + 2PC without a replicated coordinator is neither.
 
 When you design a checkout that touches payments and inventory, name which of those two worlds you are in before you draw the boxes.
+
+## A worked example
+
+2PC: coordinator asks prepare; resources lock; coordinator commits. If the coordinator dies after prepare, participants stay blocked. XA transactions across MySQL and a JMS broker show this in the wild. Raft: a majority logs the decision; there is no silent blocking on one coordinator disk forever — recovery is the log.
+
+A chaos test: kill the 2PC coordinator vs kill a Raft follower.
+
+## Failure modes
+
+2PC over a WAN. Timeouts that abort on one side and commit on the other. Heuristic decisions that leave branches inconsistent. Using 2PC for user-facing latency SLOs. Consensus with a cluster of 2 (no majority).
+
+Pretending a saga is 2PC.
+
+## When this is the wrong tool
+
+2PC is the wrong default in microservices. A single database transaction is the right tool when it fits. Consensus is the wrong tool for a shopping cart CRDT. If you need cross-region write availability during partition, neither blocking 2PC nor a single Raft group in one region will make CAP disappear. Use idempotent APIs and sagas for business workflows; use Raft inside a store, not across HTTP services.

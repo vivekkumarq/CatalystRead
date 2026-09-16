@@ -3,6 +3,7 @@ title: "Functional Route Guards and Resolvers in Angular"
 slug: "angular-functional-route-guards-resolvers"
 description: "Class-based guards are gone from the recommended path. Here's how functional guards and resolvers actually change route protection and data loading."
 publishedAt: "2026-02-23"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -104,3 +105,19 @@ Resolvers block navigation until they resolve — the URL doesn't change and the
 ## Migration Notes
 
 Angular's `CanActivateFn`, `CanDeactivateFn`, `CanMatchFn`, and `ResolveFn` types cover the full guard/resolver surface — there's no functional equivalent missing. Existing class-based guards keep working (they're not deprecated in a breaking sense), so migration is opportunistic: convert a guard when you touch it, rather than in one large sweep. The bigger win comes from guard factories like `requiresRole` above, which usually can't be extracted cleanly from an existing class hierarchy without this shift.
+
+## A worked example
+
+`canActivate` as a function: read `inject(Auth).user()`, return `true` or `Router.parseUrl('/login')`. A resolver returns `inject(Api).order(id)` as a promise; the component reads `input` from `resolve`. Tests call the guard function inside `runInInjectionContext` with a fake Auth.
+
+A `CanMatch` guard keeps a lazy admin chunk from downloading for unauthorized users — stronger than `canActivate` after the download.
+
+## Failure modes
+
+Guards that HTTP-call on every child navigation. Resolvers that never error, leaving the route hanging. Returning `false` instead of a `UrlTree` so the user sees a blank. Order of functional guards vs class guards in mixed routes. Using a resolver for data that should be fetched in the component with `resource()` so it can refresh.
+
+Redirect loops: login guard sends to home, home guard sends to login.
+
+## When this is the wrong tool
+
+Do not put entitlement checks that need the order body in a guard — load the order, then authorize in the service. Guards are the wrong tool for analytics pageviews. Resolvers that block navigation for non-critical widgets hurt INP; defer those. If every route needs the same auth check, an HTTP interceptor plus a single parent route guard is enough. Feature flags in guards can strand users on old URLs — prefer rendering a disabled state.

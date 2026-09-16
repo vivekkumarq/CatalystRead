@@ -3,6 +3,7 @@ title: "Template Literal Types in Practice"
 slug: "template-literal-types-in-practice"
 description: "Template literal types can enforce structure in strings like event names, route params, and object paths — and know exactly where to stop using them."
 publishedAt: "2025-08-10"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - Template Literal Types
@@ -76,3 +77,19 @@ Typo a field name in a form binding and it's a compile error instead of a silent
 ## Knowing when to stop
 
 The `PathsOf` type above is genuinely useful, but push it one level further — say, adding array index support or making it work with recursive, self-referencing types — and the error messages TypeScript produces become nearly unreadable walls of nested conditional expansion. That's the signal to back off. If a template literal type needs a comment explaining what it does, or if changing an unrelated part of the codebase suddenly makes `tsc` slow to a crawl on this file, a runtime validator checking the same constraint is often the better trade: weaker compile-time guarantees, but a type signature a teammate can actually read, and an error a user can actually understand.
+
+## A worked example
+
+`type EventName = \`on${Capitalize<string>}\`` is too wide. Prefer `type CssVar = \`--${string}\`` for a lint-level check, or `type Route = \`/users/${string}/orders/${string}\`` for a handful of patterns. `as const` objects plus `keyof` beat parsing arbitrary strings. You extract `UserId` from `` `user:${string}` `` with `infer`.
+
+A test: `const x: `user:${string}` = 'user:12'` passes; `'12'` fails.
+
+## Failure modes
+
+Unions of template literals exploding (each combination). Using them to parse HTML. Recursive templates that freeze the IDE. Over-constraining i18n keys so product cannot add a string without a type PR. Template types that accept `` `user:${any}` `` via `any`.
+
+Expecting runtime checks — these erase.
+
+## When this is the wrong tool
+
+Runtime routers should parse URLs with a library. Do not type every pixel of CSS. If the set is finite, a string union is clearer. Template literals are the wrong tool for email validation. Codegen from a routes file is better than inferring from a giant template. Skip them when the team is fighting the checker more than bugs.

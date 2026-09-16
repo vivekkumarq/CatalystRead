@@ -3,6 +3,7 @@ title: "The Testing Pyramid, Revisited"
 slug: "testing-pyramid-revisited"
 description: "The testing pyramid was always a proxy for a cost trade-off — here's the trade-off itself, and when the pyramid's shape doesn't apply."
 publishedAt: "2025-12-13"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -49,3 +50,19 @@ A newer framing, the "testing trophy," argues integration tests should be the la
 ## The Actual Rule
 
 Neither shape is the rule — the rule is underneath both: put the fastest, most precise test at the layer that actually carries the risk for *this* piece of code, and don't let a diagram substitute for that judgment. A codebase can and often should have areas that lean pyramid and areas that lean trophy simultaneously, based on where the logic actually lives — dense in a function, or dense in the wiring between simple functions.
+
+## A worked example
+
+Many unit tests for tax math. Fewer contract tests against a recorded HTTP. A handful of Playwright journeys for checkout. The pyramid is about cost and specificity, not a sacred ratio. You delete a 3-minute e2e that duplicates a unit test.
+
+Contract tests catch a field rename; e2e catches the button missing.
+
+## Failure modes
+
+Ice cream cone: all e2e. No unit tests because "we mock everything" in e2e. Flaky e2e as the only gate. 90% coverage of getters. Testing the mock. Pyramid as an excuse to skip integration tests for SQL.
+
+Duplicating the same assertion at three layers.
+
+## When this is the wrong tool
+
+The pyramid is the wrong argument for not testing a migration. Hardware/firmware may invert the costs. Visual products need more UI tests. If the units are trivial and the product is wiring, integration-heavy is honest. Do not use the pyramid to ban QA. Snapshot-only "pyramids" are a different failure.

@@ -3,6 +3,7 @@ title: "Software Supply Chain Security Basics"
 slug: "software-supply-chain-security-basics"
 description: "Your application's attack surface includes every package your dependencies depend on — here's what to actually check before trusting a build."
 publishedAt: "2025-01-23"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -38,3 +39,19 @@ Postinstall scripts deserve specific scrutiny because they run arbitrary code th
 ## Where to draw the line
 
 Nobody has time to audit a thousand transitive dependencies by hand, so the goal isn't exhaustive review — it's concentrating scrutiny where it matters. Direct dependencies you chose deserve more attention than transitive ones you inherited. Packages that run in your build pipeline or CI environment deserve more attention than ones that only run in a sandboxed test context, because CI credentials are frequently the most valuable target in the whole system. And any dependency with access to secrets, payment flows, or user data is worth pinning, scanning, and revisiting on a schedule — not just installing once and forgetting it exists.
+
+## A worked example
+
+Lockfiles committed. `npm audit` / `osv-scanner` in CI with a triage process. Builds in CI with OIDC, signed artifacts, SBOM attached. Dependabot with human review. You pin GitHub Actions by SHA. A policy: no `curl | sudo bash` in Dockerfiles.
+
+Incident: a compromised maintainer — you have a SBOM to find the package.
+
+## Failure modes
+
+Ignoring 400 low CVEs forever or blocking the company on all of them. Pinning nothing. Trusting a tag that moved. Build scripts downloading unsigned binaries. Developers with prod publish keys. SBOMs generated but never used.
+
+"We use a language with a compiler" as a supply-chain story.
+
+## When this is the wrong tool
+
+A weekend toy without distribution. Supply-chain tooling will not fix SQL injection in your code. Do not buy a platform instead of pinning Actions. If you vendor all deps and never update, you traded CVEs for rot — still a choice, be honest. Internal-only scripts still need a lockfile if they run in prod.
