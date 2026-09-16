@@ -50,7 +50,7 @@ You add a 5×5 path "like Inception" without 1×1 reduction on a 512-channel map
 If you revive auxiliary classifiers, down-weight them (the original used 0.3-scale losses) and drop them at inference. They are training-only. Also note GoogLeNet's aggressive bottlenecking: channel counts in the 2014 table are the real architecture. A "wide Inception" that ignores those counts is a different net. When a compiler fuses the parallel paths, check that ReLU placement still matches; fusion bugs like to move activations across the concat.
 
 
-For transfer, GoogLeNet-era checkpoints are rare compared with ResNet. Prefer a modern Inception-v3 descendant only if you already depend on that family. Otherwise take the bottleneck idea and put it in a ResNet or EfficientNet you can actually download, quantize, and serve with an official public checkpoint file.
+For transfer, GoogLeNet-era checkpoints are rare compared with ResNet. Prefer a modern Inception-v3 descendant only if you already depend on that family. Otherwise take the bottleneck idea and put it in a ResNet or EfficientNet you can actually download, quantize, and serve with an official public checkpoint on disk.
 
 ## What you can borrow
 
