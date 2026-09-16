@@ -3,6 +3,7 @@ title: "How Discord Moved Trillions of Messages From Cassandra to ScyllaDB"
 slug: "discord-cassandra-to-scylladb-and-rust-data-services"
 description: "Discord's careful, dual-write migration off Cassandra to ScyllaDB, and the parallel move to Rust, both driven by the same enemy: GC pause tails."
 publishedAt: "2025-11-25"
+updatedAt: "2026-09-16"
 category: "Discord"
 tags:
   - Engineering at Scale
@@ -27,6 +28,18 @@ Given that message data is about as critical as data gets for a messaging produc
 Separately, Discord has written extensively about rewriting specific high-throughput services in Rust instead of Go. The most cited example is their Read States service, which tracks per-user read and unread status for every channel a user is in — a service with an extremely high write volume relative to most of Discord's other backend components. The original Go implementation suffered periodic latency spikes traceable to Go's garbage collector running under sustained load. Rewriting the service in Rust, which has no garbage collector and instead uses compile-time-enforced memory management, eliminated that entire class of latency spike. Discord reported consistent, significant improvements in both latency and memory usage after the rewrite.
 
 The common thread across both the ScyllaDB and Rust decisions is notable: Discord kept running into the same underlying problem — garbage collector pause tails, whether from the JVM inside Cassandra or Go's runtime inside application services — and eventually treated it as a pattern to solve structurally with GC-less technology, rather than patching each incident as it came up.
+
+## What broke when they scaled
+
+Cassandra at Discord's later message volume was not "bad Cassandra." It was JVM GC, compaction storms, and a node count that made every rolling restart a week-long ceremony. Wide partitions (hot channels) and repair/compaction fighting live writes show up as p99 spikes users feel as "Discord is slow" even when averages look fine. ScyllaDB's shard-per-core design and lack of a stop-the-world collector targeted that tail. Wire compatibility meant Discord could keep CQL and the channel-partitioned model from the Mongo era — the expensive part was data movement, not a new query language.
+
+Dual-write is easy to describe and hard to operate. Every disagreement between Cassandra and Scylla during validation is either a bug or a legitimate concurrency window. Trillions of rows imply a backfill that must checkpoint, throttle, and not starve live traffic. Discord's public migration notes emphasize incremental read cutover because a wrong read path is a missing chat history.
+
+Rust on Read States was the same tail-latency story in userspace: Go GC under cache churn. The rewrite did not require abandoning Elixir at the gateway; it required admitting that one runtime's pause model does not fit every service.
+
+## A smaller-team version of the same idea
+
+If a JVM database's p99 is your incident class, tune GC and compaction first, then consider a compatible engine (Scylla) before a new data model. Dual-write a *table*, not the company. For app services, profile before rewriting in Rust; many Go services are fine until the heap is huge and allocation-heavy. Prefer dropping GC from the hottest cache, not from the CRUD API.
 
 ## What you can borrow
 

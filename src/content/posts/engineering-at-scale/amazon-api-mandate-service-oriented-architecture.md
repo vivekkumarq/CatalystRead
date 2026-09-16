@@ -3,6 +3,7 @@ title: "The API Mandate: How One Internal Memo Forced Amazon Into Services"
 slug: "amazon-api-mandate-service-oriented-architecture"
 description: "How an internal Bezos mandate requiring all Amazon teams to expose functionality only through service interfaces set up the conditions for AWS."
 publishedAt: "2025-08-05"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -26,6 +27,18 @@ The mandate is often retold today as "Amazon invented microservices," but that o
 ## The AWS payoff nobody explicitly planned
 
 The mandate's most consequential side effect showed up years later. Because every team had already been forced to build genuinely externalizable service interfaces — designed as if an outside developer might call them — Amazon had, almost as a byproduct, built the architectural groundwork that made launching AWS as an external product dramatically more tractable than it would have been for a company whose internal systems were tightly coupled and never designed to be exposed. Amazon Web Services grew out of infrastructure services, compute and storage among the earliest, that existed first to serve Amazon's own internal service-oriented architecture.
+
+## What broke when they scaled
+
+Interface mandates do not automatically produce good APIs. Teams exposed internals as RPC: chatty, unversioned, and leaking storage schemas. The "externalizable" rule was meant to prevent that, but without API review and compatibility policy, you still get breaking changes that ripple through hundreds of callers. Amazon's later AWS world — versioned APIs, IAM, per-service endpoints — is the mature form of the mandate; the early internal version was messier, as Yegge's memo itself complained (poor discoverability, inconsistent auth).
+
+Latency and failure multiplication are the other tax. A page that used to be a function call becomes a graph of services. Timeouts, retries, and identity propagation have to be standardized or every team invents a worse version. The mandate created the *need* for a company-wide RPC stack, service discovery, and distributed tracing; it did not ship those for free.
+
+The AWS origin story is also easy to overfit. Externalizing compute and storage worked because those services already had hard multi-tenant boundaries. Not every internal HR tool became a public AWS product. The mandate created optionality; product sense and isolation still decided what left the building.
+
+## A smaller-team version of the same idea
+
+Forbid silent cross-module database reads. If team B needs team A's data, they get a versioned HTTP/gRPC contract and a compatibility window. Document auth. Do not split every class into a microservice — a package boundary with tests is enough until deploy contention is real. Design the contract as if a second customer might appear; you may never sell it, but you will avoid coupling on foreign keys in someone else's schema.
 
 ## What you can borrow
 

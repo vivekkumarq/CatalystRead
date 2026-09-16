@@ -3,6 +3,7 @@ title: "Why Discord's Gateway Runs on Elixir and the BEAM"
 slug: "discord-elixir-beam-gateway"
 description: "How the Erlang VM's lightweight process model and fault isolation made Elixir the right fit for Discord's connection-heavy real-time gateway."
 publishedAt: "2025-06-10"
+updatedAt: "2026-09-16"
 category: "Discord"
 tags:
   - Engineering at Scale
@@ -32,6 +33,18 @@ Erlang's philosophy, inherited by Elixir, embraces the idea that individual proc
 ## Hitting scaling limits and mixing in Rust
 
 The BEAM's process model bought Discord enormous concurrency headroom, but it isn't a universal answer to every performance problem — Elixir's garbage collector and general-purpose runtime aren't optimized for the kind of raw CPU-bound throughput some hot paths eventually demanded as Discord's traffic grew into the billions of messages. Rather than abandoning Elixir for the gateway wholesale, Discord's engineers identified the specific bottlenecks empirically and addressed them by dropping down to Rust for particular hot-path components (a pattern covered in more detail elsewhere in Discord's engineering writing), while keeping Elixir and the BEAM as the backbone for connection management and the supervision architecture that made the whole system resilient.
+
+## What broke when they scaled
+
+Millions of WebSockets means millions of mailboxes. The BEAM can hold them; the *product* still has to shard guilds across nodes so one celebrity server does not pin a single VM. Discord's gateway is not one Elixir node — it is a fleet with session affinity, resume tokens, and a story for reconnecting without losing the event stream. Heartbeats, identify rate limits, and "invalid session" exist because clients and mobile networks misbehave at scale.
+
+A process-per-connection is isolation, not a free lunch. Too much work in the connection process (JSON encode of a huge MEMBER_CHUNK, presence bursts) delays heartbeats and looks like a disconnect. That is why later hot-path work moved encoding to Rust at the boundary. Distributed Erlang clustering also has limits; many companies (Discord included, in spirit) treat BEAM clustering as a node-local superpower and use explicit messaging between gateway nodes rather than a giant fully connected mesh.
+
+Deploying the gateway is a reconnect storm generator. Rolling restarts must drain, allow resume, and stagger so presence recalculation does not coincide with a fleet bounce.
+
+## A smaller-team version of the same idea
+
+Phoenix Channels or a small Elixir/OTP app can hold far more idle sockets than a thread-per-conn Java server. Model each socket as a process, supervise it, and keep the process dumb: parse, route, ack. Shard by room id when one node sweats. When you need raw throughput, profile before rewriting the gateway; a binary serializer may be enough. If your concurrency is hundreds, not millions, Node or Go with an event loop is simpler to hire for.
 
 ## What you can borrow
 

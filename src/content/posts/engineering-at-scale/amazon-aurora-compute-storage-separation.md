@@ -3,6 +3,7 @@ title: "Aurora: What Happens When You Rebuild the Database Around the Log"
 slug: "amazon-aurora-compute-storage-separation"
 description: "How Amazon Aurora separates database compute from a purpose-built, log-structured distributed storage layer to cut replication network traffic."
 publishedAt: "2026-04-14"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -28,6 +29,18 @@ Aurora's storage layer replicates data six ways across three availability zones,
 A subtler benefit of the design is fewer redundant durability mechanisms to keep consistent with each other. In a traditional replicated database setup, you're often maintaining a redo log, a binary replication log, and physical data files, and keeping all of them mutually consistent under failure scenarios is itself a source of complexity and bugs. Aurora's storage layer collapses much of that down to essentially one thing — the distributed log — which both simplifies the failure and recovery story and speeds up crash recovery: instead of replaying a redo log against data files at engine startup the way a traditional database does, Aurora's storage layer handles redo application continuously and in the background, so a crashed database engine can come back online and be usable almost immediately.
 
 Aurora presents this storage layer under database engines that are wire-compatible with standard MySQL and PostgreSQL, so applications built against those engines don't need rewriting to take advantage of the underlying architectural change — the rearchitecture is invisible above the storage boundary.
+
+## What broke when they scaled
+
+Classic MySQL replication shipped pages and binlogs until network and fsync amplified every commit. Aurora's 2017 SIGMOD paper ("Amazon Aurora: Design Considerations for High Throughput Cloud-Native Relational Databases") and the later 2018 paper on quiesced redo application describe how moving redo to a multi-AZ storage fleet changes failure modes. Compute can die and attach elsewhere because the log is the source of truth — but the storage quorum now *is* the database. A correlated storage fault, or a bug in log application, is existential in a way a local disk was not.
+
+Tail latency at the storage quorum becomes the commit path. Six copies across three AZs with a write quorum means you wait on the slower of the successful votes, not on the slowest disk in the universe — unless many nodes are slow together. Aurora's work on avoiding gossipy recovery and on segmenting storage is about keeping that tail in check as volumes grow to many terabytes.
+
+Engine compatibility is a product constraint that bites: MySQL/Postgres features that assume local files, superuser filesystem access, or certain replication plugins do not map cleanly. Customers who needed those edges stayed on RDS instance storage. Fast crash recovery also changes how you think about "reboot the box" as a mitigation — it is cheaper, so you must be sure you are not masking storage-layer pain.
+
+## A smaller-team version of the same idea
+
+Separate a database process from durable storage you already trust (EBS, a network disk) and treat the WAL as sacred: replicate the log, not ad-hoc copies of data directories. Use a managed Aurora-like service if you want the quorum design without building it. If you run Postgres yourself, synchronous replica in another AZ plus WAL archiving is the small-team cousin — slower than Aurora's custom storage, much simpler than inventing a log-structured multi-AZ engine.
 
 ## What you can borrow
 

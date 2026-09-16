@@ -3,6 +3,7 @@ title: "Pingora: Retiring NGINX for a Rust Proxy Framework"
 slug: "cloudflare-pingora-replacing-nginx-with-rust"
 description: "How Cloudflare replaced its NGINX-based proxy layer with Pingora, a Rust framework built for memory safety and lower resource use at edge scale."
 publishedAt: "2025-07-22"
+updatedAt: "2026-09-16"
 category: "Cloudflare"
 tags:
   - Engineering at Scale
@@ -31,6 +32,18 @@ Pingora is not a drop-in NGINX replacement in the config-file sense — it's a R
 ## The migration
 
 Rolling out a from-scratch replacement for the software sitting between the internet and a huge portion of Cloudflare's customer traffic required extreme caution: the team moved service by service, comparing Pingora's behavior against the existing NGINX layer under real production load before cutting traffic over, watching for subtle differences in header handling, timeout behavior, and edge-case error responses that could break customer configurations built over years around NGINX quirks. Cloudflare has reported that the migration delivered lower CPU and memory usage per request alongside the elimination of the memory-safety bug class entirely, once the majority of production HTTP traffic moved onto it.
+
+## What broke when they scaled
+
+NGINX plus years of Lua/C modules becomes a private fork. Upstream upgrades merge like archaeology; a CVE in a module you barely remember still sits in the request path. Cloudflare's public Pingora posts cited memory-safety incidents as a large share of production pain — the class of bug C makes routine. At tens of millions of RPS, even rare use-after-frees are a weekly event somewhere in the fleet.
+
+Connection semantics also fought the old process model. Cloudflare needed to reuse origin connections across many clients (HTTP/2, keepalive, coalescing) in ways that NGINX's phase machine made clumsy. Each extra handshake at this scale is real origin load and real latency. Pingora's design treats pooling as a first-class loop, not a module bolted onto a server that assumed short requests.
+
+The migration risk was protocol fidelity. Customers had accumulated dependencies on NGINX's header canonicalization, timeout defaults, and error pages. A "faster proxy" that alters `Transfer-Encoding` handling is an incident. Cloudflare's cutover compared behaviors under live traffic, service by service — the only way to retire a proxy that had become the de facto HTTP spec for a chunk of the web.
+
+## A smaller-team version of the same idea
+
+If your edge is stock NGINX with a few Lua scripts and no multi-tenant nightmare, keep it. Add keepalive and an upstream pool before you rewrite. If you are writing substantial C in the request path, or you cannot upgrade because of a fork, consider a memory-safe proxy (Pingora is open source; Envoy is another mature option) for *new* paths first. Shadow traffic. Diff status codes and a sample of headers. Do not rewrite because Rust is fashionable.
 
 ## What you can borrow
 

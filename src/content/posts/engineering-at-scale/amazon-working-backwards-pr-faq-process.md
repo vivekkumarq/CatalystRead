@@ -3,6 +3,7 @@ title: "Working Backwards: How Amazon Writes the Press Release Before the Produc
 slug: "amazon-working-backwards-pr-faq-process"
 description: "Inside Amazon's PR/FAQ process, where teams write a mock press release and FAQ before writing code, and why engineers treat it as a real design tool."
 publishedAt: "2025-12-18"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -32,6 +33,18 @@ The PR/FAQ process is part of a broader Amazon norm against PowerPoint for signi
 ## Working backwards as an engineering discipline, not just a writing exercise
 
 What makes this relevant to engineering specifically, rather than just product management, is that a PR/FAQ commits a team to specific customer-facing outcomes before implementation choices get made, which changes what "done" means. An engineering team building toward a document that already promises "results in under a second" or "works offline" has a concrete target to design against from day one, instead of discovering acceptable performance or reliability bars late, after architecture decisions have already foreclosed some options.
+
+## What broke when they scaled
+
+Working backwards fails when the document becomes a ritual. Teams pad FAQs with questions leadership always asks, leave the customer section vague, and treat the six-pager as a gate to get headcount rather than a design tool. At Amazon's size, PR/FAQs also collide with dependencies: a press release that promises a one-second experience can paper over the fact that three other two-pizza teams must change their APIs. The written artifact cannot encode a real Gantt chart, so "working backwards" without a dependency map ships fiction.
+
+Another break is metric theater. A PR that claims "customers save time" without an operational definition of time — p50, p90, which customer, which device — lets engineering optimize the wrong thing. Bryar and Carr describe the process as forcing clarity; they do not claim every Amazon launch followed it faithfully. Engineers who inherit a PR/FAQ written by a previous owner often find the FAQ's "what happens at 10x volume" answer was never turned into a load-test or a cell plan.
+
+The silent-reading meeting itself scales poorly when the room is twenty people and the document is twelve pages of appendix. The format works when the author is accountable and the readers have decision rights. It degrades into a performance when attendance is political.
+
+## A smaller-team version of the same idea
+
+Write a one-page announcement and ten FAQs before a multi-week build: who it is for, what they can do that they could not, what you will not build, what "good" means in a number you can measure in logs. Have one skeptic who does not own the feature attack the FAQ. If you cannot answer cost, failure mode, and "why not a spreadsheet," you are not ready to cut tickets. Skip the theatrical silent meeting; a shared doc with comments is enough until you have a room that actually decides.
 
 ## What you can borrow
 

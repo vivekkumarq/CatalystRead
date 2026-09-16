@@ -3,6 +3,7 @@ title: "SmartStack: Airbnb's Early Answer to Service Discovery"
 slug: "airbnb-smartstack-nerve-synapse-service-discovery"
 description: "Before service meshes existed, Airbnb built SmartStack — Nerve and Synapse plus local HAProxy — to make service discovery reliable during its microservices split."
 publishedAt: "2025-09-24"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -24,6 +25,16 @@ Routing every service call through a local, continuously updated HAProxy instanc
 ## A precursor to the service mesh
 
 SmartStack, open sourced by Airbnb around 2013, predates the term "service mesh" but solved essentially the same problem later products like Consul, Envoy, and Istio would standardize: health-aware, dynamically updated routing between services, decoupled from application code. Airbnb's own later infrastructure evolved past SmartStack as the company's scale and the surrounding ecosystem matured, but the sidecar pattern — a local proxy handling cross-cutting network concerns so application code doesn't have to — is the same architectural idea that underlies modern service meshes.
+
+## What broke when they scaled
+
+ZooKeeper-backed discovery looks elegant until the watch storm starts. Every Synapse watching hundreds of services means a membership change fans out fleet-wide. At Airbnb's monolith-split scale, ZooKeeper became a chatty control plane: session expirations, thundering-herd re-registers, and HAProxy reloads that dropped in-flight connections if you rewrote the whole config instead of hot-reloading backends.
+
+Nerve's check is a sharp edge. A cheap TCP connect announces processes that accept sockets but cannot serve. A deep dependency probe evacuates capacity whenever a database hiccups. Operators learned to split liveness from readiness and debounce flaps. Local HAProxy also concentrated CPU and file descriptors on every app host; the sidecar still needed drain-on-deannounce and a story for Synapse dying.
+
+## A smaller-team version of the same idea
+
+Split announce from discover without a mesh: a file of healthy backends plus a local proxy or a client with a cached list. Use DNS to bootstrap, not as live membership. Health-check the process you route to; keep last-known-good when the control plane is sad. Graduate to ZooKeeper, Consul, or Envoy when instance churn and service count make file-based lists a weekly incident. Debounce health flaps before they rewrite everyone's routing table.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Maglev: Google's Load Balancer That Replaced Hardware With Software"
 slug: "google-maglev-software-load-balancer"
 description: "How Google's Maglev system moved network load balancing off specialized hardware and onto commodity servers without sacrificing speed or reliability."
 publishedAt: "2026-01-06"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -29,6 +30,18 @@ This matters enormously for connection-oriented traffic: if a load balancer rand
 To handle Google's traffic volumes without the load balancer itself becoming a throughput bottleneck, Maglev uses Direct Server Return: the load balancer handles inbound packets and routes them to the chosen backend, but the backend sends response traffic directly back to the client rather than routing it back through the load balancer. Since responses are frequently much larger than requests (think a large page or video response to a small HTTP request), this removes the dominant share of traffic volume from ever needing to pass back through Maglev, letting a fleet of commodity Maglev machines handle traffic levels that would otherwise require substantially more hardware load-balancing capacity.
 
 Maglev instances run in an active-active configuration across many machines, with each instance capable of handling the full range of traffic independently, so the system scales by adding more commodity Maglev machines rather than by buying bigger specialized appliances, and tolerates individual instance failures without a special failover mechanism since any healthy instance can serve any connection.
+
+## What broke when they scaled
+
+Hardware load balancers do not grow with a fleet of commodity servers, and they are a vendor-shaped bottleneck. Maglev (NSDI 2016, Eisenbud et al.) is a software L4 load balancer on Linux servers using consistent hashing so backend pool changes do not reshuffle every flow. Direct Server Return (DSR) keeps return traffic off the Maglev machine so the balancer is not the bandwidth bottleneck.
+
+What breaks software LBs is connection tracking state, Maglev-hash polarization, and backend draining. If the hash is unstable, TCP connections reset when a balancer or backend dies. Maglev's paper is explicit about the hash and about packet processing in userspace-ish fast paths. At datacenter scale you also need ECMP into a Maglev cluster so the balancers themselves are not single boxes.
+
+VIP ownership, health checking, and "this packet's 5-tuple" are the mechanics; fancy L7 belongs elsewhere (often on the backend or a proxy tier).
+
+## A smaller-team version of the same idea
+
+Use cloud LBs or HAProxy/Envoy. Enable consistent hashing if you have sticky caches. Do not buy a hardware ADC for a startup. If you run your own, Maglev's lesson is: hash flows stably, keep the balancer out of the return path if you can, health-check backends, drain before kill.
 
 ## What you can borrow
 

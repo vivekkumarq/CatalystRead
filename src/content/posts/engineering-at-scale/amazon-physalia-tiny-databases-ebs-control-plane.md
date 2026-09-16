@@ -3,6 +3,7 @@ title: "Physalia: Why EBS Runs Millions of Tiny Databases Instead of One Big One
 slug: "amazon-physalia-tiny-databases-ebs-control-plane"
 description: "How AWS's EBS team solved a control-plane consistency problem by giving every volume its own small, independently placed replicated database."
 publishedAt: "2025-11-14"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -30,6 +31,18 @@ The genuinely novel part of Physalia isn't running many small Paxos groups — t
 ## Consensus, sized to the problem
 
 The broader lesson Physalia embodies is that consensus and strong consistency don't have to be applied at the scale of an entire system just because the system is large. EBS's actual consistency requirement lives at the granularity of a single volume — two different volumes never need to agree on anything with each other — so Physalia matches its unit of consensus to that requirement exactly, rather than defaulting to a single control plane sized for the whole fleet because that's the more conventional architecture.
+
+## What broke when they scaled
+
+A shared control-plane database looks cheaper until an availability event or a hot partition on "volumes in this AZ" serializes the fleet. EBS attach/detach is a consistency-sensitive operation: two instances must not believe they own the same volume. That invariant is per volume, which is why Physalia's "Millions of Tiny Databases" design matches consensus to the object. The scaling break of the *old* instinct is correlated load — storms of attaches after an AZ recovery — slamming one coordinator.
+
+Tiny databases create a different problem: you now operate a placement and lifecycle service for millions of Paxos groups. Leaders need to be spread so a rack loss does not simultaneously stall a huge fraction of volumes whose control records lived together. The NSDI paper emphasizes topology-aware placement for that reason. You also need a story for creating, migrating, and destroying these mini-databases without a thundering herd on the placement plane — otherwise you reintroduced a single choke point one layer up.
+
+Debugging gets stranger. There is no one admin console of "the" metadata. Observability has to be indexed by volume id, with sampling, because you cannot scrape millions of consensus groups at Prometheus cardinality. That operational shape is the tax of shrinking blast radius.
+
+## A smaller-team version of the same idea
+
+Do not run Paxos per row on day one. Do shard control data so unrelated tenants or objects do not share a lock, a queue, or a failover domain. A hash of `resource_id` onto a handful of metadata databases, plus a rule that attach leases live with the resource, captures Physalia's intent. Keep a really simple router. Invest in placement only when you have seen correlated failures. If your entire control plane fits in one Postgres primary and your blast radius is acceptable, stay there — and write down the day you will split.
 
 ## What you can borrow
 

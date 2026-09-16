@@ -3,6 +3,7 @@ title: "Presence and Read States: Keeping Millions of Discord Clients in Sync"
 slug: "discord-presence-read-states-consistency"
 description: "How Discord keeps online status and per-channel read state consistent across millions of simultaneously connected clients without collapsing under fan-out."
 publishedAt: "2025-07-15"
+updatedAt: "2026-09-16"
 category: "Discord"
 tags:
   - Engineering at Scale
@@ -33,6 +34,18 @@ This design accepts a bit of eventual consistency across a single user's multipl
 ## Designing for "close enough, instantly" over "exact, eventually"
 
 The common thread across both systems is a deliberate choice to prioritize responsiveness and scalability over perfect real-time accuracy for every observer. A presence indicator that's occasionally a few seconds stale, or an unread badge that takes a brief moment to sync across your other devices, is a completely acceptable trade for a system that has to serve these updates to millions of concurrently connected clients without buckling under fan-out cost.
+
+## What broke when they scaled
+
+Presence fan-out is O(friends × guilds × connections). A celebrity account or a huge Community server makes a status flip a thundering herd. Discord's gateway therefore scopes presence to what the client subscribed to (the visible member list, relationships), rate-limits bursts, and treats "online" as approximate. Reconnect storms after an ISP blip recalculate presence for millions of sessions at once; without batching you DDoS yourself with your own green dots.
+
+Read states failed in a different way: a write per message rendered would drown storage (the Go Read States service's later GC pain is this workload's cousin). Last-read message id per user per channel is the compact representation. Mentions still need extra bits so a badge can be right when last-read is stale. Multi-device sync is eventual by design; fighting for linearizability on unread dots would cost more than users notice.
+
+Large guilds also cannot materialize "who is online" as a complete set for every member. The product UI lies a little — and must — so the system lives.
+
+## A smaller-team version of the same idea
+
+Broadcast online status only to open sessions that share a room, with a 5–30s debounce. Store `last_read_id` per channel, not per message. Recompute unread as `latest_id - last_read`. Accept that phone and desktop badges lag by a moment. Add Redis pub/sub until a single node cannot hold the connection map, then shard by user or guild like the gateway already does.
 
 ## What you can borrow
 

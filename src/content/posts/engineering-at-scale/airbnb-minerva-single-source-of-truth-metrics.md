@@ -3,6 +3,7 @@ title: "Minerva: How Airbnb Built One Source of Truth for Metrics"
 slug: "airbnb-minerva-single-source-of-truth-metrics"
 description: "Why Airbnb kept getting conflicting numbers for the same metric across teams, and how Minerva's centralized definitions and certification process fixed it."
 publishedAt: "2025-12-25"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -24,6 +25,18 @@ Airbnb's response, described in its engineering blog as the Minerva platform, ce
 ## Certification as a trust signal
 
 Centralizing definitions alone doesn't guarantee correctness — someone still has to get the definition right and keep it right as the underlying data model evolves. Minerva introduced a certification process: a metric could carry a badge indicating it had been reviewed and approved by people with authority over that domain, distinguishing a trustworthy, governed metric from an exploratory one someone was still iterating on. This gave consumers a fast, visible signal about how much confidence to place in a number without needing to audit the underlying query themselves every time.
+
+## What broke when they scaled
+
+Metric duplication is not only two SQL files. It is the same business concept computed in Airflow, in a dashboard, in an experiment tool, and in a spreadsheet the finance partner still trusts. Each copy accretes a slightly different filter: canceled bookings in or out, timezone of "booked at," whether experiences count as nights. Minerva's bet — generate compute from a registry — only works if consumption paths are forced through that registry. If a high-status team can still paste SQL into a one-off notebook that leadership screenshots, the source of truth is theater.
+
+Scale also hits the compiler. A centralized metric graph that expands into thousands of warehouse queries needs scheduling, incrementalization, and cost controls or it recreates the ungoverned warehouse bill you were trying to tame. Dimension explosion (every metric × every cut) is a combinatorial trap; Airbnb's public Minerva writing emphasizes curated dimensions and certified cores rather than "any join anyone wants."
+
+Ownership is the human bottleneck. A certified metric whose owner left the company is a landmine. Certification has to expire, and underlying table changes have to page the owner, or the badge becomes a false guarantee — worse than no badge, because consumers stop checking.
+
+## A smaller-team version of the same idea
+
+Pick the ten metrics that appear in leadership reviews. Put each in a versioned YAML or SQL file with an owner, a grain (user-day, booking), and a timezone. Run them in one scheduled job into one table. Point dashboards at that table only. When two teams disagree, they change the file, not their private queries. Add certification later; first kill the duplicate queries.
 
 ## What you can borrow
 

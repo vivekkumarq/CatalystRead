@@ -3,6 +3,7 @@ title: "Why Amazon Turned to TLA+ to Find Bugs Before They Shipped"
 slug: "amazon-formal-methods-tla-plus-distributed-systems"
 description: "How AWS engineering teams adopted Leslie Lamport's TLA+ specification language to catch distributed-systems bugs that testing alone couldn't find."
 publishedAt: "2026-02-09"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -34,6 +35,18 @@ TLA+ at AWS was never applied to everything — writing a formal specification a
 ## What formal verification changes about design review
 
 The deeper shift formal methods brought wasn't just bug-finding, it was moving design review from "does this sound right to experienced engineers reading it" to "can we mechanically prove this invariant holds across every reachable state." Those are different bars, and for the class of systems where getting it wrong is catastrophic and expensive to fix after the fact, the second bar is worth the extra upfront investment.
+
+## What broke when they scaled
+
+Implementation tests explode combinatorially; so do TLA+ models if you leave in too much detail. AWS's 2015 CACM paper is explicit that the win is specifying *protocols* — replication, leases, failover — not modeling every Java class. Teams that tried to "verify the service" drowned in state space: TLC would not finish, so they either bounded the model into irrelevance or abandoned it. The scaling skill is abstraction: a few nodes, a few concurrent operations, invariants that actually matter (no split brain, no acknowledged write lost).
+
+A second break is spec drift. A TLA+ document that is not updated when the protocol changes is a false comfort, same as an outdated runbook. Amazon's reported practice was to keep specs next to the design of the high-stakes core and to use counterexamples as regression tests for the design, not as a substitute for unit tests of code.
+
+Organizationally, TLA+ expertise is scarce. If only one engineer can read the spec, the next protocol change ships without checking. The CACM authors argued for training more engineers in specification, not for a priesthood. That is the cultural scale problem: formal methods that cannot survive a transfer of ownership do not survive.
+
+## A smaller-team version of the same idea
+
+For any lock, lease, or "exactly one primary" protocol, write the states and messages in a page of prose, then in PlusCal or TLA+ if the interleavings scare you. Check two nodes and a crash. You can get a surprising fraction of the AWS benefit with a pencil-and-paper invariant ("a write is never visible until N replicas ack") and a brutal chaos test. Bring TLC when you have lost data or split-brained once — or when you are about to, and you know it.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Building Airbnb's Global Payments Platform"
 slug: "airbnb-global-payments-platform-currencies-payouts"
 description: "How Airbnb built a payments platform that handles dozens of currencies, split payments between guests, and reliable payouts to hosts around the world."
 publishedAt: "2026-01-22"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -28,6 +29,16 @@ Supporting a truly global marketplace meant Airbnb couldn't treat currency conve
 ## Idempotency and reconciliation as first-class concerns
 
 Because payment operations can be retried after timeouts or partial failures, Airbnb's platform had to guarantee that retrying a payout or a charge never double-processes it — a foundational idempotency guarantee that gets harder to preserve as the system is decomposed into more services, each potentially retrying calls to the others. On top of that, reconciliation — continuously verifying that Airbnb's internal ledger agrees with what payment providers and banks actually report — has to run as an ongoing process, not a one-time check, since discrepancies at global scale are a matter of when, not if, and catching them quickly is what keeps host trust intact.
+
+## What broke when they scaled
+
+Payments fail in ways CRUD apps do not. A card authorization can succeed at the processor and time out on the way back. A payout file can be accepted by a bank and later returned. A guest can pay in BRL while the host expects KRW, and the FX rate that was quoted at checkout is not the rate at capture. Airbnb's two-sided, delayed-settlement model means those events are separated by days, so "retry the request" without a ledger key is how you double-pay a host.
+
+At global scale the long tail dominates. Each local rail (wallets, boleto, regional transfers) is a state machine, a reconciliation report, and KYC — not a config flag. Split stays multiply state: a partial capture cannot leave the booking undefined. Ledgers and idempotency keys are the structures that survive that explosion.
+
+## A smaller-team version of the same idea
+
+Model money as append-only entries with a unique idempotency key per intent (charge, capture, refund, payout). Store amounts in the currency of the instrument, plus a booked FX rate if you quote one. Reconcile daily against one processor before you add a second. Delay host payout until the event you actually mean (check-in, not checkout) even if that is a cron plus a status flag. Add a second PSP only when a corridor's authorization rate or payout reliability is a measured problem.
 
 ## What you can borrow
 

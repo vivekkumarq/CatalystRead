@@ -3,6 +3,7 @@ title: "Why DoorDash Moved Critical Transactions onto CockroachDB"
 slug: "doordash-cockroachdb-horizontally-scalable-transactions"
 description: "DoorDash adopted CockroachDB to get horizontal scalability and strong consistency for order and payment data without the operational pain of manual sharding."
 publishedAt: "2025-06-11"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -35,6 +36,18 @@ COMMIT;
 ## Migrating a live, revenue-critical path
 
 Moving a system this central to the business meant DoorDash couldn't treat the migration as a big-bang cutover. The path involved running services against the new database incrementally, validating correctness and performance against real traffic patterns before fully committing critical write paths to it, and being deliberate about which services moved first based on how sensitive they were to any transition risk. The payoff was less about a single performance number and more about removing an entire category of future scaling projects — manual resharding — from the roadmap.
+
+## What broke when they scaled
+
+Postgres (or a similar single-primary SQL store) is excellent until write throughput and storage of order/payment rows exceed one machine, or until a regional outage takes the primary with it. Manual sharding — hash of `consumer_id` onto N databases — restores capacity and destroys transactions that cross shards: a Dasher payout that must stay consistent with an order row, a refund that touches payment and order state. DoorDash's engineering writing on CockroachDB adoption emphasizes serializable (or at least strongly consistent) SQL with horizontal scale so those flows did not become sagas by default.
+
+Distributed SQL is not a free lunch. CockroachDB (and Spanner-class systems) pay in commit latency for multi-region consensus and in operational novelty: range hotspots, clock uncertainty, and SQL features that surprise people coming from Postgres. A marketplace lunch rush is a hotspot factory — popular restaurants, a city, a promo code. If the primary key puts that rush on one range, you have a scaled-out database that still acts like one disk. Schema migrations and ORM assumptions from the Django era also break when the database is a cluster.
+
+The migration path for live order traffic is dual-write or shadow reads with extreme care: money and food cannot "eventually" appear.
+
+## A smaller-team version of the same idea
+
+Stay on one Postgres with replicas until you have measured the ceiling. If you must split, shard by a key that never needs cross-shard transactions (by city, by restaurant, not by random UUID). Use Cockroach or a managed Spanner-like service when you need SQL + HA + scale and cannot afford a custom sharding layer. Keep payment-critical rows on the smallest number of ranges you can, with keys that spread load.
 
 ## What you can borrow
 

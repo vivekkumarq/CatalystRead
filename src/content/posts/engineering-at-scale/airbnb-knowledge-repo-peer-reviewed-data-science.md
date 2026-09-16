@@ -3,6 +3,7 @@ title: "Knowledge Repo: Airbnb's Answer to Reproducible Data Science"
 slug: "airbnb-knowledge-repo-peer-reviewed-data-science"
 description: "Why Airbnb's best analyses kept getting lost in personal notebooks, and how Knowledge Repo made data science writing peer-reviewed, searchable and reusable."
 publishedAt: "2025-10-09"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -28,6 +29,18 @@ Airbnb's response, Knowledge Repo, treated data science write-ups the way engine
 ## Making past work findable
 
 Once published, an analysis became a permanent, taggable, full-text-searchable artifact that anyone at the company could discover later, rather than something that existed only in the memory of whoever happened to see it shared the first time. This directly attacked the repeated-investigation problem: before starting a new deep dive, an analyst could search Knowledge Repo to see whether someone had already answered a similar question, and build on that work instead of starting from zero. Airbnb open sourced Knowledge Repo, and its underlying idea — treat data science writing with the same rigor, review, and durability engineering treats code — influenced how a number of other data-driven companies think about internal analytics documentation.
+
+## What broke when they scaled
+
+Peer review for analyses fails in the same ways code review fails when the queue is unbounded: posts sit unreviewed, authors publish to a personal doc instead, and the repository becomes a graveyard of "WIP" notebooks. Knowledge Repo's git-centric workflow also collides with notebook realities — huge outputs, unpinned package versions, queries that billed the warehouse when a reviewer re-runs cells. Without execution snapshots or pinned environments, "reproducible" meant "the Markdown still renders," not "the number still computes."
+
+Discoverability degrades as the corpus grows. Tags help until everyone tags "growth." Full-text search returns twenty similar experiment readouts without a sense of which one used the current metric definition. The system then needs the same governance Minerva applied to numbers: links to certified metrics, dates, and a deprecation path when a post is known wrong.
+
+Airbnb open-sourced the idea; many companies that copied it underinvested in the review SLA and in search, then concluded "knowledge sharing doesn't work." The original problem — analyses as ephemeral chat — returns the moment publishing is slower than Slack.
+
+## A smaller-team version of the same idea
+
+A single `analyses/` folder in git, a template (question, method, result, caveats), and a required reviewer who is not the author gets you most of the value. Render notebooks to Markdown so diffs are readable. Ban committing megabyte outputs; store a screenshot or a warehouse table name instead. Search can be `rg` until it cannot. Add a real portal when you cannot remember which post answered last quarter's churn dip.
 
 ## What you can borrow
 

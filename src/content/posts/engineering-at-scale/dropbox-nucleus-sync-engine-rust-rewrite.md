@@ -3,6 +3,7 @@ title: "Nucleus: Rewriting Sync in Rust"
 slug: "dropbox-nucleus-sync-engine-rust-rewrite"
 description: "Why Dropbox rebuilt its core sync engine from a decade-old Python codebase into Nucleus, a new engine written in Rust, and what it took to ship it."
 publishedAt: "2025-07-02"
+updatedAt: "2026-09-16"
 category: "Dropbox"
 tags:
   - Engineering at Scale
@@ -28,6 +29,16 @@ The team chose Rust specifically for the properties Python couldn't offer: stron
 ## Nucleus
 
 The rewritten engine, internally called Nucleus, models the sync problem more explicitly than the old engine did — representing the state of the local filesystem and the remote account as data structures the engine can reason about and reconcile, rather than as a web of imperative logic. That structure made it dramatically easier to test: sync bugs that used to require reproducing exact timing and file-system conditions could increasingly be captured as deterministic test cases. Shipping Nucleus wasn't a single cutover; it rolled out gradually across Dropbox's user base, with the old and new engines run in parallel on subsets of traffic so behavior could be compared before fully retiring the Python engine.
+
+## What broke when they scaled
+
+Sync is a distributed system that lives on laptops: concurrent edits, partial writes, sleep/wake, flaky Wi-Fi, and a decade of Python that accumulated special cases for every OS. Dropbox's public Nucleus work describes rewriting the sync engine in Rust for performance and memory safety after the old engine's complexity made correctness changes terrifying. The scaling break is not "Python is slow" in the abstract — it is CPU and RAM on sync of large trees, lock/contention bugs, and the inability to reason about a giant stateful process that must never drop a user's file.
+
+Shipping Nucleus required running old and new engines, comparing filesystem outcomes, and migrating users gradually. A sync rewrite that is 2x faster and occasionally duplicates a folder is a support apocalypse. Rust's compile-time checks help memory bugs; they do not help "two writers, one file, whose mtime wins" — that is still a spec. Cross-platform filesystem semantics (macOS FSEvents vs Windows) remain the long tail.
+
+## A smaller-team version of the same idea
+
+If you maintain a client daemon, isolate the sync algorithm from UI, add a file-level checksum log, and test concurrent edits. Rewrite in Rust only when you have a corpus of sync scenarios and a shadow engine. Most products should use an existing sync library. If Python is fine at your tree sizes, spend the time on conflict UX, not a new runtime.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Protocol Buffers, Stubby, and the Road to gRPC"
 slug: "google-protocol-buffers-stubby-grpc"
 description: "How Google's internal Protocol Buffers serialization format and Stubby RPC framework evolved into gRPC, the open-source RPC standard many companies now run on."
 publishedAt: "2026-06-30"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -39,6 +40,18 @@ Just as important as the performance win was the schema itself as a contract: be
 Stubby was Google's internal RPC framework, built to work directly with Protocol Buffer-defined service interfaces: you'd define a service's methods in a `.proto` file alongside its message types, and Stubby handled the actual mechanics of making the call over the network, load balancing across service instances, and integrating with Google's internal infrastructure for things like authentication and monitoring. It became the default way essentially any Google service talked to any other Google service internally.
 
 Stubby itself was never open-sourced, tied too closely to Google-internal infrastructure to be broadly useful outside the company. gRPC, released publicly in 2015, is best understood as Google taking the core ideas Stubby had proven out internally, protobuf-defined services, efficient binary serialization, built-in support for streaming and multiple languages, and building a new, HTTP/2-based implementation designed from the start to work outside Google's specific internal infrastructure. It's since become a common choice for internal service-to-service RPC well beyond Google, particularly in microservice architectures that need better performance and stronger typing than a REST-over-JSON approach provides.
+
+## What broke when they scaled
+
+JSON/XML without a schema explodes at thousands of services: field reuse, optional-vs-required, and slow parsers on the hot path. Protocol Buffers gave Google a compact, versioned, codegen'd contract. Stubby, the internal RPC, never fully open-sourced; gRPC (on HTTP/2, with protobuf as the common stub) is the public cousin. What breaks protobufs is careless compatibility — recycling field numbers, changing types — and mega-messages that defeat the point. gRPC's failure modes at scale are load balancing (client-side vs proxies), deadline propagation, and retry storms without hedged requests.
+
+The API mandate lesson applies: a schema is only as good as compatibility policy and a registry. Streaming RPCs and protobuf Any/gRPC transcoding add complexity that a REST+JSON shop may not need.
+
+Stubby's Google-only features (security, tracing, naming) had to be reinvented in the open as gRPC ecosystem interceptors.
+
+## A smaller-team version of the same idea
+
+Define a schema (protobuf, OpenAPI) before you have 30 services. Use gRPC when you want typed clients and streaming; use JSON when browsers and curl matter more. Never reuse field numbers. Set timeouts on every call. Skip a custom Stubby.
 
 ## What you can borrow
 

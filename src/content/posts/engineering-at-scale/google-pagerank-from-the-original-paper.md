@@ -35,6 +35,16 @@ Modern search is hundreds of features, learned models, and spam classifiers. The
 
 Computationally, they already cared about sparse iteration over a graph that did not fit a naive dense matrix. That constraint — the web is large and sparse — is why power iteration and partitioning show up in every later graph-ranking system, including ones that never mention search.
 
+## What broke when they scaled
+
+The 1998 anatomy paper and the 1999 PageRank technical report already knew the web was sparse and hostile. What broke later was not the eigenvector idea — it was adversarial SEO, link farms, and the fact that a static graph prior cannot encode recency or query intent. Power iteration on a crawl that large is a systems problem: partitioning the graph, handling dangling nodes, and recomputing often enough that a new site is not invisible for months. Personalized PageRank and spam classifiers exist because raw PageRank on the open web is gameable.
+
+Query-time ranking also cannot run full PageRank per request. The score is a precomputed (or periodically refreshed) feature among hundreds. Teams that "just implement PageRank" on a social graph discover teleport/damping bugs, dead-end components, and the need for a recompute schedule. Brin and Page's factory — crawl, index, serve — was always the other half of the paper.
+
+## A smaller-team version of the same idea
+
+If you rank items with a citation or follow graph, a damped random walk is a decent prior. Fix dangling nodes, pick `d`, recompute on a schedule, and combine with recency. Do not ship raw PageRank as the only score. For a catalog of thousands of docs, even a spreadsheet of in-degree plus editorial boosts may be enough until someone is farming links.
+
 ## What not to cargo-cult
 
 Do not ship raw PageRank on a social graph and call it "the Google algorithm." Personalization, recency, and spam are not optional at product scale. Do take the discipline: write down the random walk, the teleport, the dangling-node policy, and how often you recompute. Ranking bugs are often those policy choices, not the linear algebra.

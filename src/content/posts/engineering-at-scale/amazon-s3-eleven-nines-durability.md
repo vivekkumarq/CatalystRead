@@ -3,6 +3,7 @@ title: "Eleven Nines: What Amazon S3 Actually Promises About Durability"
 slug: "amazon-s3-eleven-nines-durability"
 description: "What Amazon S3's famous '99.999999999% durability' figure actually means statistically, and the engineering that backs the promise."
 publishedAt: "2025-05-19"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -33,6 +34,18 @@ Durability also depends on catching corruption in transit, not only at rest. S3 
 ## What eleven nines really buys you
 
 The statistical framing matters because it reframes durability as an actuarial property of the whole system rather than a promise about any single object. No individual disk or server is eleven-nines reliable — commodity hardware fails constantly at Amazon's scale. The eleven nines emerges from redundancy plus continuous, load-independent verification plus automated repair, applied uniformly across an enormous number of objects, so that the rare failures that do slip through are caught and corrected before they compound into permanent loss.
+
+## What broke when they scaled
+
+At S3's object count, "we replicate to three disks" is not a durability program. Silent disk corruption, firmware bugs, and operator errors (deleting the wrong set of shards) dominate the loss budget. Constant-work auditors have to visit every object on a schedule even when the fleet is busy serving PUT/GET — otherwise the safety loop yields to the revenue loop. MacCárthaigh's Builders' Library essay on constant work exists because systems that only scrub when idle fail to scrub during the incidents that create corruption.
+
+Checksum design also scales poorly if it is optional. A client that skips Content-MD5 or the later checksum algorithms can store garbage that S3 faithfully preserves. AWS added additional checksum modes and trailing checksums because multipart uploads and high-throughput PUTs made "hash the whole object in one shot" awkward. Erasure coding for cheaper storage classes changes repair math: you reconstruct from k of n shards, which is efficient until a correlated failure takes too many shards in one locality — hence AZ diversity and placement rules.
+
+Availability outages are still possible with high durability. Eleven nines does not mean you could list your bucket during a control-plane event. Customers who treated durability marketing as uptime learned that distinction the hard way.
+
+## A smaller-team version of the same idea
+
+Store two copies in failure domains that do not share a disk, rack, or backup job. Checksum on write and on periodic read of a sample, then of everything once you can. Repair automatically. Make delete a two-phase, logged operation. Separate your uptime SLO from your "we still have the bytes" SLO. You will not quote eleven nines; you will still beat "RAID and hope."
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Outgrowing a Single MySQL Cluster: GitHub's Move to Vitess"
 slug: "github-scaling-mysql-vitess"
 description: "Why GitHub adopted Vitess to shard MySQL horizontally instead of continuing to scale a single primary vertically."
 publishedAt: "2025-07-14"
+updatedAt: "2026-09-16"
 category: "GitHub"
 tags:
   - Engineering at Scale
@@ -41,6 +42,18 @@ Moving a live, business-critical database under a system like Vitess is itself a
 ## Why not just shard by hand
 
 Application-level sharding is tempting because it requires no new infrastructure — you just add a routing function in your data-access layer. But every team that owns a query now has to be shard-aware, resharding means rewriting that routing logic and doing a slow, risky data migration, and cross-shard joins or transactions become bespoke application code. Vitess pushes that complexity down into infrastructure that a dedicated database-infrastructure team can own and improve centrally, so product engineers keep writing what looks like ordinary SQL against what looks like an ordinary MySQL server.
+
+## What broke when they scaled
+
+A single MySQL primary — even a very large one — eventually hits write throughput, replica lag, and operational fear of schema changes. GitHub's Vitess adoption (and public talks/blog posts) was about sharding `github/github`'s MySQL while keeping the application speaking SQL. Vitess sits as a proxy: routing, connection pooling, and shard key awareness. The scaling break of *hand* sharding is every query that cannot include the shard key becomes a scatter-gather, and cross-shard transactions appear for features that used to be one InnoDB transaction (org-level operations, moves between repos).
+
+Vitess does not make bad schemas good. A hotspot repository or a table without a viable sharding key still melts one shard. Online DDL, VReplication, and throttled backfills are the migration mechanics — not `mysqldump` on a Saturday. GitHub's size meant they had to move live, with replica lag as a user-visible "this issue didn't show up yet" bug.
+
+They kept Rails; they changed the data plane.
+
+## A smaller-team version of the same idea
+
+Read replicas and careful indexes first. Partition huge tables by id range. Vitess or PlanetScale-style pooling when connection count and write QPS demand it. Choose a shard key that matches 95% of queries. Ban unbounded `SELECT` without a key. If you still fit on one primary with headroom, do not shard for prestige.
 
 ## What you can borrow
 

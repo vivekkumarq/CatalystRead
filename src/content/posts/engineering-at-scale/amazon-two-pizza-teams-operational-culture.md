@@ -3,6 +3,7 @@ title: "Two Pizzas, One Team: Amazon's Operational Culture Beyond the Slogan"
 slug: "amazon-two-pizza-teams-operational-culture"
 description: "How Amazon's two-pizza teams, operational readiness reviews, and correction-of-error documents work together as an operating system, not just slogans."
 publishedAt: "2026-06-16"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -30,6 +31,18 @@ When something does go wrong, Amazon's internal process for analyzing it is the 
 ## The pieces reinforce each other
 
 None of these three practices does much in isolation. Small, autonomous teams without a rigorous pre-launch review would launch under-prepared services; rigorous reviews without genuine ownership would just be a gate a separate team resents clearing; and postmortems without an ownership culture that actually reads and acts on them become theater. Together, they form something closer to an operating system for how Amazon runs production services at scale: teams own what they build, prove readiness before launch, and turn every failure into documented, tracked improvement afterward.
+
+## What broke when they scaled
+
+"You build it, you run it" without platform help produces 3 a.m. pages for undifferentiated work: certificate rotation, AMI baking, ticket queues for IAM. Two-pizza teams then either grow shadow ops people (violating the size slogan) or let reliability rot. Amazon's answer at company scale is paved roads — IAM, deployment, monitoring — so ownership means *service* ownership, not reinventing load balancers. ORRs become cargo cult when the checklist is 200 items copied from a retail checkout service onto an internal batch job.
+
+COEs scale only if actions close. A wiki of root causes that nobody audits is worse than silence: it trains the company to perform blamelessness. At Amazon's density of services, a SEV in a shared library can generate dozens of COEs that all "fix" a symptom in the caller. The useful scale pattern is to bubble the corrective action to the shared platform and to track recurrence.
+
+Team topology also fights Conway. A two-pizza team that cannot ship without four other teams' APIs is not independent; it is a distributed monolith with extra meetings. The API mandate and working-backwards docs exist partly to make those dependencies explicit. Size the team to the service, but size the *service* so a small team can actually run it.
+
+## A smaller-team version of the same idea
+
+One on-call rotation that wrote the code. A one-page launch checklist: dashboards, paging, rollback, what you do if a dependency dies. After an incident, a short write-up with two actions that have names and dates. Do not split a five-person company into two-pizza theater. Do not hide production behind a separate ops team if that team cannot change the code that pages them.
 
 ## What you can borrow
 

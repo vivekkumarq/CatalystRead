@@ -3,6 +3,7 @@ title: "DoorDash's Break From the Monolith: A Platform-First Migration"
 slug: "doordash-monolith-to-microservices-platform-approach"
 description: "How DoorDash extracted its logistics and dispatch systems from a Django monolith first, and built a service platform to avoid microservices sprawl."
 publishedAt: "2026-03-19"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -28,6 +29,18 @@ Splitting a monolith into services doesn't remove complexity, it relocates it �
 ## Regional isolation for a regional business
 
 Delivery logistics are inherently local — a Dasher in one city has no bearing on an order in another — so DoorDash, like other high-growth marketplace companies, has discussed geographic or cell-based partitioning of infrastructure, keeping the blast radius of a regional infrastructure issue contained to that region rather than letting it cascade platform-wide.
+
+## What broke when they scaled
+
+DoorDash's Django monolith hit the usual walls: deploy contention, entangled logistics and consumer product, and a scaling profile that did not match a single web app. Extracting dispatch/logistics first was not ideology — it was the domain with the harshest latency and the most distinct scaling. What goes wrong in a naive split is a hundred snowflake services. DoorDash's platform-first telling (templates, paved RPC, observability, later regionalization) is the same lesson Airbnb learned: standards before sprawl.
+
+Regional isolation matches a business that is physically local. A global shared database for "who's delivering in Springfield" is a blast-radius and latency mistake. But regionalization too early duplicates ops. The platform has to make a second region a config, not a research project.
+
+Compatibility during transition — dual reads, feature flags, the monolith as a facade — lasts longer than anyone budgets. Treat it as a product with an end date.
+
+## A smaller-team version of the same idea
+
+Modularize inside Django (or your monolith) until a bounded context has its own scale or team. Extract that one. Provide a cookiecutter for the next service before the fifth volunteer. Keep a service catalog. Regionalize when a region's outage should not take down another, and not because "multi-region" looks good on a slide.
 
 ## What you can borrow
 

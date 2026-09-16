@@ -3,6 +3,7 @@ title: "Why DoorDash Rewrote Its Monolith in Kotlin, Not Go or Java"
 slug: "doordash-python-monolith-kotlin-microservices-migration"
 description: "As DoorDash broke apart its Python monolith, it picked Kotlin over Go and plain Java for the new microservices, and ran the cutover service by service."
 publishedAt: "2025-05-20"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -42,6 +43,18 @@ DoorDash didn't attempt to rewrite the monolith wholesale. New services were bui
 ### The organizational payoff
 
 Standardizing on one language for new backend services, rather than letting each team pick its own, also paid off in ways that had nothing to do with Kotlin's specific features: a single language meant shared tooling, shared code review norms, and engineers who could move between teams without a language switch on top of everything else they had to learn about a new service.
+
+## What broke when they scaled
+
+CPython's GIL and runtime characteristics were a real constraint on DoorDash's request-heavy logistics paths as traffic grew — not a moral failing of Python, which still runs a lot of the company. Their engineering posts on moving services to Kotlin cite JVM performance, coroutine-friendly concurrency, and null-safety versus Go's different error/concurrency model and versus Java's verbosity. Kotlin also sat well on the JVM hiring market and on existing Java libraries.
+
+The cutover tax is dual stacks: Django still owns some domain while a Kotlin service owns dispatch. Network boundaries appear where there were function calls; you need idempotency, timeouts, and tracing that the monolith never required. A "rewrite everything in Kotlin" mandate would have stalled product work. They extracted service by service, often starting with the paths that were CPU- or concurrency-bound.
+
+Kotlin on the JVM still has GC. It is a different GC than CPython's, not "no pauses." Tail latency still wants load tests at dinner-peak shapes.
+
+## A smaller-team version of the same idea
+
+Profile the monolith. Extract the one hot module as a service in a language your team can hire, with a strangler facade. Do not pick Kotlin because DoorDash did if you are a Go shop. Keep Python for glue and ML. Measure p99 before and after; language migrations fail when they are cultural and the graphs do not move.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Keeping Infrastructure Costs Sane While DoorDash Kept Growing"
 slug: "doordash-infrastructure-cost-efficiency-at-scale"
 description: "As order volume climbed, DoorDash treated infrastructure cost as an engineering metric teams could see and act on, not just a line on a finance report."
 publishedAt: "2026-05-30"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -40,6 +41,18 @@ Compute is the most visible cost lever, but data infrastructure — event stream
 ### Reserved and spot capacity for predictable workloads
 
 For workloads with predictable, steady baseline demand, committing to reserved capacity ahead of time is meaningfully cheaper than paying on-demand rates continuously, while more elastic, interruption-tolerant workloads can lean on spot capacity for further savings. Getting this mix right requires actually understanding which workloads are steady-state versus bursty — a classification that has to be revisited as traffic patterns and the service catalog both keep changing.
+
+## What broke when they scaled
+
+Delivery demand is bimodal: lunch and dinner, weekend vs weekday, Super Bowl vs a random Tuesday. A fleet sized for peak 24/7 is a finance incident. DoorDash's cost-efficiency writing treats autoscale, bin-packing, and turning off capacity in the trough as engineering, not a cloud-bill surprise. The break is that default microservice sprawl plus Kafka plus warehouses plus ML training is a second, quieter peak that does not follow order volume — data systems grow with events *kept*, not just orders *served*.
+
+Cost that is only visible in FinOps spreadsheets never changes code. Showing dollars on the same dashboards as latency, tagged by team and service, is what makes a cache, a partition, or a "do we need this topic" decision happen. Rightsizing and reserved capacity help, but the structural wins are dropping duplicate pipelines and not retaining debug-level events forever.
+
+Spot instances and aggressive scale-down have a reliability interaction: a trough strategy that is too aggressive makes the first 10 minutes of lunch an outage. Cost and load-shedding posts are the same system.
+
+## A smaller-team version of the same idea
+
+Tag every cloud resource with an owner. Graph spend next to QPS. Autoscale on a schedule around your real peaks. Delete the unused Kafka topic and the idle RDS. Do not buy a cost platform before you have names on resources. Sample logs.
 
 ## What you can borrow
 

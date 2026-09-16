@@ -3,6 +3,7 @@ title: "The Google File System: Storage Designed to Expect Failure"
 slug: "google-file-system-commodity-storage"
 description: "How Google's 2003 GFS paper rejected the assumptions of traditional file systems and built storage around cheap hardware that fails constantly."
 publishedAt: "2025-05-08"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -29,6 +30,18 @@ The second departure from convention was optimizing for the workload Google actu
 GFS split responsibility between a single master node holding filesystem metadata — the namespace, file-to-chunk mapping, and chunk locations — and many chunkservers that stored the actual 64MB chunks the files were broken into. Centralizing metadata in one master simplified the design considerably: the master always had a global view and could make placement and rebalancing decisions without complex distributed consensus for every operation. Google mitigated the obvious single-point-of-failure risk with operation logs, checkpoints, and a shadow master that could take over if the primary failed, and by keeping metadata small and in-memory so the master stayed fast even at scale.
 
 Clients talked to the master only to get chunk locations, then read and wrote chunk data directly with chunkservers — keeping the master out of the data path entirely so it never became a bandwidth bottleneck. This master/chunkserver split, and the general shape of centralized metadata with distributed data, went on to directly influence Hadoop's HDFS, which mirrored GFS's architecture closely enough that early Hadoop documentation cited the GFS paper as its direct inspiration.
+
+## What broke when they scaled
+
+GFS (Ghemawat, Gobioff, Leung, SOSP 2003) assumed component failure was normal: replicate 64MB chunks, relax POSIX, optimize for large sequential scans. The single master was the simplicity that later forced Colossus. Append-heavy, write-once-ish workloads fit; small-file random I/O and huge namespaces did not, over time. Applications had to tolerate stale replicas and record append semantics that are not local UNIX.
+
+A master restart that rebuilds state from chunkservers is a scaling event at cluster size. Clients caching metadata can serve wrong locations after moves. The paper is honest about these tradeoffs; cargo-culting GFS for a POSIX home directory is the failure mode.
+
+HDFS copied the design and inherited the NameNode wall — history repeating until HA and federation. Concurrent record-append from many mappers onto one log file was a GFS-specific bet: the master leased chunks, chunkservers serialized appends, and clients lived with at-least-once duplicate records. That is a systems API, not POSIX `write()`. When the workload mix shifted toward many small files, 64MB chunks wasted space and inflated metadata — the Colossus-era pressure already visible in the original paper's assumptions.
+
+## A smaller-team version of the same idea
+
+Object storage with replication, not a custom GFS. If you run HDFS, plan NameNode HA. Design apps for immutable blobs and cheap sequential throughput. Treat disks as dying. Do not require POSIX locks on petabytes.
 
 ## What you can borrow
 

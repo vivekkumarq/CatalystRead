@@ -33,6 +33,16 @@ The API is tiny on purpose: `Put`, `Get`, `Delete`, snapshots, iterators. There 
 
 LevelDB assumed a relatively gentle compaction thread and a single writer mindset that did not match Facebook's multi-threaded, write-heavy MySQL-replacement workloads. RocksDB added more compaction styles, column families, and a lot of stall-tuning knobs. The file format family stayed recognizable. That is a successful library: people fork the runtime without throwing away the on-disk idea.
 
+## What broke when they scaled
+
+LevelDB's single-writer, gentle compaction model (Ghemawat and Dean's library, inheriting SSTable/LSM ideas from the Bigtable OSDI 2006 paper) stalls when many threads ingest at Facebook-scale write rates — hence RocksDB. Write amplification and space amplification are the LSM tax: too-aggressive compaction kills throughput; too-little compaction kills reads with a pile of L0 files. Embedded in Chrome or a Bitcoin node, that trade is local. Embedded on a network filesystem, you discover LevelDB never promised distributed locking.
+
+Process-crash safety depends on the log; a bug in fsync policy is data loss, not a "cache miss." Range tombstones and deletions that do not compact away create the "I deleted everything and disk is still full" incident. Forks added column families and stall-tuning because production workloads are not the LevelDB test suite.
+
+## A smaller-team version of the same idea
+
+Use SQLite if you need SQL and one file. Use LevelDB/RocksDB when you need an ordered key-value store in-process and can budget compaction CPU and disk. Put a mutex around writers if you are not RocksDB. Never NFS. Read the LevelDB `doc/` notes before turning RocksDB knobs; the vocabulary is the same.
+
 ## When an embedded LSM is the right product choice
 
 - You need ordered iteration and range scans, not only a hash map.

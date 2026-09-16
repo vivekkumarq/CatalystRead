@@ -3,6 +3,7 @@ title: "Superset: From Airbnb Hackathon Project to Apache Top-Level Project"
 slug: "airbnb-superset-hackathon-to-apache-project"
 description: "How a weekend hackathon tool for exploring data at Airbnb grew into Apache Superset, one of the most widely used open source BI platforms."
 publishedAt: "2025-05-14"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -31,6 +32,18 @@ The project was renamed Caravel after a trademark conflict with the original nam
 ## From internal tool to Apache Software Foundation project
 
 Airbnb open sourced Superset and it entered the Apache Incubator in 2017, eventually graduating to a top-level Apache Software Foundation project in 2021. That governance shift mattered in practice: instead of a single company's roadmap and priorities determining the tool's direction, a broader community of contributors and committers — from companies well beyond Airbnb — took ownership of its evolution, review process, and release cadence. This is the same open source trajectory Airbnb's Airflow took a few years earlier, and it reflects a recurring pattern in Airbnb's data infrastructure: internal tools built to solve a real, unglamorous operational problem tend to generalize well precisely because the underlying problem — scheduling pipelines, exploring data, visualizing metrics — isn't specific to any one company's business.
+
+## What broke when they scaled
+
+A BI tool that can run arbitrary SQL against the warehouse will, at company scale, become a denial-of-service engine aimed at your most expensive cluster. Dashboards refresh on open; twenty people opening the same "company pulse" chart is twenty identical heavy queries unless you cache by query fingerprint and honor a cache timeout that product owners understand. Airbnb's evolution of Superset — and every serious deployment since — had to add async query execution, result caching, and limits so an exploratory GROUP BY on a fact table could not crowd out ETL.
+
+The semantic layer also decays. Metrics defined in the tool drift from metrics defined in the warehouse or in Minerva-style systems. Chart builders save SQL that hard-codes a join "just this once." Role-based access that is coarse (viewer vs admin) is insufficient once datasets include PII or financials; row-level rules and database impersonation become mandatory, and they are easy to get wrong when the SQLAlchemy dialect layer sits between the user and five warehouse types.
+
+Open-sourcing changed the failure mode from "Airbnb's fork" to "Apache governance plus a thousand deployments." That is a feature for longevity and a cost for focus: connectors, chart types, and security patches now serve airlines, banks, and startups, not only a marketplace.
+
+## A smaller-team version of the same idea
+
+Give analysts one place to save charts against *named* datasets, not a zoo of CSV exports. Cache the five dashboards leadership actually opens. Put warehouse query tags and a statement timeout on the service account. If you already have metric definitions elsewhere, do not let the BI tool become a second, conflicting dictionary — connect it to those definitions or accept that exploration stays exploratory. Graduate to Apache Superset or a vendor when you need RBAC, a chart library, and a community more than a notebook gallery.
 
 ## What you can borrow
 

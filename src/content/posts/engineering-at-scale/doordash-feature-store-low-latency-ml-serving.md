@@ -3,6 +3,7 @@ title: "The Feature Store Behind DoorDash's Real-Time ML Predictions"
 slug: "doordash-feature-store-low-latency-ml-serving"
 description: "How DoorDash built a feature store to serve consistent, low-latency machine learning features across dispatch, search, and fraud detection."
 publishedAt: "2025-11-10"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -37,6 +38,18 @@ Because predictions like dispatch assignment or fraud scoring happen inline in a
 ## Making features reusable across teams
 
 Beyond consistency and latency, a feature store pays off organizationally: once a feature like "Dasher's rolling acceptance rate" exists in the store, any team building a new model can reuse it rather than rebuilding the same computation from scratch, which both saves engineering effort and reduces the number of subtly different versions of the same underlying signal floating around the company's models.
+
+## What broke when they scaled
+
+Training-serving skew is the quiet killer: the model learned `merchant_avg_prep_30d` from the warehouse; production computes a slightly different window, or misses a timezone, and dispatch quality falls while dashboards still show "model AUC is fine." DoorDash's feature-store writing stresses a single definition materialized at two speeds — batch to offline training tables, streaming or request-time lookup to an online KV — so names match.
+
+Online serving has a latency budget inside search and dispatch (milliseconds). If the store is "just Cassandra with a cache," a miss pattern during dinner becomes an SLO breach. Features that require joins at request time do not belong in the hot path; they belong precomputed. Point-in-time correctness for training (no leakage from the future) is another scaling footgun: naive dumps of current feature values into historical labels invent performance.
+
+Reuse across teams only works with ownership. A `user_cancel_rate` without a grain and an owner will be forked.
+
+## A smaller-team version of the same idea
+
+A YAML list of features, a Spark/SQL job that writes parquet for training, and Redis for the ten features the live model needs. Log feature vectors with predictions. Join training labels using timestamps that would have been available at serve time. Do not build Feast-on-Kubernetes until that logging exists.
 
 ## What you can borrow
 

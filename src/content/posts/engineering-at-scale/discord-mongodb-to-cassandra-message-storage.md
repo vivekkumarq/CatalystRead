@@ -3,6 +3,7 @@ title: "Discord's First Big Migration: MongoDB to Cassandra for Messages"
 slug: "discord-mongodb-to-cassandra-message-storage"
 description: "Why Discord outgrew a single MongoDB replica set for message storage and moved to Cassandra years before its later ScyllaDB migration."
 publishedAt: "2025-06-28"
+updatedAt: "2026-09-16"
 category: "Discord"
 tags:
   - Engineering at Scale
@@ -30,6 +31,18 @@ Moving an actively growing, latency-sensitive dataset the size of Discord's mess
 ## Setting up the next decade of storage decisions
 
 This MongoDB-to-Cassandra migration set the data model — partition by channel, cluster by time-sortable ID — that Discord's message storage kept even through the later migration off Cassandra itself, when operational pain from Cassandra's compaction behavior and tail latencies at much higher scale eventually pushed Discord toward ScyllaDB. The lesson of the earlier migration outlived the database it was originally built for: get the partitioning and access-pattern design right, and you can swap out the underlying storage engine later without redesigning how the application thinks about its own data.
+
+## What broke when they scaled
+
+A MongoDB replica-set primary is a write funnel. As Discord approached hundreds of millions, then a billion messages, that funnel — plus working set that no longer fit RAM — made "just add a secondary" useless. Sharded Mongo was a possible path; Discord's engineers chose Cassandra instead because the access pattern was already clear: almost all reads are "messages in this channel, recent first," and writes are appends. That maps to `channel_id` partitions and clustering by a time-sortable snowflake-like id. A document store that encouraged fetching rich objects was the wrong shape for an ever-growing log.
+
+Migration mechanics: two systems, one growing firehose. Backfill must be idempotent; message ids must not collide; edits/deletes during the dual-write window must apply to both. A user scrolling history is an integration test you cannot fake. Discord's write-ups treat this as operational work measured in months, not a dump/restore.
+
+The model outlived Cassandra. When GC and compaction later justified ScyllaDB, they did not go back to Mongo's document layout. Partitioning by channel remained the invariant. That is the scaling lesson: pick the key for the query you cannot make slow.
+
+## A smaller-team version of the same idea
+
+Store chat as an append-only log keyed by room, ordered by id. Postgres with `(channel_id, message_id)` and a hot recent index will take you far. Move to a wide-column store when a single primary cannot absorb writes or when history no longer fits a comfortable working set. Do not shard prematurely. When you migrate, dual-write new messages first, backfill old, then compare reads on a shadow path.
 
 ## What you can borrow
 
