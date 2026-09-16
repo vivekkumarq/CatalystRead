@@ -3,6 +3,7 @@ title: "word2vec: Skip-gram, Negative Sampling, and Why Embeddings Went Mainstre
 slug: "word2vec-skipgram-negative-sampling"
 description: "Mikolov et al. turned distributional semantics into a scalable training trick. How skip-gram works, why negative sampling exists, and what still applies to modern embeddings."
 publishedAt: "2026-08-05"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -48,3 +49,30 @@ The parts that aged well:
 - **Data and negatives matter more than architecture theater.** A poorly sampled negative set still wrecks metric learning in 2026.
 
 If you ship a two-tower retrieval model, you are closer to skip-gram than to a 12-layer transformer: one vector for the query-like object, one for the document-like object, trained with in-batch or sampled negatives. Reading the 2013 papers with that mapping in mind is more useful than treating them as NLP history.
+
+## A worked negative-sampling step
+
+Vocabulary 100k, embedding dim 100, window 5, `k = 5` negatives. For center word “red” and true context “wine,” you push `v_wine · v_red` up and five noise words down. Noise drawn uniformly is too easy: frequent words never get hard negatives. The papers sample from a unigram raised to 3/4, which oversamples rare words relative to raw frequency and makes the logistic problem harder in a useful way. If your two-tower trainer uses in-batch negatives only, popular items dominate the batch and you recreate a biased softmax. Mix in explicit negatives or subsample popular documents.
+
+Subsampling “the” with probability based on frequency is the other half: without it, most windows teach almost nothing.
+
+## Failure modes
+
+**Polysemy collapse.** One vector for “bank” is a known limit; do not sell it as a sense-aware model.
+
+**Unigram negatives in retrieval.** You train a popularity model, then wonder why tail SKUs never retrieve.
+
+**Analogy as the only eval.** `king - man + woman` is a demo. Track a real task (retrieval nDCG, NER F1, duplicate-ticket match).
+
+**Huge windows on noisy logs.** Context that is not linguistic (session IDs, timestamps) pulls embeddings toward junk.
+
+## When not to use static word2vec
+
+Token-level contextual models own modern NLP. Character-level SKUs and code identifiers want subword tokenization, not a closed word list. If you only have 10k sentences, a PPMI matrix plus SVD may be more honest than undersampled skip-gram. Do not train word2vec on user PII dumps; the vectors memorize.
+
+## Review checklist
+
+- Negative distribution is documented (3/4 unigram, in-batch, hard negatives).
+- Frequent-word subsampling is on for language-like data.
+- Eval is a product task, not only a t-SNE screenshot.
+- Rare-tail behavior was inspected (skip-gram vs CBOW choice).

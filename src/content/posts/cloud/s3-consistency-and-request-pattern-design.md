@@ -3,6 +3,7 @@ title: "Object Storage Consistency and the Request Patterns That Survive It"
 slug: "s3-consistency-and-request-pattern-design"
 description: "What read-after-write means on S3 today, why list-after-delete still bites, and how to design keys, retries, and multipart uploads around that."
 publishedAt: "2026-08-19"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -42,3 +43,32 @@ Conditional writes (`If-None-Match: *` on a create, or etag-based updates where 
 Small random GETs of huge objects are the anti-pattern; use range GETs or chunk the file. Tiny objects (kilobytes of JSON at millions per day) often belong in a database, with S3 used for blobs. Cross-region replication is asynchronous: do not pretend a PUT in `us-east-1` is already readable in `ap-south-1` for a user request.
 
 The 2020 consistency upgrade is real and worth deleting old comments about "wait 2 seconds after PUT." Replace those comments with the actual invariant you need: single-key read-your-writes, or a multi-object commit protocol you designed on purpose.
+
+## A worked manifest commit
+
+Upload parts to `runs/2026-09-16/job-9f3c/parts/0001.parquet` … `000N`. Only after all parts succeed, PUT `runs/2026-09-16/job-9f3c/manifest.json` listing every part key and checksum. Readers take a manifest key from a database row (or a `current.json` you overwrite last). They never LIST the prefix to decide completeness. A retry of part `0001` uses the same key and the same bytes (or a new versioned key if you must replace).
+
+Multipart: reuse one upload ID per part set; abort abandoned uploads on a timer or you pay for incomplete parts.
+
+## Failure modes
+
+**LIST as transaction log.** Clients see a partial prefix and process it.
+
+**Timeout then new key.** Orphan objects and a DB pointer at the old name.
+
+**Cross-region read-your-write.** Replication lag is not the 2020 strong-consistency guarantee.
+
+**Overwrite without versioning** on a system-of-record object. No forensic trail.
+
+**Tiny JSON at millions of PUTs/day.** Request overhead dominates; those rows wanted a database.
+
+## When not to treat S3 as a database
+
+Secondary indexes, multi-key transactions, query-by-attribute, and low-latency conditional logic. Conditional PUTs help for a single key; they do not replace DynamoDB for a work queue. Also skip S3 for the source of truth of a lock unless you fully understand TTL and fencing; people rebuild ZooKeeper badly with objects.
+
+## Review checklist
+
+- Multi-object workflows have an explicit commit object; LIST is not the commit.
+- Keys are deterministic; retries do not mint copies.
+- Versioning or immutability on objects that are the system of record.
+- Cross-region is called out as async; range GET for large blobs.

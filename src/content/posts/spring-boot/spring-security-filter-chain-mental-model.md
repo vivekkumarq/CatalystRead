@@ -3,6 +3,7 @@ title: "The Spring Security Filter Chain, From Request to SecurityContext"
 slug: "spring-security-filter-chain-mental-model"
 description: "How SecurityFilterChain is assembled, where UsernamePassword and JWT filters sit, and why 'it works in a test slice' still fails behind a gateway."
 publishedAt: "2026-09-12"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -53,3 +54,32 @@ Anonymous authentication is a real `Authentication` object. `anonymous()` vs `pe
 Set logging for `org.springframework.security` to DEBUG in a **non-prod** clone and watch which filter failed. `SecurityContextHolder.getContext()` in a `@Async` method is empty unless you propagate the context — that is not a filter bug.
 
 If a `@WebMvcTest` passes and the full app 401s, the test likely did not use the same `SecurityFilterChain` or used `@WithMockUser` while production expects a real JWT. Tests should hit the matcher you think production hits.
+
+## A worked example
+
+You expose `/api/**` as JWT and `/actuator/health` as public, with a second chain for a small admin UI that uses form login and CSRF. Two beans, two `securityMatcher`s. A request to `/api/orders` never hits the form-login filters. A test with `MockMvc` and `httpBasic` against `/api` fails for the right reason: that chain does not enable HTTP Basic.
+
+```java
+.mockMvc.perform(get("/api/orders")
+    .header("Authorization", "Bearer " + token))
+    .andExpect(status().isOk());
+```
+
+Generate the token from the same `JwtDecoder` as production, or use `jwt()` request post-processors that match claim names your converter expects (`sub`, `roles`).
+
+## Failure modes
+
+`anyRequest().authenticated()` on a chain that also matches static assets blocks CSS after a "secure by default" copy-paste. CSRF disabled on a cookie session SPA is a classic hole. Multiple `SecurityFilterChain` beans without matchers collide; one wins unpredictably. `SecurityContext` in `CompletableFuture.supplyAsync` is empty, so `@PreAuthorize` on an async worker does nothing useful — or uses the wrong thread's context if you reuse threads.
+
+A custom filter inserted with `addFilterBefore` in the wrong place runs before the JWT is parsed and always sees anonymous.
+
+## When this is the wrong tool
+
+Spring Security's filter chain is the wrong place to implement business "can this user see order 12?" beyond role/authority checks — that is domain authorization in the service. Do not use it as an API gateway (rate limits, WAF, mTLS termination belong at the edge). If the app is a batch job with no HTTP, you do not need a filter chain; use method security or nothing. Copying OAuth2 login into a machine-to-machine client is the wrong tool: use client credentials, not a browser filter chain.
+
+## Review checklist
+
+- Each chain has a `securityMatcher`; actuator is not accidentally on the API chain.
+- CSRF matches the session story (on for cookies, off for Bearer-only).
+- JWT is validated in one place (gateway *or* resource server JWK set).
+- Slice tests hit the same matcher and token shape as production.

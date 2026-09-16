@@ -3,6 +3,7 @@ title: "ResNets: Why Skip Connections Let Us Train Hundreds of Layers"
 slug: "resnet-why-residual-connections-work"
 description: "He et al. 2016 showed degradation was an optimization problem. Residual blocks, identity shortcuts, and what that still means for modern networks."
 publishedAt: "2026-08-02"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -35,3 +36,30 @@ ResNets did not win on skip connections alone. He initialization, batch normaliz
 When a deep stack is hard to train, ask whether each layer is being asked to reconstruct the whole representation. Additive updates with a highway for the old state are a strong default — in residual MLPs, in U-Nets, in diffusion backbones. When a skip would be the wrong inductive bias (you genuinely need to forget the input), say so explicitly rather than omitting the skip by accident.
 
 The degradation plot in the paper is still the slide to show a skeptic: training error going *up* with depth is not "more capacity overfit," it is the optimizer losing the plot. Residuals were a constraint that made the optimizer's job possible.
+
+## A worked identity path
+
+A 34-layer plain net’s training error is *higher* than an 18-layer net on the same data. Add identity skips so a block can implement `x + F(x)` with `F` near 0. Training error of the deep net now at least matches the shallow one, then usually beats it. If you insert a projection shortcut with a large random 1×1 everywhere, you reintroduce a hard mapping at every block; keep identity when shapes match.
+
+In a Transformer, the residual stream is the `x`; attention and MLP are `F`. Zero-init or small-init on the last linear of `F` (a later trick) is the same idea: start close to identity.
+
+## Failure modes
+
+**Skip around the wrong tensor.** Adding `x` to a downsampled map without a projection is a shape bug people “fix” with interpolate hacks that destroy the identity interpretation.
+
+**Stripping BN and keeping 2016-depth.** The paper’s recipe was a bundle. Deep residual MLPs without normalization often need extra care (Init, LR).
+
+**Residual + dropout on the skip itself.** If you drop the identity path, you no longer have a guaranteed highway.
+
+**Exploding residuals in very deep stacks.** Some later work uses residual scaling (`x + α F(x)`). If loss explodes at depth 100+, check the scale of `F`, not only LR.
+
+## When not to add a skip
+
+When the layer must forget (a hard gating that zeros the past, some discrete bottlenecks). When the network is two layers and identity is not the problem. When you already have an LSTM-style gated highway and are adding a second skip that double-counts. Residuals do not replace a sane learning rate or data pipeline.
+
+## Review checklist
+
+- Identity shortcut wherever channel/spatial size matches.
+- Degradation is diagnosed as train-error vs depth, not only val overfit.
+- Block internals (BN, init) still match a known working recipe.
+- Skip is not dropped out; `F` can shrink to zero.

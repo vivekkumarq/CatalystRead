@@ -3,6 +3,7 @@ title: "PageRank: The Original Paper Behind Ranking the Web"
 slug: "google-pagerank-from-the-original-paper"
 description: "How Brin and Page turned the web into an eigenvector problem, what the damping factor is for, and which lessons still apply to ranking inside products."
 publishedAt: "2026-07-30"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -39,3 +40,30 @@ Computationally, they already cared about sparse iteration over a graph that did
 Do not ship raw PageRank on a social graph and call it "the Google algorithm." Personalization, recency, and spam are not optional at product scale. Do take the discipline: write down the random walk, the teleport, the dangling-node policy, and how often you recompute. Ranking bugs are often those policy choices, not the linear algebra.
 
 The anatomy paper is also a systems paper: crawling politely, storing the index, serving queries. Ranking without a crawl and an index is a whiteboard. Reading both Stanford reports together is the right dose of history — the formula, and the factory that made it a product.
+
+## A worked walk on a tiny graph
+
+Three pages: A links to B and C; B links to C; C links to A. With `d = 0.85` and uniform teleport, power iteration from a uniform start converges in a handful of steps. C collects more rank than B because two nodes point at it. If you then make C a dangling node (delete its out-link), that rank must be redistributed — typically via the teleport — or it leaks and the vector no longer sums to one. Implement the dangling policy explicitly in a unit test with a 3×3 matrix; that test will catch the production bug where a new content type has no outgoing links and silently drains the walk.
+
+Personalized PageRank is the same iteration with teleport concentrated on a seed set (the user’s history, a topic page). That is the version recommendation systems actually ship, not the global “importance of the whole web” vector.
+
+## Failure modes
+
+**Link farms.** Dense cliques of low-quality pages that point at a money page inflate graph score. Damping does not remove this; you need spam classifiers, trust seeds, or edge weights that are not binary.
+
+**Dead ends and spider traps.** A strongly connected bucket that the surfer cannot leave without teleport becomes a rank sink. The `1-d` jump is the theoretical fix; in practice you also cap out-degree tricks and drop known trap hosts at crawl time.
+
+**Stale graph.** A weekly recompute on a social product whose follow graph changes hourly will rank yesterday’s celebrity. Write down the lag SLO.
+
+**Using PageRank as a query score alone.** The original system combined it with retrieval. Graph prior without text match is a popularity contest.
+
+## Operational gotchas
+
+Power iteration needs a consistent crawl snapshot; mixing edge files from two days creates “impossible” scores. Store the graph as sparse adjacency, not a dense `N×N`. Monitor dangling-node fraction after each crawl; a sudden spike is a parser bug, not a ranking insight.
+
+## Review checklist
+
+- Damping factor, dangling-node policy, and recompute cadence are written down.
+- Teleport is uniform or personalized on purpose, not an accidental leftover.
+- Spam / link-farm response exists; graph score is a prior, not the whole ranker.
+- Iteration is on a frozen snapshot with a convergence check, not a live mutating table.

@@ -3,6 +3,7 @@ title: "SLSA and Provenance: Making 'Where Did This Binary Come From?' a Build P
 slug: "slsa-supply-chain-provenance"
 description: "What SLSA levels actually require, how provenance attestations fit next to SBOMs, and a realistic path from 'we tag git' to a verifiable builder."
 publishedAt: "2026-08-21"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - DevOps
@@ -44,3 +45,32 @@ SBOMs and provenance complement. An SBOM without provenance is a grocery list wi
 Do not sign provenance from the same GPG key developers use to sign git tags if those developers can also push arbitrary images. The builder identity must be narrower than "any engineer." Do not claim hermetic builds while `go get` hitting the public internet at 3am. SLSA is honest about that: the level is a property of the pipeline, not a badge in a README.
 
 Start by recording commit SHA and image digest in deploy logs — you may already have half of level-1. Then move signing into the hosted builder. That order prevents a year of attestations nobody verifies.
+
+## A worked admission path
+
+CI (GitHub Actions OIDC) builds `image@sha256:abc`, uploads a SLSA provenance attestation signed by Sigstore. The cluster admission webhook allows only builder identity `https://token.actions.githubusercontent.com` for this repo and requires the predicate’s commit SHA to match a tag you cut. A laptop `docker push` of the same Dockerfile bytes is rejected: no matching builder identity. That is the point.
+
+Store the attestation next to the image (referrers). On deploy, log digest + commit + builder. Incident question “what ran?” should be one query, not a Slack archaeology.
+
+## Failure modes
+
+**Self-signed attestations** from developer laptops. Anyone who can push can mint provenance.
+
+**Hermetic claim while `npm install` hits the public registry at 3am.** The level is a lie; pin and vendor or use a verified cache.
+
+**SBOM from a different job** than the image build. Ingredient list for some other graph.
+
+**Admission off in a namespace** “for debugging” that stays off.
+
+**Unsigned `latest` tags** still pullable by humans; provenance on digest only helps if deploys use digests.
+
+## When not to chase a high SLSA level
+
+Internal throwaway prototypes with no production path. Firmware built in a certified lab that already has a stronger paper trail — map that trail to SLSA language rather than bolting Sigstore onto a disconnected hall. If you cannot verify at deploy time, generating attestations is paperwork. Do verification first on a single production service, then raise builder isolation.
+
+## Review checklist
+
+- Deploy uses image digest; provenance is verified, not only stored.
+- Builder identity is narrower than “any engineer’s GPG key.”
+- SBOM and provenance come from the same build job.
+- A laptop-built image cannot enter the cluster.

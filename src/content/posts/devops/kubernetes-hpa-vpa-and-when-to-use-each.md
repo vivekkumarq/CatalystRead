@@ -3,6 +3,7 @@ title: "HPA and VPA: Autoscaling Pods Without Oscillating Through PagerDuty"
 slug: "kubernetes-hpa-vpa-and-when-to-use-each"
 description: "Horizontal versus vertical autoscaling in Kubernetes, custom metrics, and the cooldown and request-sizing mistakes that cause flapping."
 publishedAt: "2026-08-26"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - DevOps
@@ -42,3 +43,30 @@ Do not VPA-auto a latency-sensitive service that is also HPA'd on CPU unless you
 HPA can want 40 pods. The cluster must have nodes. If node provisioning takes eight minutes, your HPA max is a fiction during a spike. Over-provision a small buffer pool, or use in-place scale-up features where they exist, or accept that the SLO during a flash crowd includes "we were waiting for VMs."
 
 Autoscaling is a control system. Name the setpoint (utilization, lag), the actuator (replicas vs requests vs nodes), and the delay. If you cannot draw those three, you are not tuning HPA — you are adding YAML until the graph looks calm in staging.
+
+## A worked HPA miss
+
+CPU HPA target 70%, requests 100m, actual use 600m at 10 RPS per pod. Utilization is 600%, already maxed, but the limiter is a downstream database — more pods make more connections and p99 gets worse. Custom metric should have been queue depth or RPS with a max replica cap tied to DB pool budget. After switching to RPS-per-pod and a scaleDown window of 300s, replica count stops following every brief spike.
+
+VPA recommendation on the same service then shows memory 512Mi vs requested 128Mi. Apply that on the next deploy *without* VPA auto-evict, then re-check HPA: higher requests lower CPU utilization for the same work, so HPA may scale down. Change one loop at a time.
+
+## Failure modes
+
+**Requests as fiction.** HPA math is utilization vs requests. Polite tiny requests guarantee nonsense.
+
+**HPA+VPA auto together.** Request changes move utilization, which moves replicas, which moves per-pod load, which moves VPA. Oscillation.
+
+**No max replicas.** A retry storm scales to the ceiling and takes the cluster with it. Max must exist and match a known downstream budget.
+
+**Scale-to-zero on a latency SLO.** Cold start is part of the SLO; if you cannot pay it, keep a min replica.
+
+## When not to autoscale
+
+Sticky in-memory sessions, single-writer leaders, and licensed pods with a hard cap. Cron jobs that already request what they need. If load is a daily known peak, a scheduled replica count is simpler and easier to explain than a mis-tuned HPA. VPA auto-evict is the wrong tool for a latency-sensitive singleton.
+
+## Review checklist
+
+- Requests match reality; HPA signal leads the SLO (CPU or custom).
+- Stabilization windows on scale-down; max replicas tied to a dependency budget.
+- VPA recommendation mode first; do not combine VPA-auto with CPU HPA casually.
+- Cluster node provisioning delay is in the capacity story.

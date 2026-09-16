@@ -3,6 +3,7 @@ title: "FlashAttention: Why IO-Aware Kernels Matter More Than Another 2% BLEU"
 slug: "flashattention-why-io-aware-kernels-matter"
 description: "Dao et al. showed that attention was memory-bound, not math-bound. Here is the IO story and what it changed for long-context training."
 publishedAt: "2026-07-28"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -33,3 +34,26 @@ Approximate attention (Linformer, Performer, sparse patterns) tried to dodge the
 - Training and inference have different shapes. Inference decode is often memory-bound on the KV cache, which is a related but not identical IO story (FlashDecoding, paged attention, GQA). Do not cite FlashAttention as if it solved decode.
 
 The paper is a reminder that "the algorithm" and "the algorithm as it hits the memory hierarchy" are different objects. In GPU-era ML, the second object is frequently the one that decides whether the first one can ship.
+
+## A worked example
+
+Profile naive attention vs FlashAttention on a 8k sequence, batch 2, hidden 1024. NVIDIA Nsight or a simple CUDA memory snapshot shows the naive path allocating a multi-gigabyte scores tensor; FlashAttention keeps activations near the expected `O(N)` range for that layer. Training step time drops even though FLOP count is similar. You record both step time and peak allocated bytes in the experiment log so a later "optimization" that reintroduces materialization is obvious.
+
+When enabling a vendor kernel, lock versions: a silent fallback to math attention on an unsupported head dimension looks like a performance regression in the app, not a kernel miss.
+
+## Failure modes
+
+Assuming FlashAttention changed complexity class — it is still quadratic compute. Mixed precision softmax numerical edge cases on extreme score ranges. Custom masks that the kernel does not support falling back slowly. Training with sequence packing where padding tokens still participate because the mask was not passed into the fused kernel. Inference decode bottlenecks on KV cache bandwidth while someone "turns on FlashAttention" and expects decode tokens/s to double.
+
+Compiling for one GPU arch and running on another silently uses a worse kernel.
+
+## When this is the wrong tool
+
+Tiny sequences (hundreds of tokens) may already be compute-bound; fusion wins less. Approximate attention may still be required at 1M context if you cannot pay quadratic FLOPs. FlashAttention does not replace model architecture choices (GQA, sliding window) for memory at extreme length. CPU inference and tiny edge NPUs need different kernels. If you cannot measure HBM traffic, do not argue from the paper title alone — measure bytes and time.
+
+## Review checklist
+
+- OOM vs FLOPs is measured on the score matrix before proposing approximations.
+- Masks and packing are actually consumed by the fused kernel.
+- Decode/KV-cache IO is a separate discussion from training attention.
+- Kernel arch matches the GPU you run; fallbacks are visible in profiles.

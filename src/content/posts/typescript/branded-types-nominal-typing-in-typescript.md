@@ -3,6 +3,7 @@ title: "Branded Types: Nominal Identity in a Structural Type System"
 slug: "branded-types-nominal-typing-in-typescript"
 description: "How to stop mixing user IDs and order IDs, when brands beat extra classes, and the limits of compile-time branding at runtime."
 publishedAt: "2026-08-14"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -55,3 +56,35 @@ After compile, `UserId` is a string. `JSON.stringify`, Redis, and Postgres will 
 Libraries like `zod` can output branded types from a schema so the parse function is the only cast. That pairing (schema + brand) is stronger than brands alone, because invalid strings never enter the typed interior.
 
 If a junior engineer cannot tell why two string aliases exist, the brand is doing product work: it encodes a domain distinction that reviews used to catch by luck.
+
+## A worked example
+
+`transfer(from: AccountId, to: AccountId, amount: Cents)` should not accept a user id or a dollar float. Define `Cents` as a branded integer and parse at the HTTP edge:
+
+```typescript
+function asCents(n: number): Cents {
+  if (!Number.isInteger(n) || n < 0) throw new Error("cents");
+  return n as Cents;
+}
+```
+
+A test that `transfer(userId, accountId, 10.5)` fails to compile is the payoff. At runtime, a Fastify preValidation hook runs `asAccountId` on params. Interior ledger code never sees raw strings.
+
+For secrets, `type Redacted = string & { readonly [SecretBrand]: "redacted" }` plus a `toLog(): string` that returns `***` prevents accidental interpolation in `console.log` if you only log via that helper — remember the brand itself will not stop `String(secret)`.
+
+## Failure modes
+
+`as UserId` on unparsed JSON reintroduces the bug. Two packages each define `UserId` with their own `unique symbol`; they are incompatible, which is good, until someone adds a shared cast helper that uses `as any`. Generic `id: T` that accepts both brands because `T extends string` erases the distinction. `structuredClone` and `JSON.parse` return plain strings.
+
+Over-branding (`FirstName`, `LastName`) makes every mapper a cast festival and people stop trusting the compiler.
+
+## When this is the wrong tool
+
+If the values are already different TypeScript types (`number` vs `string`), you do not need a brand. Classes or private-constructor wrappers are better when you need runtime methods and prototype identity. Brands are the wrong tool for validating nested payloads — use a schema library, optionally with brand output. Do not brand IDs in a codebase that constantly concatenates SQL strings; fix the query layer. If a third-party SDK demands `string`, keep the brand inside your module and unwrap once at the SDK call, documented as a boundary.
+
+## Review checklist
+
+- Brands use `unique symbol`, not a shared `{ __brand: string }`.
+- Parse/construct at HTTP and queue edges; no `as Brand` on raw JSON.
+- Runtime checks live in the constructor; interior code trusts the type.
+- Brands are reserved for mix-ups that cost money or safety, not every DTO field.

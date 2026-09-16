@@ -3,6 +3,7 @@ title: "CSS Cascade Layers: Ending Specificity Wars Without !important"
 slug: "css-cascade-layers-specificity"
 description: "How @layer orders unlayered CSS, utilities, and third-party sheets, and a practical layer map for a design-system-plus-app codebase."
 publishedAt: "2026-09-14"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -46,3 +47,30 @@ Import Bootstrap or a date-picker into `@layer third-party` so your components l
 Start by wrapping existing files in `@layer leftover` and declare `leftover` last among app layers. New code goes into the proper layer. Shrink `leftover` over time. Shadow DOM and Tailwind's own layer system (`@layer base/components/utilities`) need a documented map so you do not nest competing orders.
 
 If a PR adds a selector with three classes "for specificity," that is the signal to use a layer (or a utility) instead. The cascade should be an architecture, not a high-score list.
+
+## A layer map that survives a design system
+
+Write the layer order in one file that every entrypoint imports first. The names are a contract: tokens never override components; utilities may override components; overrides are last and rare. When a new package lands, it gets a layer assignment in that file, not a comment in a Slack thread.
+
+Shadow DOM still has its own cascade. A layered page stylesheet does not automatically win inside a closed shadow root. Document which tokens pierce (`:host`, CSS variables on `:root`) and which component styles stay encapsulated. Teams that treat `@layer` as a substitute for shadow boundaries end up with parts styled twice.
+
+Tailwind’s `@layer base, components, utilities` is a second order. Nesting Tailwind inside your `utilities` layer, or importing it unlayered, will scramble which `.p-0` wins. Pick one: either Tailwind owns the utility layer and your components sit earlier, or you disable Tailwind layers and emit utilities into your named map. Both work. Two maps do not.
+
+## Failure modes
+
+**Unlayered leftovers.** A CMS “custom CSS” field, a Storybook decorator, or a `style` attribute on a layout component is unlayered and beats everything. `style=""` is not a layer problem — inline styles are a different cascade origin — but unlayered author CSS is. Hunt `<style>` tags in templates during the migration.
+
+**`!important` inside an early layer.** Important declarations compare across layers in reverse order: important in `reset` can beat important in `overrides`. If someone “fixes” a token with `!important` in `reset`, you will spend a day learning that rule. Ban important except in the documented override layer, and even then prefer a later layer without important.
+
+**Import order versus `@layer` names.** `@import "vendor.css" layer(third-party)` is the reliable wrap. Importing vendor CSS without the `layer()` function, then hoping a later `@layer third-party` wraps it, does not rewind the unlayered sheet.
+
+## When layers are the wrong tool
+
+A single-author stylesheet of a few hundred lines does not need seven layers. Specificity and source order are enough. Layers pay off when multiple teams and vendors share one document. They also do not replace cascade *origins* (user agent, user, author) or `@scope`. If the bug is “this component should not see page styles,” encapsulation or a shadow root is the fix, not a later layer.
+
+## Review checklist
+
+- Layer order is declared once; new files only *fill* named layers.
+- No unlayered author CSS in app templates; leftover is a named, shrinking layer.
+- Vendor CSS enters through `layer()`.
+- A PR that adds three classes “to win” is sent back to change layer or use a utility.
