@@ -3,6 +3,7 @@ title: "Normalization vs Pragmatic Denormalization"
 slug: "normalization-vs-pragmatic-denormalization"
 description: "When strict normalization protects you, when it just adds joins, and how to denormalize deliberately instead of by accident."
 publishedAt: "2025-01-06"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -53,3 +54,13 @@ Note this specific example is actually a case where you *want* the drift — `cu
 ## A practical rule of thumb
 
 Normalize by default, and only denormalize a specific column or table once you can point to the actual query that's slow, the actual join that's expensive at your real data volume, and a plan for how the denormalized copy stays correct — trigger, application-level write-through, or an accepted eventual-consistency window via a background job. Denormalization adopted as a blanket strategy up front, before any of that is known, tends to produce a schema with sync bugs and no measured benefit to show for the risk.
+
+## A worked failure mode
+
+An orders table stores `customer_email` copied from users. Emails change; receipts go to ghosts. A trigger was "going to be added later." The opposite failure: a 5-way join on every page view of a hot path that could have stored a snapshot of the shipping address at purchase time (which must not change). The failure is denormalizing mutable facts without an update policy, or normalizing historical snapshots that are facts-in-time. Snapshot what must freeze; join what must stay live; document which is which.
+
+## When this is the wrong tool
+
+Third-normal-form purity is the wrong tool for a high-volume read model you can rebuild. Denormalization is the wrong tool for the source of truth of balances. Do not cache joins in the write path without a rebuild plan. Normalize by default; denormalize with an owner and a refresh story.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Normalization vs Pragmatic Denormalization", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

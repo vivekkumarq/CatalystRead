@@ -3,6 +3,7 @@ title: "Docker Image Layers and Build Cache Optimization"
 slug: "docker-image-layers-and-build-cache-optimization"
 description: "How Docker's layer cache actually works under the hood, and the Dockerfile patterns that keep builds fast instead of quietly rebuilding everything."
 publishedAt: "2025-09-02"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - Docker
@@ -83,3 +84,14 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 That cache persists across builds on the same builder instance, independent of the layer cache, which matters a lot for languages with slow, incremental compilers. In CI, pair this with a remote cache backend (`--cache-to type=registry`) so ephemeral runners still get warm caches instead of starting cold every run.
 
 Getting layer ordering right and adopting cache mounts usually cuts build times by more than half on real-world images, and it costs nothing at runtime — it's purely a build-time discipline.
+
+## A worked failure mode
+
+A Dockerfile `COPY .` early, then `RUN npm install`. Any README tweak busts dependency cache; CI adds 4 minutes. A secret is `ENV`'d in a layer and remains in history after "deletion." Multi-stage is skipped, so compilers ship to prod. The failure is cache-key ignorance and leaking layers. Copy lockfiles first, run installs, copy source last, use multi-stage, and scan history for secrets.
+
+## When this is the wrong tool
+
+Micro-optimizing layers is the wrong tool if the build downloads the internet on an unpinned base tag every time. Do not squash layers to hide secrets; they are still in older tags. A 20-line image is fine. Cache discipline pays when CI minutes and deploy size are real costs.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Docker Image Layers and Build Cache Optimization" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

@@ -3,6 +3,7 @@ title: "Attention Mechanisms: Building Intuition Before the Equations"
 slug: "attention-mechanisms-intuition-before-equations"
 description: "A conceptual walkthrough of what attention mechanisms actually do, working up from the original translation problem they were built to solve."
 publishedAt: "2026-05-05"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -55,3 +56,13 @@ The mechanism genuinely mirrors what the word suggests: a limited, weighted focu
 | Multi-head | Multiple independent "what am I looking for" questions asked in parallel |
 
 Everything transformers add on top of this — scaling, multiple heads, positional encoding, masking — is refinement of this one mechanism, not a replacement for it. If the query-key-value framing above makes sense, the rest of the architecture is mostly bookkeeping around making that core idea fast, stable to train, and aware of sequence order.
+
+## A worked failure mode
+
+A product "adds attention" over three features a dense layer could mix. Attention weights are shown to customers as explanations though they are not causal. Sequences are long and unwindowed; the bill explodes. The failure is attention as branding. Use it when many tokens interact and you can pay; do not sell weights as truth.
+
+## When this is the wrong tool
+
+Attention is the wrong tool for small tabular data and as an explainer. Do not stack heads for a slide. Use pooling until pairwise interactions show up in errors.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Attention Mechanisms: Building Intuition Before the Equations" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

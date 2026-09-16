@@ -3,6 +3,7 @@ title: "SOLID Principles Without the Strawmen"
 slug: "solid-principles-practical-guide"
 description: "What each SOLID principle actually asks of your code, shown with realistic examples instead of Animal-extends-Dog toys."
 publishedAt: "2026-07-02"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Design Patterns
@@ -78,3 +79,19 @@ This is also what makes hexagonal / ports-and-adapters architecture tick: DIP ap
 - The principles reinforce each other — most "SRP violations" are also ISP violations waiting for a caller.
 
 The acronym is memorable; the underlying question is better: *when requirements change next month, how many files fight back?*
+
+## A worked example
+
+SRP: a class that both parses CSV and emails finance is split. OCP: new tax rules as strategy objects, not a 40-branch `if`. LSP: do not make `Square` extend `Rectangle` if setters break. ISP: clients do not depend on a 30-method god interface. DIP: domain depends on a `Payments` interface, Stripe is an adapter.
+
+You apply one principle to a real PR, not a checklist of five for a DTO.
+
+## Failure modes
+
+15 interfaces for one implementation. SOLID as a reason to avoid a switch on a sealed type. DIP with an interface in the same file never implemented twice. SRP used to split a cohesive transaction. Cargo-cult visitor patterns.
+
+"Solid" as a performance claim.
+
+## When this is the wrong tool
+
+A script. DTOs. Frameworks you do not own. If the language has functions, a function may beat a strategy hierarchy. Premature OCP for a change that never comes. Interviews that recite SOLID without a system. When a table-driven design is clearer than classes, use the table.

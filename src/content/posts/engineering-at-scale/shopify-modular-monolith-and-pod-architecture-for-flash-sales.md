@@ -3,6 +3,7 @@ title: "Shopify's Modular Monolith and Pods: Surviving Flash Sales"
 slug: "shopify-modular-monolith-and-pod-architecture-for-flash-sales"
 description: "How Shopify stayed on a modular Rails monolith and isolated flash-sale blast radius with pod-based sharding instead of splitting into microservices."
 publishedAt: "2026-01-14"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -31,6 +32,12 @@ The actual risk Shopify needed to defend against wasn't total platform load in t
 ## Degrading gracefully under extreme load
 
 For spikes too large for any amount of provisioned capacity to absorb cleanly, Shopify built a virtual waiting room product that merchants can enable ahead of a known high-demand event, controlling the rate at which shoppers hit checkout rather than letting an uncontrolled stampede hit the backend at once. They've also written about aggressive caching, careful inventory reservation logic to prevent overselling under concurrent checkout attempts, and load-shedding at the edge — the goal being that under extreme load, the fallback is degraded functionality for some requests, not total downtime for everyone.
+
+## A concrete failure mode for pods and modular monoliths
+
+Shopify's pods isolate shops onto slices of the monolith so a viral merchant does not take down everyone, while modular boundaries keep the Ruby codebase from becoming unownable. The failure mode is pods without a shop-affinity story: a shop's requests bounce pods and caches go cold, or worse, a shop's jobs run on a pod that does not hold its data. Mid-size steal: tenant isolation at the queue and cache layer even if you still have one database.
+
+Operational gotcha: a modular monolith where modules still call each other's private ActiveRecord, so the boundaries are folders. Steal packwerk-style dependency rules and CI that forbids the illegal import. Flash-sale traffic is spiky per shop, not globally smooth; autoscaling the average fleet still leaves one pod hot. Detect shop-level QPS and rebalance or shed non-checkout traffic for that shop. Another trap is too many pods too early, multiplying deploy and schema-migration cost. Start with noisy-neighbor limits — per-shop rate limits, statement timeouts — which are most of the benefit. Schema changes must be compatible across pods on different code versions during a rolling deploy. If you cannot dual-run old and new code against the same DB, you are not ready to pod. Isolation is an operations product, not a slide about modules.
 
 ## What you can borrow
 

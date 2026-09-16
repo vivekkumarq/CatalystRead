@@ -3,6 +3,7 @@ title: "List Virtualization for Large Data Sets in React"
 slug: "react-list-virtualization-large-datasets"
 description: "How windowing libraries keep React lists fast at thousands of rows by rendering only what's visible, and where the technique breaks down."
 publishedAt: "2026-05-19"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -72,3 +73,27 @@ For a list under a few hundred items, none of this trade-off is worth making —
 ## Combining with infinite scroll
 
 Virtualization and paginated fetching compose well — render a virtualized window over data you're incrementally loading, triggering the next page fetch when the rendered range approaches the end of what's currently loaded, rather than fetching the entire data set up front just to virtualize it.
+
+## A worked example
+
+10k rows, 36px height, `@tanstack/react-virtual` or `react-window`. The parent has a fixed height. `getItemKey` is the row id. Variable heights use a measure ref. Keyboard: you keep a real focused row in the DOM or a roving tabindex plan. A test with 100 rows asserts only a window of nodes exist.
+
+Overscan of 5 rows reduces blank flash on fast scroll.
+
+## Failure modes
+
+Virtualizing 20 rows. Variable height without measure, jumpy scroll. Auto-height parent so the window is infinite. Keys as indexes. Accessibility: virtualized tables that cannot be read by screen readers. Sticky headers that desync. Combining windowing with CSS animations on all rows.
+
+Measuring during render in a loop that forces sync layout.
+
+## When this is the wrong tool
+
+Pagination or a smaller query is better than virtualizing a million rows in the browser. Virtualization is the wrong tool for print layout and for SEO lists that must be in HTML (SSR the first page). If rows have wildly different interactive widgets, a windowing library may fight you. Prefer server-side filtering first. Do not virtualize a flex wrap of cards without a proven library for 2D grids.
+
+## A worked failure mode
+
+A list of 50 items is virtualized; keyboard users cannot tab to offscreen rows that should be in DOM for a11y. Row height is wrong; items overlap. A windowed list still mounts heavy children. The failure is virtualizing too early and skipping layout/a11y. Virtualize at thousands, measure heights, and provide a non-virtual path for small lists and assistive tech strategies.
+
+Virtualization is the wrong tool for small lists and for print. It complicates testing. Use it when DOM count is the profiler-proven cost.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "List Virtualization for Large Data Sets in React" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

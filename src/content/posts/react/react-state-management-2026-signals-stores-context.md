@@ -3,6 +3,7 @@ title: "React State Management in 2026: Signals, Stores, and Context"
 slug: "react-state-management-2026-signals-stores-context"
 description: "The state management debate settled into a layered answer: different tools for local, cross-cutting, and server state, not one library for everything."
 publishedAt: "2026-02-19"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -73,3 +74,13 @@ The biggest shift in state management thinking has been recognizing that data fe
 ## The Practical Layering
 
 A typical 2026 React app ends up with `useState`/`useReducer` for local component state, Context for rarely-changing global values, a lightweight store for frequently-changing cross-cutting state, and a data-fetching library for anything that originated from a server. The question worth asking before adding a dependency isn't "which state library is best" — it's "which of these four categories is this state actually in."
+
+## A worked failure mode
+
+Context holds the entire app state; every keystroke rerenders the tree. A signal library is added beside Redux beside server cache, and three sources disagree on the cart. The failure is too many truths. Server cache for server data, local state for widgets, a store only for true cross-cutting client state.
+
+## When this is the wrong tool
+
+A global store is the wrong tool for a form's draft. Signals are the wrong rewrite if the profiler shows a missing key, not a state library. Do not duplicate TanStack Query into Zustand. Pick the smallest store that matches update patterns.
+
+Treat the counterexample as part of the spec. Someone will apply "React State Management in 2026: Signals, Stores, and Context" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

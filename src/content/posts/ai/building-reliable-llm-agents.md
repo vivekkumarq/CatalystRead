@@ -3,6 +3,7 @@ title: "Building Reliable LLM Agents: Planning, Tools, and Recovery"
 slug: "building-reliable-llm-agents"
 description: "Why most agent failures are engineering problems, not model problems, and the planning, tool design, and recovery patterns that fix them."
 publishedAt: "2026-06-11"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -62,3 +63,11 @@ Three recovery strategies cover most failure modes:
 ## Separate what the agent decides from what it's allowed to do
 
 The model should never be the only thing standing between a bad decision and an irreversible side effect. Enforce hard policy outside the model — allowed tool arguments, spending limits, rate limits per user — in code the model can't talk its way around. Agents are reliable not because the model rarely makes mistakes, but because the system around it is built assuming it will.
+
+## A worked failure mode
+
+A support agent is wired to `lookup_order`, `issue_refund`, and `send_email`. On a 504 from `lookup_order` it replans, treats a prior chat snippet as proof the order is refundable, and calls `issue_refund` twice because the first call timed out after the payment provider had already succeeded. Traces look healthy: the loop is under the 40-call ceiling, tokens are cheap, and the model is "trying." Money is not. The failure is missing correlation: refunds must be keyed by `order_id` with an idempotency store, and irreversible tools must require a fresh `lookup_order` result in the same turn with `refundable: true`. A human checkpoint on refunds above a small dollar threshold would have stopped the second send. The model did not invent a new class of bug; it automated a missing distributed-systems control.
+
+## When this is the wrong tool
+
+If the workflow is a known DAG of payment steps, a workflow engine with retries and a state machine is cheaper, auditable, and easier to test than an agent loop. If the job is one function with a JSON schema, use tool calling without a planner. Do not put an open-ended agent on a legally deterministic path (tax filing, medical dosing, court filings). Agents are the wrong first tool for "browse until you find a cheaper vendor" without a spend cap, and the wrong tool when the organization cannot staff on-call for tool outages. Start with retrieval plus a single tool; graduate to an agent only when the plan truly branches at runtime.

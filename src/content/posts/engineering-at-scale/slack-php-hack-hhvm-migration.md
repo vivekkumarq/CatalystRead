@@ -3,6 +3,7 @@ title: "Why Slack Bet Its Backend on Hack Instead of Leaving PHP Behind"
 slug: "slack-php-hack-hhvm-migration"
 description: "How Slack moved its large PHP codebase onto Hack and HHVM, gaining static typing and JIT performance without a rewrite in a different language."
 publishedAt: "2025-09-18"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -36,6 +37,12 @@ That incremental path mattered enormously for a company Slack's size: engineers 
 ## Making the runtime swap invisible to the product
 
 The harder part of this kind of migration isn't the language feature work — it's operating two execution models against one production system while the migration is in flight, and making sure request behavior, error handling, and performance stayed correct throughout. Slack had to validate that HHVM's JIT-compiled execution matched the semantics engineers had relied on under the Zend interpreter for years, catching the inevitable edge cases where "PHP-compatible" runtimes diverge in subtle ways from actual PHP behavior. Doing this without visible disruption to the product meant rolling the runtime change out carefully, monitoring correctness and latency at every step, rather than flipping a global switch and hoping semantics matched.
+
+## A concrete failure mode for a Hack/HHVM move
+
+Slack's PHP-to-Hack/HHVM path was a bet to keep a huge web codebase and gain types and performance. The failure mode is a split brain: some boxes on HHVM, some on PHP, with subtle differences in JSON encoding, integer overflow, or extension availability, producing bugs that reproduce on one host. Mid-size steal: a canary fleet with identical traffic shape, plus a diff of responses on a sample of endpoints before a cutover.
+
+Operational gotcha: extensions. The one C extension your SSO library needs will not be there. Inventory. Another is developer laptops that stay on PHP while CI is Hack, so "works on my machine" returns with extra steps. Steal version pinning in nix or Docker for local. Typing migrations that are purely mechanical can still change runtime with `strict` modes and new warnings-as-errors. Roll the checker separately from the VM. Slack could staff this because the monolith was the product. If your PHP is already a few Laravel services, a language move may be more expensive than fixing the hot queries. The transferable lesson is gradual, production-compared migration of a runtime, not a weekend flag flip. Keep a rollback image. Measure p95 CPU and error class histograms, not only "it boots." Type errors that only appear on rare payloads will show up as customer-visible 500s unless you have fuzzed the typed boundaries.
 
 ## What you can borrow
 

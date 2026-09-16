@@ -3,6 +3,7 @@ title: "Decoupling with Spring Application Events and @EventListener"
 slug: "spring-application-events-eventlistener-architecture"
 description: "Using Spring's application event system to decouple side effects from core business logic, and the transactional pitfalls that come with it."
 publishedAt: "2025-07-21"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -83,3 +84,27 @@ This requires `@EnableAsync` and a properly configured executor — the default 
 ## Where Events Stop Being the Right Tool
 
 Events are for side effects, not for orchestrating a multi-step business process where each step's success determines whether the next one should happen. If listener B's failure needs to affect whether listener A's work is considered complete, that's a workflow with a defined outcome, not a fire-and-forget notification — model it as an explicit sequence of calls instead. Reaching for events to avoid an awkward dependency between two services that are actually tightly coupled just hides the coupling instead of removing it.
+
+## A worked example
+
+After commit, `OrderPlacedEvent` is published via `ApplicationEventPublisher`. A `@TransactionalEventListener(phase = AFTER_COMMIT)` sends email. In-transaction listeners that update a projection run `BEFORE_COMMIT` only if they must see the same TX. Tests use `ApplicationEvents` or a fake publisher.
+
+You keep the payload an id plus essentials, not a live entity.
+
+## Failure modes
+
+Listeners that throw and rollback unexpectedly (phase wrong). Sync listener doing HTTP. Events as a public API across JARs with no schema. `@Async` listener without an error handler. Publishing from a non-Spring thread. Circular events.
+
+Using events to replace a method call in the same class.
+
+## When this is the wrong tool
+
+A method call is clearer for one consumer in the same module. For integration across services, a broker plus outbox, not in-process events. Do not use Spring events as an audit log (they vanish on crash). `@EventListener` is the wrong tool for high-volume domain storms — consider a queue. Transactional outbox if the listener is "publish to Kafka."
+
+## A worked failure mode
+
+A transactional listener runs after commit and calls a remote API without a retry table; the event is lost on crash. A listener is synchronous and rolls back the transaction on a mail failure. Events are used as a local method call with extra mystery. The failure is delivery semantics. Outbox for after-commit work; do not fail money on email.
+
+Application events are the wrong tool for cross-service integration. They are not a bus. Use them for in-process decoupling with explicit transaction phase.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Decoupling with Spring Application Events and @EventListener", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

@@ -3,6 +3,7 @@ title: "DeepRed: How DoorDash Matches Orders, Dashers, and Time"
 slug: "doordash-deepred-ml-dispatch-optimization"
 description: "Inside DoorDash's dispatch system, which uses machine learning to balance delivery time, cost, and fairness when assigning orders to Dashers."
 publishedAt: "2025-08-05"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -34,6 +35,18 @@ This batching approach requires the system to make many assignment decisions wit
 ## Feedback loops between prediction and outcomes
 
 Because the predictions feeding the optimizer — prep time, travel time, delivery time — are themselves machine learning models, DoorDash continuously retrains them against actual observed outcomes, closing the loop between what the system predicted and what actually happened on a given delivery. A model that consistently underestimates prep time at a particular merchant, for instance, will systematically produce late-running assignments until retraining corrects for that merchant's real behavior, which makes the accuracy of these underlying predictions as operationally important as the optimization logic sitting on top of them.
+
+## What broke when they scaled
+
+Greedy "assign the nearest Dasher to this new order" looks optimal and produces stacked inefficiencies: one Dasher gets three bad trips while another idles, or a batch that should have been one stacked delivery becomes two cars. DoorDash's DeepRed (and related dispatch posts) frame assignment as prediction plus optimization: predict duration, acceptance probability, and cost, then solve a matching over a *batch* of orders and Dashers rather than a single FIFO.
+
+Batching introduces delay: wait 30 seconds to build a better matching versus assign immediately. That trade is a product decision at lunch peak. Fairness and Dasher experience (not always the same person getting the worst miles) are constraints in the optimizer, not a later apology. Feedback loops matter: if you train on historical assignments, you encode yesterday's greedy policy.
+
+Geo and time make the state space huge. You cannot run a global MIP every second; you shard by region and horizon, with heuristics for the rest. When predictions are wrong (rain, closed road), the optimizer needs a way to reassign without ping-ponging Dashers.
+
+## A smaller-team version of the same idea
+
+Nearest Dasher with a cap on active deliveries, plus a simple stack if the second pickup is on the way. Measure late deliveries and Dasher idle time. Introduce a 10-second batch window in one city before you buy an OR-tools cluster. Log predicted vs actual duration; that log is the start of DeepRed, not the solver.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "JSON Columns: When Schemaless Inside SQL Makes Sense"
 slug: "json-columns-when-schemaless-makes-sense"
 description: "A practical look at JSON and JSONB columns: when they replace a schema migration, when they hide a design problem, and how to index them."
 publishedAt: "2025-01-22"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -67,3 +68,13 @@ ON events ((metadata->>'experiment'));
 ## A rule that holds up
 
 Use JSONB for the part of the data that's genuinely open-ended, and real columns for anything you'd write a `NOT NULL` constraint on if it weren't buried in a document. Mixed models — a handful of real columns for the fields every row has, plus one JSONB column for the truly variable extras — are usually the right shape, not an either-or choice between "fully relational" and "one big blob."
+
+## A worked failure mode
+
+User-defined fields land in a JSONB blob. Product later needs "all users whose custom field country is DE" and a seq scan plus GIN that is always slightly wrong because some rows stored `"DE"` and some `{code:"de"}`. Constraints were never applied. A generated column or a real column would have been a one-line migration on week one and a quarter-long project on year two. The failure is schemaless as procrastination. Use JSON for truly irregular payloads you mostly fetch by id; promote hot keys to columns.
+
+## When this is the wrong tool
+
+JSON columns are the wrong tool for money, identities, and anything you join on. They are the wrong default for a new CRUD app. Do not store the entire domain model as one document in Postgres because Mongo was in a talk. Use JSON when the schema is owned by a client or a vendor payload you cannot normalize yet.
+
+Treat the counterexample as part of the spec. Someone will apply "JSON Columns: When Schemaless Inside SQL Makes Sense" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

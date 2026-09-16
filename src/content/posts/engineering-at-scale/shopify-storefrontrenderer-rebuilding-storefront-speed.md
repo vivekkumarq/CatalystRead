@@ -3,6 +3,7 @@ title: "StorefrontRenderer: Pulling Storefronts Out of the Monolith for Speed"
 slug: "shopify-storefrontrenderer-rebuilding-storefront-speed"
 description: "Shopify rebuilt storefront rendering as a dedicated service to cut page load times, separating buyer-facing traffic from the core Rails monolith."
 publishedAt: "2025-08-22"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ Because millions of storefronts run on themes built by third-party developers, b
 ## Rolling out without breaking millions of storefronts
 
 Shopify moved storefront traffic to the new renderer incrementally, shop by shop and theme by theme, comparing rendered output and latency against the old code path before fully cutting over. That gradualism let the team catch edge cases in Liquid rendering behavior that only surfaced on real merchant themes, rather than discovering them after a hard cutover across the entire platform.
+
+## A concrete failure mode for storefront renderers
+
+Rebuilding storefront rendering — streaming HTML, isolating theme execution, caching fragments — fails when the cache key forgets a dimension: currency, language, app blocks, A/B flags, or logged-in vs buyer. Shoppers then see the wrong price or another market's theme. Mid-size steal: an explicit cache-key spec reviewed like an API, and a kill switch that disables fragment cache without a full outage.
+
+Operational gotcha: a new renderer that is faster in benchmarks and slower on real themes because a popular section is a N+1 Liquid drop that hits the database per product in a collection. Profile the top 50 themes, not a hello-world. Another is dual-running old and new renderers with slightly different Liquid semantics; a theme that relied on a quirk breaks only on the new path. Document divergences and a partner test suite. Streaming responses that error mid-stream after a 200 has started are brutal for clients and CDNs; decide where you can still fail. Edge caching of personalized storefronts is how you leak carts; separate truly public bytes from session bytes. Shopify's renderer work is as much a tenancy and safety project as a speed project. If you only chase Lighthouse scores, you will cache too hard and ship the wrong shop.
 
 ## What you can borrow
 

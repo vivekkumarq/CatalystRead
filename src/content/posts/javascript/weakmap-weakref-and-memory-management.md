@@ -3,6 +3,7 @@ title: "WeakMap, WeakRef, and Getting Serious About Memory"
 slug: "weakmap-weakref-and-memory-management"
 description: "How WeakMap, WeakRef, and FinalizationRegistry actually work, where each one earns its place, and why most of them belong in library code, not app code."
 publishedAt: "2025-11-16"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Memory Management
@@ -54,3 +55,19 @@ The callback timing is entirely up to the engine. It might run milliseconds afte
 ## The actual leak checklist
 
 Before reaching for any of these APIs, check the boring stuff first: event listeners not removed on teardown, `setInterval` timers never cleared, closures capturing large objects in a scope that outlives its usefulness, and caches without a size cap or TTL. `WeakMap` solves the "cache keyed by object identity" leak specifically. It won't save you from the other three.
+
+## A worked example
+
+A `WeakMap<object, Metadata>` stores extra data for DOM nodes without preventing GC when the node is gone. A library uses `WeakMap` for private fields on objects it does not own. `FinalizationRegistry` logs in diagnostics when a cache entry is collected — not for business logic.
+
+`WeakRef` to a large image bitmap: re-fetch if `deref()` is undefined.
+
+## Failure modes
+
+Using `WeakMap` with string keys (illegal). Expecting deterministic collection. `FinalizationRegistry` for closing sockets — too late and racy. Holding a strong reference elsewhere, so WeakMap "leaks" from your point of view. `WeakRef` in a Map you never prune of empty refs — the Map still grows.
+
+Debugging GC with `WeakRef` in tests that fail under different heap sizes.
+
+## When this is the wrong tool
+
+If you own the object's lifetime, a `Map` plus explicit delete is clearer. Do not use WeakRef to "fix" a leak you have not profiled. WeakMaps are the wrong tool for LRU caches of strings. `FinalizationRegistry` is not a destructor. In WASM/linear memory, JS weak refs will not free WASM allocations. Prefer aborting and dropping closures for request cancellation.

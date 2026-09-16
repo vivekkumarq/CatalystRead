@@ -3,6 +3,7 @@ title: "Canonical Log Lines: One Wide Event Instead of Scattered Logs"
 slug: "stripe-canonical-log-lines-observability"
 description: "Why Stripe engineers emit a single structured log line per request instead of many scattered ones, and how it changes debugging at scale."
 publishedAt: "2025-06-18"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -42,6 +43,12 @@ A single wide event per request turns debugging into a query problem rather than
 ### Implementation is mostly plumbing
 
 The pattern itself is architecturally simple — the hard part is discipline. Middleware or a request-scoped context object needs to be threaded through every layer of the codebase so that any function, at any depth, can attach a fact to the eventual canonical line without needing to pass a logger explicitly through every call. Getting this wired in consistently across a large codebase, and getting engineers into the habit of adding fields to the shared context instead of reaching for a one-off log statement, matters more than any specific storage backend chosen for the resulting events.
+
+## A concrete failure mode without canonical log lines
+
+Canonical log lines put the whole request — status, actor, latency breakdown, ids — on one line so a grep during an incident is a story, not a scavenger hunt. The failure mode is 15 JSON micro-logs per request with uncorrelated ids, and a tracing system that was too expensive to sample at 100% when you needed it. Mid-size steal: one line per request at the edge of each service, with a request id you already put on the client response.
+
+Operational gotcha: high-cardinality fields on the line (raw URL with ids) exploding log volume and cost, so someone turns logging down during the incident. Bound the fields. Another is PII: emails and card last-fours sneaking onto the line for "support." Redact, hash, or you will build a second, illegal warehouse. Canonical lines do not replace metrics; they explain a single bad request. Pair them with RED metrics. If you only log errors, you cannot compare a success that was slow. Sample successes if you must, but keep 100% of money-path lines. Stripe's style is boring on purpose. Adopt it in the API gateway first. When a customer pastes a request id into a ticket, you should jump to one line. If you cannot, your observability is a dashboard of averages, and averages do not refund people.
 
 ## What you can borrow
 

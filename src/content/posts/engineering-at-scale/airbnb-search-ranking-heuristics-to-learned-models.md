@@ -3,6 +3,7 @@ title: "From Heuristics to Learned Ranking: Airbnb Search's Evolution"
 slug: "airbnb-search-ranking-heuristics-to-learned-models"
 description: "How Airbnb's search ranking moved from hand-tuned heuristics to gradient-boosted trees and eventually neural networks, and what each transition actually bought."
 publishedAt: "2026-06-27"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -24,6 +25,18 @@ Airbnb's widely cited transition was to a machine-learned model, specifically gr
 ## Neural networks, and knowing when the jump is worth it
 
 Airbnb later moved parts of its ranking system to neural network architectures, a transition it also wrote about candidly, including the fact that an initial attempt didn't clearly outperform the existing GBDT model despite the added complexity — the real gains came from a later architecture combined with better feature representations, not from switching model families alone. This point stands out among search-ranking case studies precisely because it's not a straightforward success story: Airbnb's own account emphasized that a more sophisticated model architecture doesn't automatically translate into a better result, and that the surrounding feature engineering and training methodology mattered as much as the model type itself.
+
+## What broke when they scaled
+
+Marketplace ranking has a two-sided objective that click models ignore. A listing that wins clicks but gets rejected by the host, or that converts poorly because the guest never intended to book, poisons training data if you optimize the wrong label. Airbnb's engineering posts on search ranking (including work on booking as the target and on handling position bias) had to confront feedback loops: the model promotes what was already shown high, so popular listings get more data, cold listings starve, and new hosts look worse than they are.
+
+Feature pipelines break next. Training uses yesterday's warehouse snapshot; serving needs the listing's price and reviews *now*. Training-serving skew on even a few features can erase a GBDT gain. Neural ranking added representation learning (listing embeddings, query/session context) but also a serving path that must fetch those vectors under the search latency budget — another reason the first neural attempt could lose to trees that consumed well-debugged tabular features.
+
+Evaluation is its own scaling problem. Offline NDCG on historical logs is biased by the previous ranker. Airbnb invested in online experiments and in techniques to make logged data usable, because a "better" model that only looks good offline will still ship through the same search box guests use to plan trips.
+
+## A smaller-team version of the same idea
+
+Write a scoring function you can print: distance, price relative to the viewport, review volume, availability. Log the features you used at serve time. When you have enough booked sessions, train a tree model on those same features with booking (or host-accept) as the label, and run it as a shadow scorer before it owns the list. Do not start with a two-tower neural ranker until the logging, bias, and two-sided outcome problems are named in the experiment design.
 
 ## What you can borrow
 

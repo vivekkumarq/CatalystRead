@@ -3,6 +3,7 @@ title: "Streaming LLM Responses: UX and Backend Plumbing"
 slug: "streaming-llm-responses"
 description: "How to implement LLM response streaming end to end, from server-sent events to handling structured output and mid-stream tool calls."
 publishedAt: "2026-08-03"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -63,3 +64,11 @@ When a response involves a tool call partway through generation — the model st
 ## Handle disconnection and cancellation explicitly
 
 Users close tabs and click stop buttons mid-generation, and if the backend doesn't handle this, you keep paying for and generating tokens nobody will see. Wire client disconnection (SSE connection close) and an explicit stop action to actually cancel the upstream model call, not just stop forwarding data to a client that's no longer listening — otherwise your cost scales with abandoned requests, which on a chat-heavy product is a larger fraction of traffic than it sounds like.
+
+## A worked failure mode
+
+A UI streams tokens into a markdown renderer. Mid-stream the model emits a table; the renderer flashes broken layout, then the connection drops and the UI leaves a half-sentence that looks like a final answer. A client retries and starts a second stream; the user sees two overlapping drafts. The backend billed both. Cancellation was never wired to the provider request. The failure is treating a stream as a pretty print of a complete string. Buffer display units (sentences, code fences), mark incomplete state in the UI, propagate abort, and persist only when the stream completes or the user explicitly saves a partial.
+
+## When this is the wrong tool
+
+Streaming is the wrong tool for JSON that must parse, for batch jobs, and for answers shorter than a round-trip you would not notice. It complicates caching, moderation (you may need to delay flush until a sentence passes a filter), and billing transparency. Do not stream into a form field that users submit as if it were validated. If you must moderate, a short time-to-first-token wait with a complete-message check can be safer than token-by-token XSS in HTML. Use streaming where perceived latency matters and the contract is "draft in progress."

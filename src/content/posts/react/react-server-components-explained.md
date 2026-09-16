@@ -3,6 +3,7 @@ title: "React Server Components, Explained Without the Hype"
 slug: "react-server-components-explained"
 description: "RSCs are not server-side rendering with a new name. They change where component code runs at all, and that changes what you can safely do in a component."
 publishedAt: "2026-01-08"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -69,3 +70,13 @@ Passing data from Server to Client Components has a real constraint too: props m
 ## Where This Fits Today
 
 RSCs are a framework-level feature — Next.js's App Router is the primary place most teams encounter them, though the RSC convention itself is part of React's own architecture, not Next-specific. Adopting RSCs is a routing and data-fetching decision as much as a component-authoring one, which is why the migration for existing apps tends to happen route by route rather than as a single rewrite. The mental shift that matters most: stop asking "should this be a hook," and start asking "does this code need to run in the browser at all."
+
+## A worked failure mode
+
+A Server Component fetches in a loop of children without caching; one page hits the DB 200 times. A secret env var is passed to a Client Component by accident. A client island is so large that SSR benefits vanish. The failure is RSC as a default without a data API and a secret boundary. Cache, hoist fetches, and keep client components small and explicit.
+
+## When this is the wrong tool
+
+RSC is the wrong tool for a highly interactive canvas. It is the wrong migration if the app is already a SPA behind login with no SEO need and no server data. Do not fetch in every leaf. Use RSC for data-heavy public pages and thin clients.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "React Server Components, Explained Without the Hype" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

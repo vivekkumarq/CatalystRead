@@ -3,6 +3,7 @@ title: "Hunting Down N+1 Queries in JPA Before They Hunt You"
 slug: "jpa-n-plus-one-queries-detection-and-fixes"
 description: "Practical techniques for spotting N+1 query problems in Hibernate and JPA before they show up as a production latency incident."
 publishedAt: "2025-02-25"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -72,3 +73,27 @@ With batch fetching enabled, Hibernate replaces N individual `SELECT ... WHERE i
 ## Know Which Fix Fits
 
 `JOIN FETCH` is best when the association is always needed and the collection side is small or absent. Batch fetching is best as a default safety net across the whole application, since it requires no query rewriting. `@EntityGraph` sits in between, giving you per-query control without hand-writing JPQL. In practice, most services benefit from setting a sane default batch size globally and reaching for `JOIN FETCH` or `@EntityGraph` only on the handful of hot-path queries where the access pattern is well understood. Treat N+1 detection the same way you treat null-pointer prevention: a habit enforced by tooling, not a thing you remember to check manually.
+
+## A worked example
+
+`Order` has `OneToMany lines`. `findAll()` then `order.getLines().size()` in a loop: 1 + N queries. Fix: `join fetch` in a dedicated query, or `@EntityGraph`, or a DTO projection that selects what the API needs. `spring.jpa.open-in-view=false` plus a test that fails on extra statements (`datasource-proxy` or p6spy count).
+
+A JSON serializer triggering lazy loads is the usual production surprise.
+
+## Failure modes
+
+`EAGER` on collections as a "fix" (cartesian products). Multiple `join fetch` bags (hibernate multiplebagfetchexception). Entity graphs that fetch the whole graph for a list view. Pagination plus fetch join duplicating rows. Batch size helping N+1 but hiding it.
+
+OSIV hiding the problem until a thread pool.
+
+## When this is the wrong tool
+
+If the access path is reporting, SQL/jOOQ is better than fetch graphs. Caching entities to hide N+1 still hits memory. Do not disable lazy loading globally. For one-off admin pages, N+1 of 20 rows is fine. GraphQL resolvers can reintroduce N+1 — use DataLoader, not JPA magic. If you migrated to JDBC aggregates, this ticket may already be dead.
+
+## A worked failure mode
+
+`open-in-view` hides lazy loads in a view; a JSON serializer triggers hundreds of queries. `join fetch` of two bags cartesian-explodes. A batch size is set globally and surprises a tiny association. The failure is lazy as a default on APIs. Detect with p6spy/hibernate stats, fetch graphs for list endpoints, turn OSIV off for APIs.
+
+JPA fetch tricks are the wrong tool if the endpoint should be a SQL projection. Do not EAGER globally. Use query-per-use-case for lists.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Hunting Down N+1 Queries in JPA Before They Hunt You" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

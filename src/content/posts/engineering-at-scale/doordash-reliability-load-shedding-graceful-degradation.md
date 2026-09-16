@@ -3,6 +3,7 @@ title: "Reliability Engineering for a Three-Sided Marketplace"
 slug: "doordash-reliability-load-shedding-graceful-degradation"
 description: "How DoorDash designs for graceful degradation and load shedding so a spike or partial outage on one side of its marketplace doesn't take down the rest."
 publishedAt: "2026-01-15"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -36,6 +37,18 @@ Deciding what "degraded but functional" looks like for DoorDash's core flows req
 ## Testing degradation before it's needed for real
 
 Much like scheduled load testing at other companies, DoorDash's reliability practice includes deliberately inducing failure and overload conditions in controlled settings to confirm that load shedding, circuit breakers, and fallback behavior actually trigger and behave as designed, since untested resilience code is one of the more common ways a system fails precisely when it's needed most.
+
+## What broke when they scaled
+
+A three-sided marketplace fails asymmetrically. If Dasher tracking dies, consumers still order and restaurants still cook — then food sits. If the order-placement API dies, nobody cooks. Load shedding that drops random 10% of all traffic can drop checkout while keeping a recommendation carousel healthy, which is the wrong survival function. DoorDash's reliability writing emphasizes shedding the cheapest, least revenue-critical work first (extra personalization, nonessential banners) and protecting checkout, dispatch, and payment paths.
+
+Cascades are the other break. A slow downstream (maps, notifications, fraud) without a deadline turns every thread into a wait. Circuit breakers and bulkheads are how you keep "ratings service sad" from becoming "cannot place order." Graceful degradation is a product spec: show last-known ETA, hide the live map, queue the SMS. That spec has to be tested with game days; it will not appear under unit tests.
+
+Lunch and dinner spikes are predictable DDoS from your own customers. Autoscale that lags 10 minutes is an outage. Shed and degrade while capacity catches up.
+
+## A smaller-team version of the same idea
+
+List endpoints in priority order. Put timeouts on every RPC shorter than the user SLO. When concurrency hits a limit, fail the lowest-priority handler with a canned response. Practice turning off one noncritical feature. Do not require a service mesh to do this — a semaphore and a feature flag get you started.
 
 ## What you can borrow
 

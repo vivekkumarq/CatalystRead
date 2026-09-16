@@ -3,6 +3,7 @@ title: "Side Projects That Actually Teach You Something"
 slug: "side-projects-that-actually-teach-you-something"
 description: "Most side projects stall at the same 'CRUD app with auth' stage that taught you everything it's going to — how to pick one that keeps teaching you."
 publishedAt: "2025-06-11"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -30,3 +31,11 @@ This is also why a project solving a real, specific annoyance in your own life t
 The unglamorous half of a project — deployment, monitoring, handling the error cases that only show up in production, dealing with a dependency update that breaks something — teaches a different and, for most engineers' day jobs, more directly applicable set of skills than the interesting core logic did. It's also the half that gets skipped constantly, because building the exciting part is more fun than deploying and operating a boring service. A project that never gets deployed never teaches you anything about what actually breaks once real traffic, real users, or real time passes hit it, which is precisely the category of problem that's hardest to learn about any other way.
 
 The projects that end up genuinely useful on a resume or in an interview aren't usually the most technically ambitious ones — they're the ones the person can talk about in specific, first-hand detail: what broke, what they changed, what they'd do differently next time. That level of detail only comes from a project that ran long enough, and real enough, to actually go wrong at least once.
+
+## A worked failure mode
+
+A developer rebuilds a todo app in every framework and calls it growth. In interviews they cannot talk about data loss, auth, or an outage. A better side project: a small paid or volunteer tool with a real user, a migration, a backup, and a mistake you had to repair. The failure is optimizing for README screenshots. Pick one constraint you do not get at work (a queue, a compiler, a11y, a mobile client) and take it through operations, not only the happy path. Write a postmortem for your own downtime. That artifact teaches more than a seventh UI clone.
+
+## When this is the wrong tool
+
+Side projects are the wrong tool if you are already burned out; rest is not a moral failure. They are the wrong path to a promotion if your company only values internal impact. Do not leak employer IP into a public repo. If you need a job, a targeted portfolio piece plus networking may beat a year-long unfinished MMO. Use side projects to practice constraints you cannot get on the clock, not to perform busyness.

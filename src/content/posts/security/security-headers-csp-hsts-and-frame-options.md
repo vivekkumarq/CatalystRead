@@ -3,6 +3,7 @@ title: "Security Headers: CSP, HSTS, and Frame Options, and What Each Stops"
 slug: "security-headers-csp-hsts-and-frame-options"
 description: "A practical walkthrough of the HTTP security headers that matter most, what specific attack each one mitigates, and how to roll them out without breaking your site."
 publishedAt: "2025-12-17"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -47,3 +48,13 @@ CSP's `frame-ancestors` directive is the modern replacement and supports finer-g
 ## A few more worth the five minutes
 
 `X-Content-Type-Options: nosniff` stops browsers from guessing a response's content type based on its content rather than its declared `Content-Type`, which closes a path attackers used to get a browser to execute a file as script when the server intended it as plain data. `Referrer-Policy: strict-origin-when-cross-origin` limits how much of your URLs — including potentially sensitive query parameters — leak to third-party sites via the referrer header. None of these headers require application changes, and together they close off entire categories of attack that no amount of careful application code fully replaces.
+
+## A worked failure mode
+
+HSTS is set on an HTTP-only staging domain and browsers remember it; developers cannot load it. `X-Frame-Options` and CSP `frame-ancestors` disagree. Headers are only on the homepage. The failure is copy-paste headers without a rollout. HSTS with preload only when HTTPS is guaranteed; test framing; apply headers globally.
+
+## When this is the wrong tool
+
+Header soup is the wrong tool to stop SQL injection. Do not HSTS-preload a domain you share with HTTP apps. Use headers as layers, not as the app's security model.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Security Headers: CSP, HSTS, and Frame Options, and What Each Stops" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

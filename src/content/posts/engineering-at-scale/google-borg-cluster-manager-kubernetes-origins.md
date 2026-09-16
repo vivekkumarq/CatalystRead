@@ -3,6 +3,7 @@ title: "Borg: The Cluster Manager That Quietly Became Kubernetes' Blueprint"
 slug: "google-borg-cluster-manager-kubernetes-origins"
 description: "Inside Borg, Google's internal cluster manager, and how its ideas about scheduling, priority, and bin packing became the design for Kubernetes."
 publishedAt: "2025-12-30"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -33,6 +34,18 @@ At Borg's scale, machine failures, kernel upgrades, and hardware maintenance are
 Google built an intermediate system called Omega, which explored a more decentralized, optimistic-concurrency approach to scheduling before some of its ideas fed back into Borg's own evolution. But the more consequential lineage runs from Borg to Kubernetes: when Google open sourced Kubernetes in 2014, it was explicitly built by engineers who had worked on Borg and Omega, carrying over concepts like pods (Borg's task grouping, generalized), declarative desired-state configuration, and a scheduler that separates "what should run" from "where it currently runs." Kubernetes' original internal codename, "Seven," was a nod to the Star Trek Borg character Seven of Nine — a fairly direct acknowledgment of its ancestry.
 
 The difference wasn't the core ideas, which Google had already validated internally for a decade — it was making those ideas available as an open, vendor-neutral system the rest of the industry could run, rather than something locked inside one company's datacenters.
+
+## What broke when they scaled
+
+Static machine assignment wastes a fleet. Borg (Verma et al., EuroSys 2015 — describing a system that had run for years) schedules jobs as tasks into cells, with priorities, so prod and batch share machines. Failure is normal; the scheduler resubmits. What broke naive cluster use was stranded CPU, noisy neighbors, and humans placing binaries. Omega and then Kubernetes exported a Borg-like API (pods, declarative desired state) without copying Borg's internals.
+
+Kubernetes at Google scale is not Borg; Borg had years of admission control, production-vs-batch mixing, and a different control plane. What breaks k8s copies is treating the API server as infinitely scalable, or running mixed laptops-and-prod without priority. Resource estimation (Borg's "guess then measure") still matters: requests vs limits, eviction, and overcommit.
+
+The paper is careful: Kubernetes is inspired by, not a source drop of, Borg.
+
+## A smaller-team version of the same idea
+
+One Kubernetes cluster, resource requests that are not fiction, liveness/readiness probes, and a scheduler that can reschedule dead nodes. Do not mix batch ML training with latency-critical serving without QoS. Nomad or a cloud scheduler is fine. Read the Borg paper for the *ideas* (cells, priority, reallocating idle prod headroom), not to reimplement Borg.
 
 ## What you can borrow
 

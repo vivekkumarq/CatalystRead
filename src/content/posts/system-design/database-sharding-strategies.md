@@ -3,6 +3,7 @@ title: "Database Sharding Strategies That Survive Growth"
 slug: "database-sharding-strategies"
 description: "Hash-based, range-based, and directory-based shard keys compared, and why resharding is the expensive part nobody plans for early."
 publishedAt: "2025-08-11"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -47,3 +48,27 @@ Choosing wrong doesn't fail immediately — it fails at the next capacity wall, 
 ## A Rule of Thumb
 
 Don't shard until a single primary genuinely can't keep up — read replicas, better indexing, and caching solve most scaling problems more cheaply than a sharded topology, which trades every cross-shard operation's simplicity for horizontal headroom. When you do shard, spend more design time on the key than on the mechanism; the mechanism is a solved problem, the key is specific to your queries.
+
+## A worked example
+
+Hash-shard users by `user_id` into 16 logical shards mapped to 4 physical DBs. Directory table (or consistent hash) maps id → shard. A request never joins across shards; a "user's orders" query is on the user's shard. Reshard: split logical shards by moving a subset with dual-write then cutover.
+
+Hot key: a celebrity user_id — you add a special shard or cache.
+
+## Failure modes
+
+Sharding on a low-cardinality column. Cross-shard transactions as if they were local. Auto-increment IDs without a generator. Changing the hash function without a migration. Secondary indexes that need scatter-gather on every search. Global uniqueness without a coordinator.
+
+ORMs that hide N-shard round trips.
+
+## When this is the wrong tool
+
+Vertical scaling and partitioning inside one instance come first. Read replicas may fix read load without sharding. Sharding is the wrong tool for a 50 GB database. If the access pattern is "scan everything," a warehouse or search index is better. Multi-tenant DBs with one tenant per shard only if tenants are large; tiny tenants should share. Do not shard to look like a FAANG interview.
+
+## A worked failure mode
+
+Shard key is `created_at`; today's shard melts. Cross-shard joins are done in the app with huge IN lists. Resharding is "later." The failure is a key that does not spread writes and no rebalance plan. Pick a high-cardinality key that matches access, and practice splits.
+
+Sharding is the wrong tool before indexes and replicas. It is misery for multi-entity transactions. Stay unsharded until a metric says you must.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Database Sharding Strategies That Survive Growth" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

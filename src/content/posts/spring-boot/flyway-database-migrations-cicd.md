@@ -3,6 +3,7 @@ title: "Database Migrations with Flyway in a CI/CD Pipeline"
 slug: "flyway-database-migrations-cicd"
 description: "Practical rules for writing Flyway migrations that survive a real CI/CD pipeline, including rollback strategy and how to handle schema drift across environments."
 publishedAt: "2025-08-22"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -75,3 +76,13 @@ It's slower than a single migration, and it's the difference between a deploy no
 ## Flyway Doesn't Do Rollback — Plan Accordingly
 
 Flyway has no built-in "undo" for a migration once applied (the paid Teams edition has undo migrations, but the open-source core doesn't). The practical rollback strategy is almost always forward-only: if `V14` causes a problem, you ship `V15` that corrects it, rather than trying to reverse `V14` in place. Writing migrations as small, single-purpose, and reviewed as carefully as application code is what makes forward-only rollback tolerable instead of terrifying.
+
+## A worked failure mode
+
+Migrations run as a random replica during deploy; two pods apply; checksums diverge. A `repair` is run in prod to silence it. A destructive `DROP` ships Friday. CI does not migrate a throwaway database. The failure is Flyway without a single runner and review. One migrator job, checksum in CI, expand/contract, never repair away a real drift without understanding it.
+
+## When this is the wrong tool
+
+Flyway in every pod is the wrong topology. Auto-migrate on a developer laptop against prod is the wrong tool. Do not use migrations for data backfills of millions of rows in one transaction. Use Flyway (or Liquibase) as a gated, single-writer process.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Database Migrations with Flyway in a CI/CD Pipeline" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

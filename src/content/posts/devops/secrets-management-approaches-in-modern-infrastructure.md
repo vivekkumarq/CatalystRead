@@ -3,6 +3,7 @@ title: "Secrets Management Approaches in Modern Infrastructure"
 slug: "secrets-management-approaches-in-modern-infrastructure"
 description: "A comparison of secrets management patterns, from environment variables to dedicated vaults, and how to pick the right one without overengineering a simple app."
 publishedAt: "2025-11-24"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - DevOps
@@ -63,3 +64,27 @@ Every consumer that requests credentials from this role gets a unique, time-boxe
 ## Matching the tool to the actual risk
 
 A small internal tool with a handful of secrets rarely justifies standing up Vault with its own HA cluster, unseal process, and audit logging pipeline — a managed secrets manager with IAM-based access control covers that case with far less operational burden. Vault (or an equivalent) earns its complexity when you need dynamic credentials, fine-grained per-team access policies, or secrets shared across multiple heterogeneous platforms (Kubernetes, VMs, CI runners) that a single cloud provider's secrets manager doesn't cleanly span. Pick based on the actual blast radius of a leaked credential, not on what the most sophisticated team in the industry uses.
+
+## A worked example
+
+App secrets in a vault / cloud SM, injected as env or a mounted file, rotated with a new revision and rolling restart (or a refresh API). CI uses OIDC to mint short-lived creds, not a static AWS key. Kubernetes: ExternalSecrets or CSI driver. Audit who read a secret.
+
+A break-glass role with logging.
+
+## Failure modes
+
+Secrets in git, images, and logs. Long-lived keys in GitHub. Everyone has vault admin. Rotation that is not tested. Copying secrets to laptops. `stringData` in YAML committed. Debug `env` endpoints.
+
+Two vaults, neither source of truth.
+
+## When this is the wrong tool
+
+Encrypting secrets in git with a passphrase in Slack. A secrets manager will not save hardcoded keys in the client app. For public config, use config not secrets. If you have one VM and one operator, a locked-down file may be fine until you grow. Do not put TLS private keys in the same rotation path as a feature flag without thinking about blast radius.
+
+## A worked failure mode
+
+Secrets live in CI variables, copied into Kubernetes Secrets via a pipeline log that prints `env`. Rotation is yearly. A former contractor's token still deploys. The better pattern they skipped: a vault or cloud manager, short-lived credentials, injection at runtime, and audit on read. The failure is secrets as config files with extra anxiety. Treat them as time-bound leases.
+
+A vault is the wrong tool if the app still hardcodes a second password. Do not put secrets in Git even encrypted if the key is checkout-able. Env vars on a shared jumphost are not a strategy. Pick a manager when you can rotate and revoke.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Secrets Management Approaches in Modern Infrastructure" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

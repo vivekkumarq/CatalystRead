@@ -3,6 +3,7 @@ title: "Go, Java, and the Monorepos Holding Uber's Fleet Together"
 slug: "uber-go-java-polyglot-monorepo"
 description: "How Uber ended up running a polyglot backend split mainly between Go and Java, and why it consolidated each language's services into monorepos."
 publishedAt: "2025-11-11"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Supporting multiple primary languages well is significantly harder than supporti
 ## Investment in build tooling as a prerequisite
 
 None of this works without heavy investment in build systems capable of handling a monorepo at that scale — incremental builds that don't require rebuilding the entire repository for a small change, dependency graph analysis to determine what's actually affected by a change, and CI systems that can test only the affected subset of thousands of services rather than everything on every commit. Uber invested specifically in this tooling layer because a monorepo without it degrades into a slow, unusable shared workspace rather than the productivity win it's meant to be.
+
+## Operational gotchas of a polyglot monorepo
+
+Uber's Go/Java (and more) monorepo promised atomic changes and unified tooling across languages. The failure mode is a repo that takes 40 minutes to clone, CI that rebuilds the world, and a Bazel file nobody dares touch. Mid-size steal: a monorepo when the coupling is real, plus remote cache and path-based tests; skip it if teams ship independently and only meet at API contracts.
+
+The concrete failure mode is an atomic commit that updates a proto and twenty services, then a rollback that cannot because mobile is already out. Version the contract anyway. Operational gotcha: language toolchains fighting in one image; Go modules vs vendored Java vs generated code merge conflicts. Generate in CI, not in random PRs. Ownership CODEOWNERS becomes a bottleneck if every common/ directory pages a platform person. Another is IDE performance; developers bypass the repo with copies. That is how you lose the only advantage. Uber could staff build. You can use a small monorepo for tightly coupled backends and separate the mobile app. Do not go polyglot in one repo without generated RPC and a single CI orchestrator. Measure mean time to green on a one-line change. If that number is hours, the monorepo is an incident in slow motion. Fix the graph of targets before adding a language.
 
 ## What you can borrow
 

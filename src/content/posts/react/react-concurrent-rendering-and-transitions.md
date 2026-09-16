@@ -3,6 +3,7 @@ title: "Concurrent Rendering and Transitions: What startTransition Actually Buys
 slug: "react-concurrent-rendering-and-transitions"
 description: "Concurrent rendering lets React interrupt its own work for something more urgent. Transitions are how you tell React which updates can wait."
 publishedAt: "2026-04-02"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -91,3 +92,19 @@ function ResultsList({ query }) {
 ## What Transitions Don't Do
 
 Transitions don't make the underlying computation faster — `filterLargeDataset` still takes exactly as long to run. What changes is whether that computation can block more urgent work while it runs. If a render is expensive enough to matter, the actual fix is still reducing the work (virtualizing a long list, moving computation off the main thread, memoizing) — transitions just stop that work from starving the interactions users notice most, like typing and clicking. Reach for `startTransition` when you've identified a specific state update that's expensive and non-urgent, not as a blanket wrapper around `setState` calls.
+
+## A worked example
+
+A list filter: `startTransition(() => setQuery(e.target.value))` keeps the input in an urgent update and the heavy list as a transition. Typing stays responsive; the list may lag a frame. `useDeferredValue(query)` is the alternative when you do not control the setter. Profiler shows the list render marked as transition.
+
+A tab switch wrapped in `startTransition` so the old tab stays visible until the new tab is ready (`isPending`).
+
+## Failure modes
+
+Wrapping the input itself in a transition so keystrokes lag. Nested transitions that never paint. Assuming concurrent features work the same in React 17. Using transitions to hide a 2s network call — you still need Suspense or a pending UI. Priority inversion: a transition that updates a store the urgent input also reads.
+
+`flushSync` inside a transition fighting the scheduler.
+
+## When this is the wrong tool
+
+Transitions will not virtualize 50k rows. They are the wrong tool for debouncing network requests (debounce or abort). Do not wrap layout-critical CSS changes that must be atomic. For tiny components, transitions add noise. `useDeferredValue` is enough without `startTransition` in many filter UIs. Server Components are a different axis than concurrent client rendering.

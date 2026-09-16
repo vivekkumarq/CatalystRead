@@ -3,6 +3,7 @@ title: "Cells and Shuffle Sharding: Amazon's Approach to Containing Blast Radius
 slug: "amazon-cell-based-architecture-shuffle-sharding"
 description: "How AWS uses cell-based architecture and shuffle sharding to keep one customer's or one partition's failure from taking down everyone else."
 publishedAt: "2025-10-29"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -28,6 +29,18 @@ The practical effect is that even when two customers are both affected by the sa
 ## Isolation as a first-class design goal, not an afterthought
 
 What ties cells and shuffle sharding together is a shared philosophy: assume failures will happen somewhere in the system regularly, and design the system's topology so failures stay small and contained rather than trying to prevent every possible failure outright. That's a meaningfully different posture from simply adding redundancy or trying to make each individual component more reliable — it accepts that perfect reliability isn't achievable and instead optimizes for how much damage an inevitable failure can do.
+
+## What broke when they scaled
+
+Cells fail at the seams. A shared cache, a global identity service, or a "temporary" cross-cell admin tool becomes the path that takes all cells down together. AWS Builders' Library pieces on blast radius keep returning to this: the router and any shared dependency must be simpler and more reliable than the cells, or cellular architecture is a drawing. Deployments are another seam — a pipeline that pushes to all cells at once defeats isolation; staggered, one-cell-first deploys are part of the design.
+
+Shuffle sharding's combinatorics also have a cost. Customers mapped onto overlapping replica sets make capacity planning and "which hosts do we page" harder. Debugging a single customer's bad traffic means understanding a unique subset of the fleet. Colm MacCárthaigh's shuffle-sharding explanations (including Route 53's use) emphasize that you still need limits per shard so one customer cannot burn their entire replica set — isolation of assignment is not isolation of load.
+
+Too many tiny cells increase toil: N times the dashboards, N times the schema migrations. Too few cells make each failure too large. The scaling work is picking N from customer-impact math, not from a slogan.
+
+## A smaller-team version of the same idea
+
+Split production into two independent stacks (even two Kubernetes namespaces with no shared Redis) and a dumb router: cookie, tenant id, or coin flip. Deploy to one first. If a tenant can ruin a shared worker pool, give them a shuffle of workers rather than the whole pool. You do not need Route 53's scale to get the idea. Avoid a "shared everything" cache in front of both stacks.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "The Architecture Behind Uber's Surge Pricing"
 slug: "uber-surge-pricing-architecture"
 description: "How Uber computes and updates dynamic surge pricing in near real time by combining geospatial indexing, streaming demand signals, and ML forecasting."
 publishedAt: "2025-12-09"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ A pricing system that updates too eagerly creates its own problems: multipliers 
 ## Closing the loop back to supply
 
 Surge isn't only a rider-facing price — it's also a supply signal shown to drivers, nudging them toward undersupplied areas, which is the mechanism that's actually supposed to resolve the imbalance the pricing responded to in the first place. That closes a feedback loop: demand imbalance raises price, higher price and driver-facing surge visualization pulls supply toward the area, supply increasing brings the multiplier back down. The system's effectiveness depends on that loop actually functioning — pricing alone, without visible signals pulling drivers toward the area that needs them, only solves half the marketplace problem.
+
+## What a mid-size team can steal from surge
+
+Surge is a control loop: measure imbalance, compute a multiplier, show it, and live with gaming and public anger. Mid-size steal for any marketplace: a bounded, explainable lever with a max, a smoothing window so it does not oscillate every 30 seconds, and a client that cannot secretly ignore it.
+
+The concrete failure mode is a feedback loop. Too much surge suppresses demand, looks like recovery, drops surge, demand slams back. Dampen. Operational gotcha: hex or zone boundaries that put two street sides in different multipliers, which drivers learn and users feel as unfair. Hysteresis at boundaries. Another is a stale map: a concert ended and surge stays because the telemetry window is long. Pair with event feeds if you have them. Surge that is computed in a batch job and cached too long will be wrong at the moment of request; the request path needs a fresh enough value with a default of 1.0 if the pipeline is down — and that default is a business decision you should write down. Legal and comms are part of the architecture. If you ship a multiplier, you will screenshot it. Log the inputs. Do not copy Uber's specifics; copy the control-loop mindset and the fail-safe. A marketplace without a documented default during an outage will invent one in a panic.
 
 ## What you can borrow
 

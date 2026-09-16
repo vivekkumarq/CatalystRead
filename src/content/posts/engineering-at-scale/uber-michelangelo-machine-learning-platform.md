@@ -3,6 +3,7 @@ title: "Michelangelo: How Uber Turned Machine Learning Into a Self-Service Platf
 slug: "uber-michelangelo-machine-learning-platform"
 description: "How Uber built Michelangelo to give data scientists a shared path from feature data to a deployed, monitored production ML model."
 publishedAt: "2026-01-20"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -33,6 +34,12 @@ Because many of Uber's ML use cases are on the critical path of a live product d
 The real win from Michelangelo wasn't any single technical component, it was consolidation: teams across Uber stopped independently reinventing feature pipelines, training infrastructure, and deployment tooling, and instead built on a shared platform that already handled the undifferentiated heavy lifting. That let data scientists and ML engineers spend more of their time on the parts of the problem specific to their use case — feature selection, model architecture, evaluation criteria — instead of infrastructure plumbing that had already been solved once for everyone else on the platform.
 
 Michelangelo became a widely cited example of the "ML platform" pattern that many large tech companies later built their own versions of, and it's frequently referenced in industry discussions of MLOps as an early, comprehensive example of the category before "MLOps" was a commonly used term.
+
+## A concrete failure mode for an ML platform
+
+Michelangelo aimed to make training, feature pipelines, and serving a paved path so every team did not invent a snowflake. The failure mode of a copycat platform is a UI that submits jobs nobody can reproduce, with undeclared data sources. Mid-size steal: a training job spec that pins data snapshot, code digest, and metrics, plus an online/offline feature contract.
+
+Operational gotcha: a model that is "deployed" while its feature job is failing, so production scores defaults. Couple health: if features are stale, the model is unhealthy. Another is GPU queues that look shared-fair and are actually blocked by one hyperparameter sweep. Quotas. Uber-scale had many models on one platform; you may have three. A lightweight MLflow-plus-rules setup beats a two-year platform rewrite. Shadow traffic before a marketplace model can change prices or ETAs. Marketplace ML has feedback loops: the model changes supply, which changes the next training set. Steal holdouts. Access control on features that include personal data is part of the platform, not an afterthought. If data scientists can train on production dumps on laptops, you do not have Michelangelo, you have a leak. The steal is reproducibility and a serving path with an SLO, not a brand-name internal PaaS.
 
 ## What you can borrow
 

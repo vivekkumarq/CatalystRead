@@ -3,6 +3,7 @@ title: "Scaling Django and Python to Hundreds of Millions of Users"
 slug: "instagram-django-python-scaling-hundreds-of-millions"
 description: "How Instagram kept a synchronous Django monolith running as its user base exploded from zero to hundreds of millions of accounts."
 publishedAt: "2025-05-14"
+updatedAt: "2026-09-16"
 category: "Instagram"
 tags:
   - Engineering at Scale
@@ -32,6 +33,18 @@ Keeping the Django tier stateless and horizontally scalable meant pushing everyt
 ## Operational discipline over rewrites
 
 A small team couldn't afford to rebuild the stack every time growth strained it, so the emphasis fell on observability and automation: consistent deployment tooling, careful capacity planning, and monitoring dashboards that made it obvious which layer was closest to falling over. That discipline is why Instagram could grow its user base by orders of magnitude without a "big rewrite" story — the architecture changed incrementally, one bottleneck at a time, while the core application code stayed recognizably the same Django project engineers had started with.
+
+## What broke when they scaled
+
+Instagram's early engineering talks (Mike Krieger and later Instagram engineering posts) are blunt: they kept Django, synchronous Python, and a relatively simple stack by pushing complexity into Postgres, memcached, Redis, and later Cassandra-style stores for the feed. What broke at hundreds of millions was not "we need to rewrite in Go" first — it was the database and cache: connection counts, cache stampede, and the infamous feed fan-out vs fan-in tradeoff. GIL-bound CPU showed up on photo processing and certain endpoints; they moved those off the web processes rather than abandoning Django for the request path.
+
+Staying synchronous means a slow memcache or a locked row blocks a worker. The scaling discipline is aggressive timeouts, lots of cheap web workers, and not doing work in the request that can be queued. Instagram's culture of "boring technology" only works if the data tier is aggressively tuned and sharded. A Django monolith that also runs heavy analytics in-process will not repeat their result.
+
+Python 3 migration, uWSGI/gunicorn worker math, and pre-fork memory were operational themes as the fleet grew.
+
+## A smaller-team version of the same idea
+
+Django + Postgres + Redis will take you further than a microservice diagram. Cache the feed. Queue image processing. Add read replicas. Shard when a single primary is the incident. Rewrite an endpoint in another language only after you have proven the web workers are CPU-bound on that path. Keep the app synchronous and short.
 
 ## What you can borrow
 

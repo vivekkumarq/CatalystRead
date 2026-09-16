@@ -3,6 +3,7 @@ title: "Zoneless Angular: Signals as the Notification System Change Detection Al
 slug: "angular-zoneless-and-signal-based-apps"
 description: "What Zone.js was doing on every async hop, how zoneless + signals mark dirty components, and the remaining places you still need to tell Angular that data arrived."
 publishedAt: "2026-09-04"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -43,3 +44,45 @@ If `ticks` updates, this badge refreshes. A sibling that never read `ticks` does
 A lot of specs were secretly testing Zone's clocks. Zoneless tests need `whenStable` / fixture `detectChanges` after signal writes. That is more honest, not more annoying: you were always depending on a global patch.
 
 The destination is an app whose profiler shows CD aligned with actual state changes. Signals are the API. Zoneless is the runtime that stops lying about why CD ran.
+
+## A worked example
+
+A widget polls a price every two seconds with `setInterval` and writes `this.price = n` on a Default-strategy component. Under Zone.js the tree refreshes. After `provideZonelessChangeDetection()`, the template stays stale. The fix is a signal:
+
+```typescript
+price = signal<number | null>(null);
+ngOnInit() {
+  this.id = setInterval(() => {
+    this.price.set(readTicker());
+  }, 2000);
+}
+```
+
+The template reads `price()`. A sibling `LastUpdated` that does not read `price` stays idle. In a spec, call `fixture.detectChanges()` after the signal write; do not wrap the test in `fakeAsync` expecting Zone to flush CD.
+
+For an RxJS websocket, `toSignal(messages$, { initialValue: null })` is the bridge. Mutating `this.user.name = x` without a new object or signal write remains invisible.
+
+## Failure modes
+
+Third-party charts that update canvas from their own timers will look "fine" while Angular bindings next to them are stale — two clocks. Tests that `tick()` and assert DOM without `whenStable` flap. Mixing Default and OnPush parents can hide a zoneless miss until you promote the parent. `markForCheck` called from outside NgZone used to work because Zone patched the event; zoneless needs an Angular-aware notification.
+
+`effect()` that writes a signal unconditionally creates a loop. `untracked` exists for a reason.
+
+## When this is the wrong tool
+
+Do not flip zoneless on a NgModules-era app whose CD strategy is Default everywhere and whose third-party suite assumes Zone. Migrate OnPush + signals first. Zoneless is the wrong tool to "speed up" a page whose cost is a 4 MB bundle or a slow API. If you only have a handful of components, Zone.js noise may be cheaper than a migration. Server-side rendering still needs a coherent hydration story; zoneless does not replace incremental hydration work.
+
+## Review checklist
+
+- Tree is OnPush and state flows through signals before zoneless is enabled.
+- RxJS lands in `toSignal` or `async` pipe; in-place mutation is gone.
+- Specs use `whenStable` / `detectChanges` after writes, not Zone clocks.
+- Profiler CD lines up with signal writes, not with third-party timers.
+
+## A worked failure mode
+
+Zoneless is enabled while a chart library still patches `addEventListener` and expects Zone to notify Angular. The chart updates the canvas but the Angular summary beside it stays stale until a click elsewhere. A setTimeout in a third-party SDK never triggers CD. Developers reintroduce `NgZone.run` everywhere, recreating Zone in disguise. The failure is zoneless without a notification story. Wrap non-signal async in explicit `markForCheck`/signal sets, prefer signal-based inputs from the library, and audit vendors.
+
+Zoneless is the wrong first migration if the app is a thicket of Zone-dependent libraries and you cannot test. It will not magically speed up a huge default-CD tree. Do not mix half-zoneless modules. Stay with Zone until signals (or explicit marks) cover your async boundaries; then switch with a checklist of third-party callbacks.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Zoneless Angular: Signals as the Notification System Change Detection Always Wanted" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

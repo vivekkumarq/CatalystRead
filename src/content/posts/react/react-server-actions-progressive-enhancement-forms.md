@@ -3,6 +3,7 @@ title: "Form Handling with Server Actions and Progressive Enhancement"
 slug: "react-server-actions-progressive-enhancement-forms"
 description: "How React server actions let forms work before JavaScript loads, and the patterns needed to layer client-side validation and pending state on top."
 publishedAt: "2026-06-30"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -95,3 +96,27 @@ function CommentForm() {
 ## Client-side validation as an enhancement, not a requirement
 
 Add `required`, `pattern`, and `minLength` as native HTML attributes so validation works even without JavaScript, and treat any JS-driven validation as a faster feedback loop layered on top — never the only line of defense, since server actions must re-validate anyway. A malicious or buggy client can always submit a raw POST bypassing whatever a JS validator would have blocked, so the server-side check inside the action itself isn't optional polish; it's the actual security boundary, with everything else purely for UX.
+
+## A worked example
+
+A `<form action={updateEmail}>` works without JS: POST, server validates, redirects with a cookie flash. With JS, the same action runs without a full reload; `useFormStatus` pending. Hidden `_intent` fields distinguish "save" vs "delete". Idempotency key in a hidden field for retries.
+
+You test with JS disabled in Playwright and with JS on.
+
+## Failure modes
+
+Actions that only work with client `fetch` and empty native action. CSRF if you mix cookies and a wide CORS. Returning huge payloads from actions. Not revalidating tags so the page shows old data. Double submit. File uploads without size limits.
+
+Using GET forms for mutations because it "worked in demo."
+
+## When this is the wrong tool
+
+A rich SPA canvas editor is not a form action. Search-as-you-type should not be a server action per key. If the backend is a public JSON API for mobile too, keep a shared handler, not only a Next-style action. Progressive enhancement is the wrong hill if the product is a WebGL game. Do not replace a well-tested REST mutation layer overnight for a single form.
+
+## A worked failure mode
+
+A Server Action is called from a client without a form; JS fails and the mutation cannot run. The action trusts hidden fields the client can edit (price). No revalidate, so the list stays stale. The failure is enhancement as optional security. Validate on the server, use real forms for the critical path, and revalidate.
+
+Server Actions are the wrong tool for a high-frequency slider. They are not a substitute for an API with a contract for third parties. Use them for first-party mutations with a no-JS story where it matters.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Form Handling with Server Actions and Progressive Enhancement" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

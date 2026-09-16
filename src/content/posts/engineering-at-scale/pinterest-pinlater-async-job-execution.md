@@ -3,6 +3,7 @@ title: "PinLater: Asynchronous Job Execution at Pinterest Scale"
 slug: "pinterest-pinlater-async-job-execution"
 description: "How Pinterest replaced a fragile in-memory queue with PinLater, a durable, pluggable asynchronous job execution system built to survive real production load."
 publishedAt: "2025-05-20"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ Not every asynchronous job is equally urgent, and a queue that treats a bulk rei
 ## Operability as a first-class requirement
 
 Because so much of Pinterest's product behavior depends on jobs that run outside the request path, PinLater was also built with monitoring and introspection as core functionality rather than an afterthought — queue depth per job type, processing latency, and failure rates needed to be visible enough that an on-call engineer could tell, at a glance, whether a backlog was a transient blip or a sign that a downstream dependency was down. That operational visibility mattered as much to PinLater's success internally as its throughput numbers did, since a queueing system nobody can debug under pressure isn't actually production-ready no matter how fast it processes jobs on a good day.
+
+## What a mid-size team can steal from Pinlater
+
+Pinlater-style job systems exist because a pin save should return fast while fan-out — notifications, search index, image processing — happens later. Mid-size steal: a durable queue, idempotent workers, and visibility into lag by job type. You do not need a custom Pinterest scheduler if SQS plus a worker pool with a poison queue will do.
+
+The concrete failure mode is a retry that is not idempotent: a job resizes an image twice into two CDN keys, or sends two emails. Another is a single queue for "tiny metadata updates" and "transcode this 4K video," so videos stall saves. Separate queues and concurrency. Operational gotcha: delayed jobs that pile up overnight and then all become due at 8:00, melting MySQL. Jitter the clocks. Deduplication windows that are shorter than the maximum retry span will double-run. Pinlater's lesson is treating async as a product with SLOs — time to index a pin — not a best-effort dump. Dead letters need owners; a queue named "failed" that nobody reads is where GDPR deletions go to die. If a job mutates money or trust, it needs the same review as an HTTP handler. Steal tracing from enqueue to complete, because otherwise on-call debugs "the app is slow" when the app is fine and the workers are not.
 
 ## What you can borrow
 

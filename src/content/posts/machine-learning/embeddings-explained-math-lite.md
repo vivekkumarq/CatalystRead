@@ -3,6 +3,7 @@ title: "Embeddings, Explained With Minimal Math"
 slug: "embeddings-explained-math-lite"
 description: "What embeddings actually are, why distance in that space means something, and how to reason about them without wading through linear algebra."
 publishedAt: "2026-04-29"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -53,3 +54,13 @@ More dimensions aren't free — every dimension adds storage and compute cost to
 ## Where this shows up beyond NLP
 
 The same idea powers recommendation systems (user and item embeddings, where proximity means "likely to be a good match"), image search (visually similar images end up close together), and semantic search over documents (retrieving by meaning rather than keyword overlap). In every case, the actual work happens in two stages: train or download a model that produces good embeddings for your domain, then build an efficient nearest-neighbor search — libraries like FAISS or HNSW-based indexes — over the resulting vectors, since brute-force distance computation stops being practical well before you reach a few million items.
+
+## A worked failure mode
+
+Cosine 0.82 is shown to users as "82% match" across two models trained differently. One batch of vectors is L2-normalized and the next is not, so nearest-neighbor ranks shuffle after a re-embed of half the corpus. The failure is treating a geometric score as a calibrated probability and mixing spaces. Normalize with a documented policy, rebuild indexes atomically, and evaluate with labeled pairs.
+
+## When this is the wrong tool
+
+Embeddings are the wrong tool for exact identifier lookup. Do not explain legal relevance with a pretty 2D plot. Use them for similarity you can measure, with a frozen model version on the index.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Embeddings, Explained With Minimal Math" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

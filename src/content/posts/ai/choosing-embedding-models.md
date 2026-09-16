@@ -3,6 +3,7 @@ title: "Choosing and Evaluating Embedding Models for Retrieval"
 slug: "choosing-embedding-models"
 description: "How to pick an embedding model for your retrieval stack using benchmarks that actually correlate with your data, not just MTEB leaderboard rank."
 publishedAt: "2026-06-05"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -54,3 +55,25 @@ If you re-embed your corpus frequently — because documents update often or you
 ## Re-run the eval on every model swap
 
 Embedding models are not drop-in replacements for each other, even within the same vendor's lineup. A new version can shift the vector space enough that your reranker's calibration or your similarity thresholds stop making sense. Treat swapping the embedding model as a migration: re-embed the full corpus, re-run the golden-set eval, and compare recall@k side by side before cutting traffic over. Never run two embedding models against the same index — cosine similarity across incompatible vector spaces is meaningless, and you'll get retrieval results that look plausible but are actually noise.
+
+## A worked example
+
+You pick a candidate list (open vs API). Evaluate on *your* queries: recall@10 of a labeled set of 200 query-doc pairs. Measure dimensions, latency, cost, multilingual. Same chunking for all. A small fine-tune / adapter only after the baseline. You record that a 3% recall gain cost 4× latency.
+
+Normalize vectors if using cosine and the model expects it.
+
+## Failure modes
+
+Leaderboard-only selection. Mixing embedding spaces in one index. Changing chunk size when swapping models without re-embedding. Asymmetric query vs doc models used symmetrically. PII sent to a third-party embed API against policy.
+
+Assuming MTEB English equals your tickets.
+
+## When this is the wrong tool
+
+Keyword-only corpora with exact SKUs: lexical search. If documents are 20 tokens of structured IDs, a hash index wins. Do not embed every keystroke for autocomplete of known titles. A single giant LLM as "embeddings" via hidden states without a retrieval eval is guesswork. Skip weekly model shopping if the bottleneck is chunking and metadata filters.
+
+## A worked failure mode
+
+A search team downloads the leaderboard's top embedding, indexes 4M chunks, and ships. Queries in German and queries that are error codes both degrade. The leaderboard was English MTEB-style paraphrase. A domain model 5% lower on the public board would have kept SKUs together. They also mix cosine in the database with dot-product vectors that were never normalized, so scores are not comparable across batches. Rebuild cost is a week of silent bad search. The failure is picking embeddings as a brand instead of a retrieval metric on your query log: recall@k, MRR, and a slice for identifiers. Freeze the model version in the index metadata so you cannot half-upgrade.
+
+A giant multilingual embedding is the wrong tool for an English-only catalog of part numbers. Do not re-embed nightly without a recall regression set. Do not assume OpenAI-vs-open-source rankings transfer to legal or medical text. Choose a model with a measured lift on your labels; stay with a slightly worse model if the index rebuild and dimension cost dominate the quality gain.

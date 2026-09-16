@@ -3,6 +3,7 @@ title: "Titus: Running Containers Alongside Instances Without Rewriting Everythi
 slug: "netflix-titus-container-management-platform"
 description: "How Netflix built Titus, its own container management platform on EC2, to bring containers into an infrastructure stack built around AWS instances."
 publishedAt: "2025-10-30"
+updatedAt: "2026-09-16"
 category: "Netflix"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ Titus's scheduler was originally built on Apache Mesos, which provided the resou
 Titus runs two meaningfully different kinds of workloads: long-running services that need to stay up and be discoverable, and batch and machine-learning jobs that run to completion and are far more tolerant of interruption. Supporting both on one platform let Netflix consolidate its container infrastructure instead of running separate systems for services versus batch compute, and it let batch workloads opportunistically use capacity that would otherwise sit idle waiting for peak service traffic, improving overall resource utilization across Netflix's AWS footprint.
 
 That shared-capacity model is a meaningful efficiency win at Netflix's scale: streaming traffic has a strong daily and weekly cycle, and batch and ML training jobs can be scheduled to soak up spare capacity during off-peak hours rather than requiring their own dedicated, separately-provisioned fleet.
+
+## What a mid-size team can steal from Titus
+
+Titus existed because Netflix needed containers on AWS before Kubernetes was the default, with batch and service workloads sharing a fleet. You should not rebuild Titus. You should steal the workload split: services with SLOs versus batch that can be preempted, with quotas so a Spark-like job cannot starve playback APIs. Kubernetes plus cluster autoscaler plus PriorityClasses is the mid-size version.
+
+Operational gotcha: image sprawl and slow pulls at scale. A thundering herd of new tasks after a deploy hammers the registry; mirrors and smaller images matter as much as the scheduler. Another failure mode is assuming the container scheduler understands your availability zones the way your stateful data layer does. Schedule poorly and you concentrate load on one AZ's cache. Steal topology-aware placement for anything chatty. Titus taught that a platform team must own the contract of CPU, memory, networking, and IAM for tasks, or every studio rebuilds it. If developers can request unlimited burstable CPU, they will, and noisy neighbor returns. Show teams their actual usage versus request; reclaim slack. Custom schedulers are justified when the cloud's scheduler cannot express a constraint you already measured — not when a blog post made Borg look romantic.
 
 ## What you can borrow
 

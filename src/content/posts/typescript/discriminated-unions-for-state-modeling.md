@@ -3,6 +3,7 @@ title: "Discriminated Unions for Modeling State You Can Actually Trust"
 slug: "discriminated-unions-for-state-modeling"
 description: "Replace scattered boolean flags with discriminated unions to make impossible UI and reducer states unrepresentable, not just unlikely."
 publishedAt: "2025-11-30"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -88,3 +89,27 @@ type CartAction =
 ```
 
 You can't accidentally read `action.itemId` on a `"clear"` action — it doesn't type-check. That's not a linting convention; it's structurally impossible, which is exactly the property you want from state that other people will maintain after you.
+
+## A worked example
+
+`type Remote<T> = { status: 'idle' } | { status: 'loading' } | { status: 'ok'; data: T } | { status: 'err'; error: string }`. A switch on `status` makes `data` available only in `'ok'`. You reject `{ loading: boolean; data?: T; error?: string }` because `loading && data` states exist.
+
+Redux/useReducer actions use the same discriminant: `{ type: 'loaded'; payload: T }`.
+
+## Failure modes
+
+Optional discriminant. Two fields as fake discriminant (`success` boolean plus `error`). Forgetting `never` in default to catch unhandled variants. Nested unions without a tag. Serializing to JSON and losing the tag name (`kind` vs `status` mismatch across services).
+
+`as` casts to the happy variant.
+
+## When this is the wrong tool
+
+A single boolean is enough for a checkbox. Classes with methods can be better when behavior varies more than data. Do not union 40 API error codes if a single `AppError` with a code field is enough — unless you need exhaustive UI. Zod discriminated unions at the boundary; interior can use the TS union. If state is a dense grid of flags, a state machine library may be clearer than ad-hoc unions.
+
+## A worked failure mode
+
+A union is `{type, ...optional fields}` without a discriminant that TypeScript can narrow; fields are still optional everywhere. A new state is added and a switch has a default that swallows it. The failure is a fake union. Required discriminant, no default or `satisfies never`, and one object per state.
+
+Discriminated unions are the wrong tool for a boolean. Do not union 40 states you could make a state machine library for. Use them for a handful of mutually exclusive shapes.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Discriminated Unions for Modeling State You Can Actually Trust" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

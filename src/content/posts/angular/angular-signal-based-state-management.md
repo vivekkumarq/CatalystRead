@@ -3,6 +3,7 @@ title: "State Management Patterns in Modern Signal-Based Angular"
 slug: "angular-signal-based-state-management"
 description: "How signals change the calculus around state management in Angular, and when a plain service with writable signals is enough versus reaching for a store."
 publishedAt: "2026-08-20"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -64,3 +65,27 @@ Functionally this is close to the hand-rolled version, but `signalStore` standar
 ## Don't put everything behind a store
 
 The most common signal-era mistake is treating every piece of state as global by default. Local UI state — whether a dropdown is open, which tab is active, form-in-progress values — belongs in `signal()` calls inside the component itself, not hoisted into a shared store. Promoting state to shared scope should be a deliberate decision made when a second, unrelated component genuinely needs to read it, not a default. Signals made state management cheap enough that the discipline now has to come from where you draw the boundary, not from the tooling enforcing it for you.
+
+## A worked example
+
+A `CartStore` injectable holds `items = signal<Line[]>([])`, `total = computed(() => ...)`, and methods `add`, `remove` that update with immutable copies. Components inject the store and read signals in templates. For server state, the store calls `resource` or a repository, not HTTP in each component.
+
+A test instantiates `CartStore` with a fake repo and asserts `total()` after `add`.
+
+## Failure modes
+
+Deep mutable updates (`items()[0].qty++`) that skip notifications. Giant stores that become god objects. Duplicating server cache in the store and in Query. Putting every local input in a global store. Effects that sync signals to `localStorage` on every keystroke without debounce.
+
+Multiple instances of a store that should be `providedIn: 'root'` vs component-scoped — two carts.
+
+## When this is the wrong tool
+
+NgRx is still reasonable for event-sourced audit-heavy apps with many reducers already paid for. Do not invent a store for a widget with two signals. Signals are the wrong tool to persist a 5 MB editor document on every computed. If the team is not zoneless/OnPush, a store will not by itself fix CD. URL state belongs in the router, not a parallel store.
+
+## A worked failure mode
+
+A "store" is a file of exported `signal`s mutated from anywhere. Two features increment the same cart count; a computed tax never updates because it closed over `.value` once instead of reading the signal. An effect writes back into the same signal and loops until the page janks. There is no single transaction for "add line + recompute coupon." The failure is global mutable signals without an API. Encapsulate writes in functions, keep effects for interop and logging, and group related state so updates are atomic.
+
+A signal store is the wrong tool for server cache with stale-while-revalidate; use a query library. It is the wrong tool for undo/redo of graphs unless you model events. Do not replace the router with signals. Local component signals beat a global store for a tooltip. Use shared signal state when multiple features truly share a live model and you can name the mutations.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "State Management Patterns in Modern Signal-Based Angular" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

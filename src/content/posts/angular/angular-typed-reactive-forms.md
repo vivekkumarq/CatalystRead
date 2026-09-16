@@ -3,6 +3,7 @@ title: "Typed Reactive Forms: Getting Real Type Safety Out of Angular Forms"
 slug: "angular-typed-reactive-forms"
 description: "Angular's reactive forms went from returning any everywhere to fully inferred types. Here's what that buys you and where it still leaks."
 publishedAt: "2026-03-10"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -88,3 +89,11 @@ Typed forms infer control shape, not validation *state*. `Validators.required` d
 ## Migrating an Existing Form
 
 There's no automatic migration for typed forms the way there is for control flow — the compiler will simply start complaining once you upgrade, because untyped `FormGroup`/`FormControl` usages default to their old, more permissive types under the hood, but any new typed API you touch enforces the stricter contract. Convert form by form, starting with whichever forms have caused the most "value was unexpectedly null" bugs — that's where the payoff is immediate.
+
+## A worked failure mode
+
+A migration sets `FormControl<string | null>` then uses `nonNullable` inconsistently. Submit code asserts `getRawValue()` as a domain type that forbids null; runtime still sends `null` for untouched fields and the API 400s. A `FormArray` is typed as `any` "just for now," and a nested control rename does not fail the compiler. Tests pass because they typecast the form. The failure is types that lie. Enable strict generic inference, align `null` with your reset policy, and map to a DTO in one function that the compiler checks. Do not `as` your way back to untyped forms.
+
+## When this is the wrong tool
+
+If the form is three fields and a button, a typed reactive form is ceremony; a signal-based or template-driven form may be enough. Typed reactive forms will not validate business rules you never wrote. Do not use them as a client-side copy of a 200-field mainframe screen without UX. They are the wrong tool if your team bypasses the type system with `any` everywhere. Adopt them when the form shape is a real contract with the API and you will maintain it.

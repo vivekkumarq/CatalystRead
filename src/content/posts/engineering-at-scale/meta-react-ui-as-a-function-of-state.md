@@ -3,6 +3,7 @@ title: "The Origin of React: UI as a Function of State"
 slug: "meta-react-ui-as-a-function-of-state"
 description: "How Facebook's Ads team, wrestling with cascading manual DOM updates, built React around declarative rendering and a virtual DOM diff."
 publishedAt: "2026-03-04"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Re-rendering a full description on every state change sounds wasteful if taken l
 ## Components as the unit of reasoning
 
 The other piece that mattered as much as declarative rendering was componentization: breaking a UI into self-contained pieces, each owning its own logic and rendering, that could be composed into larger interfaces. This let large frontend codebases scale in a way that mirrored how backend teams already broke large systems into smaller services — a component could be reasoned about, tested, and modified largely in isolation from the rest of the page, rather than requiring an understanding of the entire page's mutation logic to change a small part of it safely.
+
+## What a mid-size team can steal from React's origin
+
+React won because cascading DOM updates in the ads UI were unmaintainable. The steal is not "rewrite the app in React." It is making UI a function of explicit state so a bug can be reproduced from props, not from a sequence of jQuery mutations. Mid-size teams still have that problem in admin tools and legacy dashboards even if the public site is already a SPA.
+
+The concrete failure mode is lifting too little state and then fighting the library: hidden mutable stores, direct DOM writes, and effects that reintroduce the cascade React was built to kill. Another operational gotcha is performance folklore. Virtual DOM is not free; a giant table that re-renders on every keystroke will feel worse than the old page. Steal lists virtualization and measured profiling, not memos sprinkled until the profiler is quiet. Migration risk: a half-React half-legacy page with two routing models and two CSS worlds. Facebook could afford a long parallel era; a 30-person product org should pick a seam — one surface at a time — and finish it. Accessibility and form semantics were easy to lose in early SPA culture; treat them as part of the state model, not a later pass. The idea that aged well is unidirectional data, not any particular heuristic for the virtual tree.
 
 ## What you can borrow
 

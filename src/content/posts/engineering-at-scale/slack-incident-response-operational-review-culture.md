@@ -3,6 +3,7 @@ title: "Inside Slack's Incident Response and Operational Review Culture"
 slug: "slack-incident-response-operational-review-culture"
 description: "How Slack structures incident severity, on-call response, and blameless postmortems to turn outages into durable operational improvements."
 publishedAt: "2025-08-26"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -34,6 +35,12 @@ The postmortem process is explicitly tied to generating concrete action items �
 ## Turning individual incidents into systemic learning
 
 Beyond any single incident's postmortem, Slack's operational culture includes periodic review of patterns across many incidents — recurring root causes, categories of failure that keep showing up in slightly different forms, systems that generate a disproportionate share of on-call pain. This is where incident response stops being purely reactive and starts feeding back into proactive engineering investment: a service that keeps generating similar incidents is a signal that it needs real architectural attention, not just another round of tactical fixes to the latest symptom.
+
+## What a mid-size team can steal from Slack's ops reviews
+
+Slack's operational review culture treats incidents as production data about the socio-technical system, not as trials. Mid-size steal: a blameless write-up within a few days, with contributing factors, and a small number of actions that have owners and dates. Ten actions is zero actions.
+
+The concrete failure mode is a theater review: everyone agrees communication was slow, nobody changes paging, and the next incident has the same timeline. Another is punishing the person who ran the risky migrate, which teaches the org to hide work. Operational gotcha: incident commanders who are always the same two seniors, so the practice does not spread and those two burn out. Rotate. Slack-scale also means customer communication as a skill; a mid-size B2B tool should still have a pre-approved status template and a person who is not also debugging DNS. Steal severity definitions that include customer-visible impact, not only HTTP 500 rates — a search outage with 200s is still an incident. Do not copy a huge ICE/IC/comms org chart for a 15-person company; copy the habit of ending with "what we will do differently" and checking that those tickets closed. If reviews are only written when legal asks, you do not have a culture, you have a file.
 
 ## What you can borrow
 

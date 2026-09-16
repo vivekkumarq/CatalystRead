@@ -3,6 +3,7 @@ title: "Firecracker: The microVM Behind Lambda's Isolation Model"
 slug: "amazon-firecracker-microvms-lambda-isolation"
 description: "How AWS built Firecracker, a minimal virtual machine monitor, to give Lambda functions strong isolation without paying the cost of a full VM."
 publishedAt: "2025-09-02"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -30,6 +31,16 @@ Firecracker doesn't reimplement virtualization itself — it runs on top of Linu
 ## From Lambda's internal need to an open-source project
 
 Firecracker was built initially to solve Lambda's own isolation and density problem, and AWS later applied the same technology to AWS Fargate, giving both services a shared, hardware-enforced isolation boundary between customer workloads rather than relying on container-level isolation alone. AWS open-sourced Firecracker in 2018, and it has since been adopted well beyond AWS by other companies building multi-tenant sandboxed compute, since the underlying problem — strong isolation without full-VM overhead — is not unique to Lambda.
+
+## What broke when they scaled
+
+Lambda's density problem was not only boot time. It was noisy neighbors, leftover state, and the cold-start tax when a microVM had to be created for a burst of a rarely used function. Firecracker's NSDI paper describes a VMM small enough to start quickly, but production still needs a control plane that snapshots warmed VMs, provisions block devices, and attaches network identities without turning the host into a fork bomb. A minimal device model also means guests cannot assume a PC: operators supply a tightly specified kernel and rootfs. That is a feature for Lambda; it is a migration cost for anyone who wanted "a tiny EC2."
+
+Security scaling is continuous. A smaller QEMU surface does not remove KVM or virtio bugs. AWS still patches hosts and reasons about side channels; density makes those events more frequent, just in smaller units. Jailer, seccomp, and dropping privileges after boot are part of Firecracker because a Rust VMM running as root is not the isolation customers think they bought.
+
+## A smaller-team version of the same idea
+
+If you run untrusted plugins, CI jobs, or customer code, prefer a real isolation boundary (a VM, gVisor, or a separate account) over "containers on a shared kernel" once the blast radius includes other customers' data. You do not need to write a VMM: Firecracker is open source, and so are simpler sandbox tools. Shrink what you emulate. Measure cold start as a product metric. If all code is first-party and trusted, a process or container is enough — do not pay VM tax for theater.
 
 ## What you can borrow
 

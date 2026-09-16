@@ -3,6 +3,7 @@ title: "Routing Millions of Voice Calls Through Discord's SFU Infrastructure"
 slug: "discord-voice-infrastructure-sfu-routing"
 description: "How Discord's voice chat scales using selective forwarding units, UDP-based media transport, and globally distributed voice servers close to users."
 publishedAt: "2025-08-18"
+updatedAt: "2026-09-16"
 category: "Discord"
 tags:
   - Engineering at Scale
@@ -31,6 +32,18 @@ Discord's voice transport runs over UDP rather than TCP, accepting the possibili
 ## Placing voice servers close to where people actually are
 
 Because voice latency is so sensitive to physical network distance, Discord operates voice servers distributed across many regions globally and routes each user's client to a nearby server rather than a single centralized location, minimizing the round-trip time between a speaker and the SFU handling their channel. For calls with participants spread across different regions, Discord's infrastructure has to make a judgment call about which region's server should host the SFU for that call, generally optimizing to minimize the worst-case latency across all participants rather than simply defaulting to whichever region the call's creator happens to be in.
+
+## What broke when they scaled
+
+Stage channels and large voice rooms turn an SFU into a bandwidth amplifier: one upload becomes N forwards. Without subscription (who is actually speaking / who is in range) you waste last-mile capacity. Discord's later voice work — including speaking detection and more selective forwarding — exists because "forward everyone to everyone" dies at stage-size audiences. NAT, mobile networks, and corporate firewalls also break naive UDP; you need ICE-like connectivity checks, fallbacks, and jitter buffers that hide loss without adding lag.
+
+Region placement is a social graph problem. A server with members on three continents has no "nearest" SFU for everyone. Minimizing the worst-case RTT, plus pinning a call so members do not flap between PoPs, matters as much as raw codec choice. A voice server crash must re-home the channel without sounding like a hang-up. That is orchestration on a UDP fleet, not a typical HTTP rolling deploy.
+
+CPU stays low only while you do not transcode. The moment you need recording, live transcription, or a client that cannot receive Opus at a given bitrate, you have mixer-like costs again. Discord keeps that off the default path.
+
+## A smaller-team version of the same idea
+
+For five-person calls, a mesh or a single SFU box running something like mediasoup/LiveKit is enough. Use UDP/WebRTC, not TCP audio. Put the server in one region your users actually occupy. Add a TURN fallback. Do not build a global voice fabric until you have measured that latency, not features, is the complaint. Mute locally; do not mix on the server unless you are recording.
 
 ## What you can borrow
 

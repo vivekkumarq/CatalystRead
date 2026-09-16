@@ -3,6 +3,7 @@ title: "Jupiter: Rebuilding the Network Underneath Google's Datacenters"
 slug: "google-jupiter-datacenter-network-fabric"
 description: "How Google's Jupiter network fabric used Clos topologies and centralized control to scale datacenter bandwidth by orders of magnitude."
 publishedAt: "2026-02-24"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -29,6 +30,18 @@ A Clos topology also means the network can scale incrementally — adding more b
 The second major theme in Jupiter's design is centralized control: rather than each switch making independent, locally-computed routing decisions the way traditional distributed routing protocols do, Google built centralized software controllers with a global view of the network's topology and traffic, able to compute more globally optimal routing and traffic engineering decisions than distributed protocols converging independently ever could. This is the same software-defined networking philosophy that became an industry-wide trend afterward, but Google was running production centralized network control at datacenter scale years before "SDN" became a common industry term.
 
 Centralized control also simplified operating the network: a single logical control plane made it dramatically easier to reason about the network's global state, roll out changes safely, and debug problems, compared to inferring global behavior from the emergent interaction of thousands of independently-deciding distributed routers.
+
+## What broke when they scaled
+
+A tree of expensive core routers does not provide enough bisection bandwidth for MapReduce-style shuffle. Jupiter (SIGCOMM 2015, Singh et al., building on earlier Google fabric talks) uses a Clos of merchant silicon: many cheap switches, central traffic engineering, and a software control plane. What broke the old network was oversubscription — jobs waiting on the network, not on CPU.
+
+Clos fabrics fail in wiring, in control-plane bugs that black-hole a slice of the cluster, and in incast (many-to-one) that still overwhelms a last hop. Centralized control can be a brain: when it is wrong, the blast radius is the datacenter. Google's papers emphasize evolution (Firehose, Jupiter) over years, not a single redesign. Packet spraying and congestion control (later DCTCP/Timely-class work in the industry) pair with topology.
+
+You cannot "just BGP" this at their port counts without an SDN-ish controller.
+
+## A smaller-team version of the same idea
+
+Buy a leaf-spine (Clos) from a vendor. Do not oversubscribe the spine if your jobs shuffle. Keep the control plane boring. If you are in a cloud, you already rent someone else's Jupiter. Measure whether your jobs are network-bound before you obsess over topology.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Moving Money Across Dozens of Currencies Without Breaking Trust"
 slug: "uber-payments-platform-global-money-movement"
 description: "How Uber built a payments platform to handle rider charges, driver payouts, taxes, and refunds correctly across dozens of countries and currencies."
 publishedAt: "2026-01-27"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ Operating payments across dozens of countries means each market brings its own t
 ## Driver payouts as their own hard problem
 
 Getting money to drivers reliably, quickly, and in their preferred payout method is a distinct challenge from charging riders — it involves aggregating a driver's earnings across trips, subtracting the correct fees and any applicable taxes, and disbursing through payout methods that vary widely by country, some of which support near-instant transfers and some of which don't. Uber has invested specifically in faster payout options in various markets, since payout speed and reliability directly affect driver satisfaction and retention on the platform.
+
+## What a mid-size team can steal from Uber payments
+
+Uber's payments platform moves money across countries, methods, and roles (rider, driver, restaurant) with different regulators. Mid-size steal: a ledger per market, explicit FX at a recorded rate, and adapters per processor rather than if-statements in checkout. Do not encode Brazil and US in one `charge()` with a flag pile.
+
+The concrete failure mode is a payout that succeeds at the processor and fails in the ledger, or the reverse. Reconciliation jobs are the product. Operational gotcha: idempotency across processors with different retry semantics. Another is holding balances in a currency the user cannot withdraw. State that in the API. Split payments and marketplace tax invoices will be wrong if the ledger does not store who was the merchant of record. Get that model right before volume. Uber-scale also means outages of a local method; fail over to another method only if the user consented and the price is still valid. PCI and local data residency may forbid a single global database. Design the boundary. If you are in one country with Stripe, still steal the ledger and the adapter pattern; you will add a method. Support tooling that can freeze a flow without SSH is part of global money. The steal is boring money plumbing. The anti-steal is a creative shortcut around a rail you did not understand.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "The Twelve-Factor App, Revisited for Containers and Managed Data Stores"
 slug: "the-twelve-factor-app-revisited"
 description: "Which of Heroku's 2011 factors still prevent outages, which ones aged (local disk, log sockets), and how to apply them without cargo-culting config vars."
 publishedAt: "2026-09-10"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -37,3 +38,34 @@ Twelve-factor was a reaction to apps that stored session files on one dyno's dis
 **Port binding.** Still right for containers. Service meshes and sidecars complicate "the process listens on $PORT" but do not replace it; they wrap it.
 
 Use twelve-factor as a review checklist for a new service, then write down the two places you deviate (sticky WebSockets, a GPU that cannot be cattle). Deviations with a name age better than silent specialness.
+
+## A worked example
+
+A billing API stores `DATABASE_URL` and `STRIPE_KEY` in a secret manager, injected as env at process start. The image is `billing:gitsha`. Logs are JSON to stdout. Horizontal Pod Autoscaler adds replicas; session state lives in Redis, not `/tmp`. A migration runs as a Job using the same image and a command override, not a laptop.
+
+A review checklist against a new service: can we replace the database URL without rebuilding? Can we kill a pod mid-request without corrupting a file on disk? If both answers are yes, twelve-factor did its job.
+
+## Failure modes
+
+Config in env for 200 keys becomes unreadable; people bake a subset into the image "just for defaults" and then cannot tell which layer won. Shared NFS as "backing service" that is actually a single point of failure. Log libraries that write to files *and* stdout duplicate and rotate badly. Sticky sessions to hold in-memory carts make disposability a lie. Dev/prod parity dies when developers run SQLite and production runs Postgres with different nulls.
+
+`kubectl cp` of a patched JAR onto a live pod is an undisclosed release.
+
+## When this is the wrong tool
+
+A GPU training job with a 40 GB checkpoint on local SSD is not a twelve-factor web process; treat checkpoints as artifacts to object storage on a schedule. Desktop apps, firmware, and notebooks need different rules. Do not stretch "stateless processes" to mean "no cache": a local LRU is fine. Twelve-factor is the wrong hammer for a data warehouse dbt project whose "process" is a batch graph. Use the checklist for network services you scale by replica.
+
+## Review checklist
+
+- Secrets are not in the image; backing services are rebound by config.
+- The same SHA-tagged artifact is what runs in every environment.
+- Processes are crash-safe; local disk is cache, not the system of record.
+- Deviations (sticky sockets, GPUs) are named, not silent.
+
+## A worked failure mode
+
+Logs go to a local file in a container that dies. Config is compiled in. Dev/prod parity is a slide while prod has a sidecar nobody runs locally. The failure is factors as nostalgia. Stream logs, inject config, and make parity a script, not a poster.
+
+Twelve-factor is the wrong tool for a stateful data store you run yourself. Do not stretch "stateless" to mean "we have no backups." Use the parts that still prevent snowflakes.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The Twelve-Factor App, Revisited for Containers and Managed Data Stores" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

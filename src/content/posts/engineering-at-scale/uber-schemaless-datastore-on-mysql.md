@@ -3,6 +3,7 @@ title: "Schemaless: How Uber Scaled MySQL Instead of Abandoning It"
 slug: "uber-schemaless-datastore-on-mysql"
 description: "Why Uber built Schemaless, an append-only document layer on top of sharded MySQL, instead of migrating wholesale to a NoSQL database."
 publishedAt: "2025-10-07"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ It also sidestepped a common NoSQL migration risk: giving up transactional guara
 ## A foundation, not a final answer
 
 Schemaless became foundational infrastructure at Uber for a period, underpinning several core services, and it directly informed the design of Uber's later-generation storage systems, which continued to build higher-level datastore abstractions on top of proven lower-level storage engines rather than chasing the latest storage technology for its own sake. The broader lesson Uber's engineering blog drew from the Schemaless era was less about MySQL specifically and more about a general principle: scaling problems are often solvable with a well-designed layer on top of infrastructure you already trust, rather than requiring you to throw out that infrastructure entirely.
+
+## Operational gotchas of Schemaless-on-MySQL
+
+Uber's Schemaless put JSON-ish documents on sharded MySQL to iterate without DDL on every field, while keeping MySQL's operational comfort. The failure mode is schemaless becoming schema-less: every producer writes different keys for "driver_id," and readers guess. Mid-size steal: JSON columns with a version field and a validator at write time, not a free-for-all.
+
+The concrete failure mode is an index you cannot add because the field is buried in JSON, so you scan. Promote hot fields to columns on a schedule. Operational gotcha: wide documents that blow row size and replication. Cap. Dual-write between old tables and Schemaless during migration without idempotency will duplicate trips. Another is secondary indexes that are eventually consistent while the primary row is not; product reads the index and 404s the document. Document the lag. MySQL still needs schema changes for the envelope — shard key, indexes — so you did not escape migrations, you delayed them. Steal the envelope-and-payload pattern. Do not steal a custom datastore name until vanilla JSONB plus a few generated columns is on fire. Watch the super-row: a trip that accumulates every event forever. Archive to cold storage. Schemaless is an API discipline sitting on SQL, and the discipline is the hard part.
 
 ## What you can borrow
 

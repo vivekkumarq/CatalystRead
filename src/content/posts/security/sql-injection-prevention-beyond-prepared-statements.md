@@ -3,6 +3,7 @@ title: "SQL Injection Prevention Beyond Prepared Statements"
 slug: "sql-injection-prevention-beyond-prepared-statements"
 description: "Parameterized queries solve the classic SQL injection case, but ORMs, dynamic identifiers, and second-order injection still find ways through."
 publishedAt: "2025-02-27"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -49,3 +50,19 @@ The fix is always an allowlist, not sanitization — there's no reliable way to 
 The subtler case is data that was safely inserted with a parameterized query, sits in the database looking completely ordinary, and later gets pulled back out and used to build a different query without going through parameterization a second time. A username containing a single quote is stored safely; if a background job later builds a report query by concatenating that stored username into a new SQL string, the injection fires on the read path even though the write path did everything right.
 
 This tends to happen in exactly the places teams don't think to check: admin tooling, internal reporting scripts, and data migration jobs, which are usually held to a lower security bar than user-facing endpoints because "it's internal." The rule that closes this gap is simple to state and easy to forget in practice: every query is parameterized based on where the data is going, not based on how trustworthy the data seemed when it arrived.
+
+## A worked example
+
+Prepared statements for values. Allowlist for `ORDER BY` columns. Identifiers never concatenated from users. Dynamic filters built as `AND col = ?` with bound values. A linter/semgrep rule for string-built SQL. Tests with `'` in names. Stored procedures that still concatenate inside are not a fix.
+
+ORM `where` APIs instead of raw strings; raw only with bound params.
+
+## Failure modes
+
+`${id}` in template SQL. `escape` functions you wrote. LIKE `%${term}%` still needs binding (and watch `%`/`_`). Second-order injection from stored fields. GraphQL concatenating. Excel CSV formulas (different injection).
+
+`int` cast as the only defense on a string column.
+
+## When this is the wrong tool
+
+Prepared statements are not XSS defense. If you need a user-defined query language, use a parser and a safe AST-to-SQL compiler, not string glue. NoSQL has its own injection (operators). An allowlist is the wrong tool if the list is `*` of every column including secrets. Do not "sanitize" SQL with regex. For analytics, a BI tool with its own permissions may beat ad-hoc SQL from the app.

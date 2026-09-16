@@ -3,6 +3,7 @@ title: "Backpressure in Streaming Systems"
 slug: "backpressure-in-streaming-systems"
 description: "Bounded buffers, reactive pull-based demand, and log-based pull consumption: three ways streaming systems handle a slow consumer."
 publishedAt: "2025-09-16"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -66,3 +67,19 @@ Kafka and similar log-based systems sidestep push-based backpressure entirely: c
 ## Choosing a Failure Mode
 
 Every backpressure strategy is really a choice between three unpleasant options when the system is genuinely overloaded: block the producer (latency spikes upstream, possibly cascading), drop data (load shedding — pick what's least important to lose), or buffer unboundedly (eventual crash, just deferred). There's no strategy that avoids all three — the design work is choosing which one is least bad for your system, deliberately, rather than getting whichever one falls out of default configuration.
+
+## A worked example
+
+A producer writes 10k msgs/s into Kafka; a consumer with a slow DB processes 2k/s. Without backpressure the consumer's in-memory queue grows until OOM. With pause on the poll loop (or a bounded executor plus `pause`/`resume` on the Kafka assignment), lag is visible as consumer lag, not as heap. HTTP: a server returns 429 or stops reading the socket so TCP window closes. Reactive streams `request(n)` is the same idea with a credit window.
+
+A load test shows p99 latency rising smoothly, not a cliff at 30s GC.
+
+## Failure modes
+
+Dropping messages silently. Unbounded `thread pool queue`. Retrying 429 without jitter so you DDoS yourself. Backpressuring the wrong hop (edge waits while the core still ingests). Mixing at-least-once with a full in-memory buffer. Kafka pause that never resumes.
+
+Logging every dropped item at 10k/s — the logger becomes the bottleneck.
+
+## When this is the wrong tool
+
+If the producer is a human form, a 429 plus a message is enough; do not build a reactive pipeline. Backpressure will not fix an under-provisioned database — you still need capacity. For unbounded historical replay, you want storage lag, not TCP backpressure on a live user. Do not backpressure by blocking the event loop of a shared Node process. Batch jobs can run at max disk speed with a bounded thread pool instead of a fancy credit protocol.

@@ -3,6 +3,7 @@ title: "ClassLoaders Demystified"
 slug: "classloaders-demystified"
 description: "ClassLoaders quietly decide how your code finds classes, why two copies of the same class can coexist, and why app servers leak metaspace."
 publishedAt: "2025-04-09"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -59,3 +60,13 @@ Metaspace, where class metadata lives, is reclaimed only when a class's defining
 | Static caches in shared/parent-loaded classes | Cache entry references a class from the child loader |
 
 This is the classic "hot redeploy leaks metaspace" problem in application servers: every redeploy creates a new class loader, and if the old one can't be garbage collected because of one of the above, you accumulate loaders — and their entire class graphs — until `OutOfMemoryError: Metaspace`. A heap dump analyzer that can show retained class loaders (Eclipse MAT's "duplicate classes" and leak suspects reports are good starting points) is the fastest way to confirm this diagnosis.
+
+## A worked failure mode
+
+A plugin is loaded in a child classloader, then cached in a static map in the parent. The plugin JAR is "unloaded" but the class stays alive; file handles leak; a reload gets `LinkageError` for duplicate classes. Another app compares classes with `==` across loaders and fails equality. The failure is ignoring loader identity as part of type identity. Do not stash plugin classes in parent statics, and close loaders only after no instances remain.
+
+## When this is the wrong tool
+
+Deep classloader graphs are the wrong tool for a simple Spring Boot fat jar. OSGi-style systems are overkill for one team. Do not invent a plugin loader if a separate process would isolate better. Learn classloaders to debug `ClassNotFound` and leaks, not to design a new module system on Friday.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "ClassLoaders Demystified", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

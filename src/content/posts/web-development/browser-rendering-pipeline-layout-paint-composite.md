@@ -3,6 +3,7 @@ title: "The Browser Rendering Pipeline: Layout, Paint, and Composite"
 slug: "browser-rendering-pipeline-layout-paint-composite"
 description: "A walkthrough of how browsers turn a style change into pixels on screen, and why some CSS properties are far cheaper to animate than others."
 publishedAt: "2026-07-14"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Performance
@@ -81,3 +82,19 @@ elements.forEach((el, i) => { el.style.width = heights[i] + 'px'; }); // then al
 ## Measuring which stage is actually the bottleneck
 
 The Performance panel in Chrome DevTools color-codes each stage — purple for layout, green for paint, and a distinct compositor track — directly in the flame chart. When frames are dropping, that's the first place to look before guessing; it tells you definitively whether the cost is layout thrashing, expensive paint (large shadows, filters), or something on the main thread blocking composite from running at all.
+
+## A worked example
+
+A sticky header with `transform: translateY` on scroll stays on the compositor if you only change transform/opacity. Changing `top` or `height` on each scroll forces layout. DevTools Performance: purple layout bars vs green paint vs composite. You replace `offsetHeight` reads in a loop (forced sync layout) with one read.
+
+`will-change: transform` on the animated node, not on `body`.
+
+## Failure modes
+
+Reading layout then writing in a loop. Animating `box-shadow` on a huge layer. Too many layers (memory). `filter` on a parent forcing a huge paint. Intersection observers that mutate layout of all items. SVG filters on scroll.
+
+Blaming React for layout thrash caused by CSS.
+
+## When this is the wrong tool
+
+The pipeline model will not fix a 4 MB image. Do not promote every element to a layer. Canvas/WebGL have a different path. If the cost is JS (JSON parse), rendering is not the first profile. Print stylesheets and accessibility zoom change the rules. Micro-optimizing composite for a static article is wasted time.

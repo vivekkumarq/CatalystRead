@@ -3,6 +3,7 @@ title: "The Confused Deputy Problem in Cloud IAM, With Resource Policies That Cl
 slug: "iam-confused-deputy-and-resource-policies"
 description: "How a service with a broad role gets tricked into acting on the wrong resource, and the sts:ExternalId / source ARN patterns that stop it."
 publishedAt: "2026-08-22"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -43,3 +44,34 @@ Identity policy: what the role can do. Resource policy: who can use the bucket, 
 Logs should record the external ID, the assumed role ARN, and the object key. After an incident, "we assumed something" is not a narrative.
 
 If you are reviewing a multi-tenant AWS integration, ask: "If I pass you my competitor's bucket ARN, do you write to it?" The only acceptable answer is no, with a pointer to the condition keys that make it no.
+
+## A worked example
+
+Your SaaS provisions `arn:aws:s3:::acme-tenant-{id}` and stores `{id}` in your database. When the customer clicks "export," your worker assumes `arn:aws:iam::{customer}:role/AcmeExport` with `ExternalId` from your DB, then `PutObject` only to `s3://acme-tenant-{id}/exports/...`. The customer role's trust policy requires that external ID. The bucket policy allows `s3:PutObject` from that role ARN, not from the world.
+
+A penetration test that supplies a competitor's bucket name in the API body must fail at *your* validation layer before `AssumeRole`, and would fail again if the assumed role is scoped to one prefix.
+
+## Failure modes
+
+Generating external IDs that are guessable (tenant slug). Reusing one external ID for all customers. Not passing `ExternalId` on `AssumeRole` because "the role already trusts us." Resource policies that allow `Principal: *` with a condition you mis-type. Lambda that takes a target ARN from an SQS message without binding it to the tenant on the message's IAM role.
+
+CloudTrail without `sourceIPAddress` / `userIdentity` correlation makes after-the-fact proof expensive.
+
+## When this is the wrong tool
+
+If there is no cross-account assume-role, confused-deputy ExternalId is not your problem — ordinary least privilege is. Do not bolt ExternalId onto same-account role hops as a substitute for removing `s3:*`. Resource policies are the wrong tool to encode per-user product authorization (use the app). If a partner insists on a role that can write to any of their buckets, decline or isolate that partner on a dedicated AWS account. For non-AWS clouds, the same pattern is "audience + resource condition"; copy the idea, not the JSON keys.
+
+## Review checklist
+
+- Target ARNs come from tenant records you provisioned, not from form fields.
+- `AssumeRole` always sends the stored external ID; trust policies require it.
+- Resource policies pin `aws:SourceArn` / `aws:SourceAccount` for publishers.
+- CloudTrail can answer which tenant, which role, which key.
+
+## A worked failure mode
+
+A CI role can assume into production because a trust policy checks only `sts:AssumeRole` from "some AWS account" and not the source ARN or an external ID. A second team builds a service that takes a customer-supplied role ARN and calls AWS with it; an attacker points at a victim bucket. Resource policies on the bucket allow that service's account, so the deputy copies data. The failure is missing confused-deputy controls: `aws:SourceArn`/`SourceAccount`, external IDs, and not accepting raw role ARNs from users without a binding. Test with a malicious ARN in staging.
+
+A complex resource policy is the wrong tool if the resource should not be shared at all. Do not sprinkle `"AWS": "*"` and rely on a condition you do not understand. Confused-deputy lore is the wrong rabbit hole when access keys are in Git. Use resource policies and source binding when you actually have cross-account invocation.
+
+Treat the counterexample as part of the spec. Someone will apply "The Confused Deputy Problem in Cloud IAM, With Resource Policies That Close It" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

@@ -3,6 +3,7 @@ title: "DOMA: Taming Microservice Sprawl With Domain Boundaries"
 slug: "uber-doma-domain-oriented-microservices"
 description: "How Uber's Domain-Oriented Microservice Architecture organized thousands of services into gateways and layers after sprawl made the old model unmanageable."
 publishedAt: "2025-06-11"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -30,6 +31,12 @@ Smaller engineering organizations with tens of services can often keep a mental 
 ## A migration, not a rewrite
 
 Uber didn't rebuild its service graph from scratch to adopt DOMA — the existing thousands of services had to be regrouped and given gateways incrementally, domain by domain, while the business kept shipping. That incremental nature is part of why DOMA is presented as an architecture pattern and set of principles rather than a specific piece of software: the value was in the organizing discipline it imposed on already-sprawling infrastructure, applied gradually across teams that each had to buy in and do the regrouping work themselves.
+
+## What a mid-size team can steal from DOMA
+
+DOMA was Uber's attempt to cluster microservices into domains so the org did not drown in a mesh of tiny repos. The failure mode of microservices without domains is a change that needs twelve PRs and an undocumented call graph. Mid-size steal: few domains with clear owners and APIs, even if each domain is still a modular monolith.
+
+The concrete failure mode is a "domain" that is a rename of a team with the same leaky RPCs inside. Another is a shared kernel library that becomes a distributed monolith via version pinning hell. Operational gotcha: data ownership. If every service still writes the trips table, you did not domain the data. Pick a source of truth per concept. Uber had hundreds of services; that was the disease DOMA treated. If you have eight, do not split them to look like Uber. Steal the language: bounded contexts, published events, no drive-by PRs into another domain's store. Cross-domain features go through a workflow, not a join. On-call should map to domains, or you will page the wrong people. The org change only works if architecture review can reject a new service that belongs inside an existing domain. Otherwise DOMA is a slide, and the graph keeps growing.
 
 ## What you can borrow
 

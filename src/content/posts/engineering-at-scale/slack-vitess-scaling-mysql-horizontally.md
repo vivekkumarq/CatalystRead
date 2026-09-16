@@ -3,6 +3,7 @@ title: "How Slack Used Vitess to Scale MySQL Without Leaving SQL"
 slug: "slack-vitess-scaling-mysql-horizontally"
 description: "Why Slack adopted Vitess to shard MySQL horizontally at the connection-pooling and proxy layer instead of migrating off relational storage entirely."
 publishedAt: "2025-07-05"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ One of Vitess's most valuable capabilities for a company like Slack, where workl
 ## Keeping the relational model where it earned its keep
 
 Adopting Vitess reflected a deliberate choice to stay on a relational model rather than migrating this class of data to a NoSQL store, because Slack's workspace and channel data genuinely benefited from relational guarantees — transactions, joins, and a mature query language that a large number of engineers already knew well. Rather than trading those properties away to solve a scaling problem, Vitess let Slack keep them while solving the scaling problem at the infrastructure layer instead, which meant application teams didn't need to relearn a new data access paradigm just because the underlying storage now spanned many physical shards.
+
+## Operational gotchas of Vitess in production
+
+Vitess lets you keep MySQL semantics while sharding. It does not let you keep every JOIN and every cross-shard transaction you accidentally wrote. The failure mode is lifting a Slack-like monolith onto Vitess without a query inventory, then watching scatter queries fan out to every shard on a search-ish endpoint. Mid-size steal: explain the top 50 queries, add shard-key predicates, and ban unconstrained scatter in CI if you can parse SQL.
+
+Operational gotcha: vtgate plans that change after a version upgrade. A query that was targeted becomes scatter and the primary CPUs melt. Pin and test. Another is sequences and unique keys that were global and are now per-shard; uniqueness of channel names or emails needs a lookup shard. Slack-scale also means online resharding: you must dual-write or copy with VReplication and switch traffic without dropping websocket-related rows. Rehearse on a shadow cluster. Connection pooling through vtgate is a new bottleneck that looks like MySQL is "fine." Watch vtgate CPU. If you have one primary and it is not dying, you do not need Vitess yet; you need indexes and replicas. Steal the operational model — a proxy that enforces sharding — when the alternative is manual application sharding you will get wrong. Vitess is a product you run, not a flag on RDS.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "CTEs and Recursive Queries: Solving Hierarchies in SQL"
 slug: "ctes-and-recursive-queries"
 description: "How common table expressions clean up nested subqueries, and how recursive CTEs turn hierarchical data into a solvable SQL problem."
 publishedAt: "2025-05-04"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -87,3 +88,11 @@ SELECT * FROM org_chart;
 ## When to reach for it versus an adjacency-list library call
 
 For shallow, occasional hierarchy queries, a recursive CTE run directly against the database is simpler and more consistent than fetching flat rows and reconstructing the tree in application code. For very deep or very frequently traversed hierarchies where performance matters more than simplicity, a materialized path or nested-set model (storing the ancestry directly on each row) trades write complexity for read speed — worth it only once profiling shows the recursive query is actually the bottleneck, not by default.
+
+## A worked failure mode
+
+A recursive CTE walks an org chart with no cycle guard. A bad row points a manager at themselves; the query runs until timeout and takes a worker. Another CTE is referenced twice and executed twice in a planner that does not materialize, scanning a large table twice and surprising the author who thought it was a temp table. The failure is recursion without bounds and CTE-as-cache folklore. Use `CYCLE` / path arrays, cap depth, `EXPLAIN`, and `MATERIALIZED` when you mean it.
+
+## When this is the wrong tool
+
+Recursive SQL is the wrong tool for graphs with frequent writes and deep, hot traversals; a graph store or a closure table maintained in the app may be better. A CTE is the wrong tool if a temp table with indexes would be clearer. Do not recurse in the request path on unbounded user-defined trees without a limit. Use CTEs for readability and bounded hierarchy walks you can explain.

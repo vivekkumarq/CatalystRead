@@ -3,6 +3,7 @@ title: "Practical Tuning Signals for G1 and ZGC"
 slug: "practical-g1-zgc-tuning-signals"
 description: "Most GC tuning advice is cargo culted flags copied from a blog post. Here's how to read the actual signals before you touch anything."
 publishedAt: "2025-03-17"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -63,3 +64,13 @@ ZGC's main tuning lever isn't a pause-time flag — it's making sure it has enou
 ## The Rule That Actually Matters
 
 Change one flag at a time, under realistic load, and compare GC logs before and after. Any tuning advice — including everything above — is a starting hypothesis, not a guarantee. The collector that's right for a batch ETL job is often wrong for a request-serving API, even on identical hardware.
+
+## A worked failure mode
+
+Heap is grown to 64GB to hide a leak; G1 pause goals are set to 1ms; CPU burns on concurrent marking while allocation rate is the real issue. ZGC is enabled on a tiny heap where the extra machinery does not pay. Flags are copied from a 2018 blog. The failure is tuning without allocation rate, live set, and pause histograms. Fix leaks and object churn first; then pick a collector that matches pause vs throughput needs.
+
+## When this is the wrong tool
+
+GC flag soup is the wrong tool for a memory leak. Do not switch collectors weekly. Default G1 is fine for many services. Tune when you have GC logs and a stated pause SLO.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Practical Tuning Signals for G1 and ZGC", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

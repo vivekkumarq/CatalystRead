@@ -3,6 +3,7 @@ title: "Store-and-Forward: The Simple Idea Behind WhatsApp's Delivery Guarantees
 slug: "whatsapp-store-and-forward-message-delivery-acks"
 description: "How WhatsApp's store-and-forward architecture and layered acknowledgment model deliver messages reliably even when recipients are offline."
 publishedAt: "2025-06-20"
+updatedAt: "2026-09-16"
 category: "WhatsApp"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ This layered acknowledgment model gives WhatsApp a clean way to reason about exa
 ## Designing for at-least-once, not exactly-once
 
 Store-and-forward delivery over unreliable mobile networks naturally produces at-least-once semantics — retries after a dropped acknowledgment can result in the same message being pushed twice. WhatsApp's clients are built to de-duplicate on message identifiers, which shifts the harder half of exactly-once delivery to the edge, where duplicate detection is cheap, rather than trying to guarantee it in the network layer, where it's expensive and fragile.
+
+## What a mid-size team can steal from store-and-forward
+
+WhatsApp's store-and-forward plus delivery and read acks is a protocol, not a database trick: the server holds an encrypted blob until a device is online, then deletes what it can. Mid-size steal: offline queues with a cap, distinct delivered vs read receipts, and a client that can live without receipts if the peer disables them.
+
+The concrete failure mode is an unbounded offline mailbox for a user who abandoned the app, filling disks. TTL and size caps, with a user-visible "message too old." Operational gotcha: ack loss. The server thinks it delivered, the client crashed before persist, and the message is gone. At-least-once to the client plus de-dupe by id. Read receipts have privacy product implications; they are not free telemetry. Group acks can storm a server if every participant acks a viral message at once; batch. Multi-device complicates "delivered": delivered to which device? Define it. If you build on a generic chat API, still persist a monotonic id per chat so retries do not reorder. Steal the gray-check / double-check mental model in the protocol even if your UI is different. The anti-steal is storing plaintext forever "for search" while advertising disappearing messages. Retention must match the story. Page on mailbox depth, not only on send QPS; the silent failure is a growing pile of undelivered ciphertext.
 
 ## What you can borrow
 

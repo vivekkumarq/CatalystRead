@@ -3,6 +3,7 @@ title: "Why GitHub Kept the Rails Monolith — and Drew Boundaries Inside It"
 slug: "github-rails-monolith-modular-boundaries"
 description: "GitHub's github/github Rails application grew for over a decade without a microservices rewrite, using internal modularity instead of a network split."
 publishedAt: "2025-08-02"
+updatedAt: "2026-09-16"
 category: "GitHub"
 tags:
   - Engineering at Scale
@@ -37,6 +38,18 @@ This gets you much of what a service boundary is meant to provide — isolated o
 ## Where GitHub did split services
 
 The approach was pragmatic, not dogmatic. Git itself — the actual repository storage and retrieval layer — was pulled out into dedicated infrastructure (what became Spokes/DGit), because replicating and serving git data at GitHub's scale is a genuinely different problem with different scaling and reliability characteristics than rendering a pull request page. Similarly, high-volume, latency-sensitive paths like webhook delivery and Git protocol handling got their own services over time. The dividing line GitHub tended to use was whether a component had scaling needs, failure isolation needs, or a team-ownership story that a monolith module couldn't satisfy — not a general belief that services are inherently better architecture.
+
+## What broke when they scaled
+
+`github/github` is famous for remaining a Rails monolith while the company and the git storage/job systems around it grew. The break of *not* modularizing is circular dependencies, hour-long CI, and "who owns this model?" The break of naive microservices is network ACLs for what used to be an ActiveRecord call — GitHub did extract some services (file storage, notifications at times, etc.) when the scaling profile was genuinely different, but they invested in Packwerk-style boundaries, Zeitwerk, and ownership inside one deploy.
+
+CI and deploy times still grow with a monolith. The platform work is test splitting, profiling, and caching — Shopify and GitHub both published on this. A modular monolith that nobody enforces (constant `ignore` in the boundary tool) is a monolith with extra YAML.
+
+Scientist-style refactors and Vitess sharding are how they changed internals without a rewrite.
+
+## A smaller-team version of the same idea
+
+Folders with public APIs, tests that fail on illegal cross-imports, and one deploy. Extract a service when it needs a different language, SLO, or scale. Do not copy GitHub's monolith size; copy the refusal to split for fashion. Keep a list of allowed exceptions.
 
 ## What you can borrow
 

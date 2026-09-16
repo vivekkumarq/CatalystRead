@@ -3,6 +3,7 @@ title: "The TypeScript Strictness Flags Actually Worth Turning On"
 slug: "typescript-strictness-flags-worth-enabling"
 description: "A practical walkthrough of the compiler flags beyond strict: true that catch real bugs, plus how to adopt them on a large legacy codebase."
 publishedAt: "2025-12-28"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -68,3 +69,13 @@ On a large existing codebase, don't flip all of these at once — the error coun
 - If your build supports per-directory `tsconfig.json` overrides, enable new flags in newer directories first and expand outward — new code shouldn't inherit old laxity while you migrate the rest.
 
 Treat the error count from a newly enabled flag as a backlog, not a blocker — most of it is real bugs that were previously invisible, not false positives.
+
+## A worked failure mode
+
+`strict` is on except `strictNullChecks` because of a large migration; production `undefined` still throws. `noImplicitAny` is off and `any` floods. `skipLibCheck` hides a broken dep that fails in the browser. The failure is a flag set that lies. Turn on the flags that match the bugs you have, module by module, with `any` as a measured debt.
+
+## When this is the wrong tool
+
+Maximum strictness on a throwaway script is ceremony. Do not enable `exactOptionalPropertyTypes` the night before a launch without a plan. Flags are not a substitute for tests. Tighten when you will pay down the errors.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "The TypeScript Strictness Flags Actually Worth Turning On" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

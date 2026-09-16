@@ -3,6 +3,7 @@ title: "Teletraan: How Pinterest Made Deploys Safe and Self-Service"
 slug: "pinterest-teletraan-deploy-system-safe-rollouts"
 description: "Pinterest built Teletraan to let any engineer deploy their own service safely, with staged rollouts and fast rollback replacing manual, ops-gated pushes."
 publishedAt: "2025-07-15"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -39,6 +40,12 @@ A staged rollout only helps if catching a bad deploy early actually translates i
 ## Integrating with the rest of the fleet
 
 Because Teletraan managed deploys across Pinterest's fleet of hosts and autoscaling groups, it needed to stay aware of the broader infrastructure state — which hosts existed, which were healthy, which were being replaced by autoscaling — rather than operating as an isolated tool disconnected from host management. That integration meant a deploy could correctly target the current, live set of hosts for a service even as the underlying fleet changed shape dynamically, which is a much harder problem than deploying to a static, manually maintained list of servers.
+
+## Operational gotchas of safe rollout systems
+
+Teletraan-style deploy tools encode what humans forget at 2 a.m.: stage, canary, pause, rollback. Mid-size steal: a mandatory canary on production with automatic halt on error-rate or latency deltas, even if the "system" is a script around Kubernetes rollouts. The failure mode is a dashboard nobody looks at because the halt thresholds were noisy and engineers learned to skip.
+
+Operational gotcha: canaries that only hit internal staff, while a regional ISP or a particular mobile version is where the bug lives. Another is configuration deploys that bypass the binary pipeline; a flag or a traffic rule can take the site down without a Teletraan record. Steal one control plane for code and config. Partial rollouts plus sticky sessions mean some users never leave the canary and others never enter, ruining metrics. Connection draining on pin upload or long-lived connections needs extra time. If deploy permissions are broad, a well-meaning hotfix will skip stages. Two-person review for production accelerate should be the default. Teletraan's value is memory: the last known good, the diff, the owner. If your system cannot name who shipped and how to revert in one command, you do not yet have safe rollouts, you have hope plus git.
 
 ## What you can borrow
 

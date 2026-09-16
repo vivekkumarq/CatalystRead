@@ -3,6 +3,7 @@ title: "Secure File Upload Handling"
 slug: "secure-file-upload-handling"
 description: "A defense-in-depth checklist for handling user-uploaded files safely, covering validation, storage, serving, and the mistakes that lead to real compromises."
 publishedAt: "2026-06-30"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -44,3 +45,13 @@ Serving user-uploaded content from a separate domain or subdomain than your main
 ## Scan, but don't rely on scanning alone
 
 Running uploaded files through malware and antivirus scanning is a reasonable additional layer, especially for files that will be shared with other users or downloaded broadly, but it should never be the only defense — scanners miss novel payloads by design, and their absence of a detection is not proof of safety. Treat every control here — content validation, storage isolation, correct serving headers, scanning — as one layer in a stack, because any single one of them failing alone shouldn't be enough to compromise the system.
+
+## A worked failure mode
+
+Uploads keep user filenames and are served as `image/jpeg` based on extension; a polyglot HTML file is executed. Size is unbounded. AV is skipped. The file is scanned by an ImageMagick with a known CVE. The failure is trusting clients. Random keys, separate domain, content sniffing disabled, size limits, and a pipeline you patch.
+
+## When this is the wrong tool
+
+A custom upload stack is the wrong tool if a signed S3 POST with a virus-scan lambda exists. Do not store uploads in the webroot. Skip building a CDN for three internal PDFs. Use uploads with a hard boundary from your origin.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Secure File Upload Handling" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

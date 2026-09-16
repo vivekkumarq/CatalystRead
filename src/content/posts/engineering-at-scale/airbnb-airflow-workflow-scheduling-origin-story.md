@@ -3,6 +3,7 @@ title: "How a Scheduling Problem at Airbnb Became Apache Airflow"
 slug: "airbnb-airflow-workflow-scheduling-origin-story"
 description: "Why cron and ad hoc scripts stopped working for Airbnb's data pipelines, and how the internal tool built to fix it became the industry-standard workflow scheduler."
 publishedAt: "2025-06-24"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -24,6 +25,16 @@ A defining design choice was treating retries, backfills, and partial failure as
 ## From internal tool to Apache project
 
 Airflow was open sourced by Airbnb in 2015 and entered the Apache Incubator in 2016, eventually graduating to a top-level Apache project. Its adoption outside Airbnb grew quickly because the problem it solved — scheduling and monitoring pipelines with real dependencies, in a UI that shows what succeeded, what failed, and why — was universal to any company doing serious data engineering, not something specific to Airbnb's domain. The web UI showing DAG runs as a grid, with color-coded task states over time, became a template that essentially every subsequent workflow orchestrator (Prefect, Dagster, and others) has answered to, one way or another.
+
+## What broke when they scaled
+
+The first generation of Airflow was a scheduler that still lived close to a single process and a relational metadata store. That worked while the DAG count was in the dozens. It strained when Airbnb accumulated hundreds of pipelines, each emitting state into the same metadata tables. Scheduler heartbeat lag, "zombie" tasks, and DAG-parse time that grew with Python import graphs became incidents.
+
+The bottleneck is mechanical. The scheduler parses DAG files, compares the graph to stored task instances, and launches what is eligible. Slow parsing means importing Python instead of starting work. A retry storm after a warehouse outage can lock the same tables the UI needs. Later Airflow versions added HA schedulers and serialized DAGs so the webserver did not re-import every file; operators learned to treat the metadata database as production. The DAG idea stayed; the process model grew up around it. Once Airflow was the paved path, a noisy dynamic DAG could stall the scheduler for every team — pools, ownership, and parse-time SLAs became part of the design.
+
+## A smaller-team version of the same idea
+
+Model pipelines as a checked-in graph (Makefile, `needs:` in CI, a small Python DAG) instead of crons that "usually" finish in order. Put retries and an alert on edges that fail. Backfill only date-partitioned jobs you will actually rerun. When two teams share a scheduler, isolate parse and treat metadata like production.
 
 ## What you can borrow
 

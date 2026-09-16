@@ -3,6 +3,7 @@ title: "BERT: Why Bidirectional Pretraining Changed How We Fine-Tune Language Mo
 slug: "bert-pretraining-what-changed-after-gpt"
 description: "Masked language modeling versus left-to-right GPT, next-sentence prediction, and what still matters when you fine-tune encoder models in products."
 publishedAt: "2026-07-24"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -41,3 +42,25 @@ Where teams get hurt:
 - **Using BERT as a chatbot.** Encoder-only models are the wrong tool for open generation. Use them for retrieve, classify, extract; generate with a decoder.
 
 Read the paper's GLUE numbers as history, not as a promise that "BERT" on a model card means those numbers. The useful inheritance is the training idea: if the downstream task is understanding a span in context, train the model to need both sides of the span.
+
+## A worked example
+
+Masked LM: 15% tokens masked, predict them from both sides. NSP (later questioned) vs sentence-order. Fine-tune with a classification head on `[CLS]`. You compare a frozen embedding mean-pool vs full fine-tune on a 2k-label set. Modern cousins: RoBERTa (no NSP, more data), encoder-only still useful for retrieval and classification cheaper than a decoder LLM.
+
+A confusion matrix after fine-tune beats "BERT is magic."
+
+## Failure modes
+
+Using BERT decoder-style for long generation. Fine-tuning on leaked test text. `[CLS]` pooling when mean pooling works better for similarity (or vice versa). Max 512 tokens ignored. Domain mismatch (wiki → legal) without continued pretrain.
+
+Evaluating generative chat with a masked LM.
+
+## When this is the wrong tool
+
+Open-ended chat and agents: decoder LLMs. BERT is the wrong tool for 100k context. If you only need bag-of-words search, BM25 first. Tiny labels: a linear model on TF-IDF may win. Do not BERT-encode images. For RAG, a dedicated embedding model (often BERT-descended) is the tool, not a chat checkpoint.
+
+## A worked failure mode
+
+A team still fine-tunes BERT-base for a support classifier in 2026, using next-sentence prediction era defaults and a 128-token truncate. Tickets that put the real issue in sentence three get the generic label. They then try to "make it generative" by decoding from the CLS vector and are surprised by garbage. The failure is using a masked-language encoder as a generator, and truncating the evidence. Bidirectional pretraining still shines for classification and span tagging when you control the max length and the domain tokenizer. It does not replace a decoder for drafting replies. Measure truncation rate in production; if 30% of tickets clip, you are classifying a prefix, not a document.
+
+BERT-style encoders are the wrong tool for open-ended writing, agents, and long RAG answers. They are the wrong upgrade path when a linear model on strong features already meets the SLA. Do not pretrain from scratch on a tiny corpus "to get a company BERT." Use an encoder when you need cheap, bidirectional representations for labels or retrieval embeddings you are willing to eval; use a decoder when you must generate.

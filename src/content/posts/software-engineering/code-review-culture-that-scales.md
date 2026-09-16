@@ -3,6 +3,7 @@ title: "Code Review Culture That Scales Past Ten Engineers"
 slug: "code-review-culture-that-scales"
 description: "Why code review that works at five engineers breaks at fifty, and the concrete conventions that keep review fast and fair as teams grow."
 publishedAt: "2025-10-02"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -47,3 +48,19 @@ Formatting, import ordering, basic linting, and test coverage thresholds should 
 ## The Cultural Part
 
 None of the above works if review is treated as a gate to survive rather than a second pair of eyes genuinely trying to catch what the author missed. That tone comes from the top of the team, not from a guideline doc — reviewers who ask questions instead of issuing verdicts, and authors who don't take blocking comments personally, are a leadership example more than a written policy. The mechanics above just remove the friction that makes a bad culture worse; they don't substitute for the culture itself.
+
+## A worked example
+
+PRs under 400 lines. Reviewer SLA 1 business day. Checklist: tests, rollback, logs, not nits-first. "Nit:" prefix. Owners via CODEOWNERS, not pinging everyone. A weekly 20-minute calibration on one PR. You measure time-to-first-review, not comments per line.
+
+A blocked PR: reviewer posts the question, author answers in code, not a 40-comment thread.
+
+## Failure modes
+
+Review as gate for power. Drive-by style nits blocking a security fix. Rubber stamps. 3000-line PRs. Review after merge. Personal tone. Requiring 5 approvers. Using review to redesign from scratch.
+
+Hero reviewers as SPOF.
+
+## When this is the wrong tool
+
+Pairing can replace review for a spike. Formal review is the wrong tool for a typo in a comment you can commit yourself if policy allows. Do not copy FAANG review theater for a 3-person team. If the build is red, review is later. Architecture belongs in an RFC before a 50-file PR.

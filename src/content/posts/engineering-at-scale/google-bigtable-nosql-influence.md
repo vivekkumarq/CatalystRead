@@ -3,6 +3,7 @@ title: "Bigtable: The Sparse Sorted Map That Launched a Thousand NoSQL Databases
 slug: "google-bigtable-nosql-influence"
 description: "How Google's Bigtable paper defined the wide-column data model that HBase, Cassandra, and much of the NoSQL movement built on."
 publishedAt: "2025-09-16"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -33,6 +34,16 @@ Bigtable wasn't a standalone system; it was built on top of GFS for underlying f
 Google didn't open source Bigtable, but as with MapReduce, publishing the design was enough to shape the industry. Apache HBase implemented Bigtable's data model directly on top of Hadoop's HDFS, becoming its most literal open source descendant. Apache Cassandra took a different lineage — merging Bigtable's column-family data model with the partitioning and eventual-consistency ideas from Amazon's Dynamo paper — producing a system philosophically related to both. Along with Amazon's DynamoDB (a managed service, distinct from the original Dynamo paper), these systems collectively defined what "NoSQL" meant to a generation of engineers: schema flexibility, horizontal scalability, and a willingness to trade some relational guarantees for both.
 
 Google itself eventually offered Bigtable as a managed cloud product, Cloud Bigtable, letting external customers use essentially the same system that had powered Google's internal infrastructure for over a decade.
+
+## What broke when they scaled
+
+Bigtable (Chang et al., OSDI 2006) is a sparse, distributed, persistent multidimensional sorted map: rows, column families, timestamps, stored as SSTables on GFS with a tablet server per range and Chubby for coordination. Relational joins and multi-row transactions were not the point — web-scale crawls and analytics were. What broke naive RDBMS for that workload was the schema and the scale of sparse attributes. What breaks Bigtable-style systems is a hot row, a gigantic row, or treating it as Postgres (you will miss transactions).
+
+HBase copied the paper; Cassandra mixed Bigtable's model with Dynamo's ring. Compaction, memtables, and locality groups are the operational tax. Google later added richer transaction layers (Percolator, then Spanner) because applications kept needing them. The paper's influence is the data model and the LSM/tablet split, not a single product.
+
+## A smaller-team version of the same idea
+
+If access is by primary key and you have sparse columns, a wide-column or KV store fits. If you need joins and multi-row ACID, use SQL. Cassandra/HBase when you have the access pattern Discord had for messages. Do not choose Bigtable because the paper is famous.
 
 ## What you can borrow
 

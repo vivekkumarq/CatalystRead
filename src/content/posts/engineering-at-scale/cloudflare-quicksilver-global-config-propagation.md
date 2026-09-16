@@ -3,6 +3,7 @@ title: "Quicksilver: Pushing Config to Every Edge Location in Seconds"
 slug: "cloudflare-quicksilver-global-config-propagation"
 description: "Inside Quicksilver, the distributed key-value store Cloudflare built to propagate configuration changes worldwide in seconds instead of minutes."
 publishedAt: "2025-05-14"
+updatedAt: "2026-09-16"
 category: "Cloudflare"
 tags:
   - Engineering at Scale
@@ -30,6 +31,16 @@ Quicksilver is built around eventual consistency: an edge location might briefly
 ## Why this shaped the rest of the platform
 
 Quicksilver became a piece of shared infrastructure well beyond its original DNS-and-firewall use case — it's the same propagation mechanism underneath Cloudflare Workers' configuration, rate-limiting rules, and other features that need to reach every edge location quickly and reliably. Building one well-understood system for "get this piece of data everywhere, fast" let product teams building new edge features reuse it rather than each inventing their own propagation mechanism, which is as much an organizational win as a technical one.
+
+## What broke when they scaled
+
+Kyoto Tycoon-era propagation measured in minutes was a product bug: a WAF rule that is "on" in one city and "off" in another is an attacker lottery. As zone count and per-zone settings grew, the dataset that had to live on *every* machine grew too. Full replicas are the point of Quicksilver's read path; they are also a memory and SSD budget. Cloudflare's blog writing on Quicksilver describes a system optimized for fan-out of small, frequent config mutations — not for treating the edge as a general-purpose database. If you stuff large blobs into the same channel, you stall the firehose that firewall and DNS changes depend on.
+
+Eventual consistency has a nasty edge during rollback. A bad config that is already in 30% of cities cannot be "un-published" faster than the same gossip/replication path unless you have a kill switch that is itself replicated as a first-class, tiny key. Versioning and monotonic epoch numbers matter so an edge that was partitioned does not apply an older write after a newer one. Debugging "why does this customer still see the old page rule" becomes a distributed-tracing problem indexed by key and location, not a single primary's binlog.
+
+## A smaller-team version of the same idea
+
+If every request needs a setting, copy the settings onto the box that serves the request. A cron that rsyncs a JSON file, or a sidecar that watches a small Consul KV, is Quicksilver's cousin. Optimize for local reads and last-known-good. Measure propagation delay as an SLO when the setting is a security control. Do not build a global strongly consistent store for "is this feature flag on." Use a central write API and async fan-out. Split huge objects out of the config channel.
 
 ## What you can borrow
 

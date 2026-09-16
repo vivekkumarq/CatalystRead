@@ -3,6 +3,7 @@ title: "Apache Hudi: Making the Data Lake Behave Like a Database"
 slug: "uber-apache-hudi-incremental-data-lake"
 description: "How Uber built Hudi to bring record-level updates, deletes, and incremental processing to a Hadoop data lake designed for immutable batch files."
 publishedAt: "2025-08-19"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ Hudi originated inside Uber to solve this specific ingestion and freshness probl
 ## Why this mattered beyond storage mechanics
 
 The practical payoff for Uber was data freshness: pipelines and analytics that depended on the data lake no longer had to tolerate the staleness that came from expensive, infrequent full-partition rewrites. Trip data, driver data, and other frequently mutated business records could be reflected in lake-backed analytics with much lower lag, which mattered for both internal reporting and downstream systems, like machine learning feature pipelines, that depended on reasonably fresh lake data rather than yesterday's batch snapshot.
+
+## What a mid-size team can steal from Hudi
+
+Hudi (and cousins Iceberg/Delta) let Uber ingest incremental upserts into a lake instead of rewriting partitions daily. Mid-size steal: upsert-friendly tables for CDC from trips and payments, with compaction as a scheduled job, so streaming and batch readers see a consistent snapshot.
+
+The concrete failure mode is a stream of tiny files from Flink/Spark that nobody compacts; query engines scan millions of files and miss SLAs. Compaction is on-call, not optional. Operational gotcha: copy-on-write vs merge-on-read chosen once in a blog and wrong for your read/write ratio. Measure. Late money events that upsert a trip after a finance snapshot will change history; you need a business rule, not only a table type. GDPR deletes are another upsert class with legal deadlines. Dual engines reading half-committed instants is how two dashboards disagree. Pin a table snapshot in jobs that must match. You do not need Uber's whole lake. One Hudi or Iceberg table for the core business events, with a documented commit rate, beats twenty raw JSON dumps. The steal is incremental, transactional lake tables. The anti-steal is five competing table formats in one bucket because each squad followed a different talk.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Database Performance Triage Checklist"
 slug: "database-performance-triage-checklist"
 description: "When a database is suddenly slow, the order you check things in matters — a triage sequence that finds the real cause before you start guessing."
 publishedAt: "2025-05-24"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -54,3 +55,13 @@ If individual queries look reasonable in isolation but the database is still und
 ## Keep the sequence, not just the checklist
 
 The value of this order is that each step is cheaper to check than the next and rules out a distinct, common cause. Jumping straight to "let's add an index" skips the possibility that the database was never the bottleneck, or that the real problem is a lock held by an unrelated transaction that no amount of indexing would fix. Triage in order, and most incidents resolve at step two or three rather than requiring a deep dive into query planning.
+
+## A worked failure mode
+
+CPU is high; someone adds a replica before checking `pg_stat_activity` and finds a missing index and a transaction idle for an hour. A cache is added in front of a 4-row table. The checklist was skipped: locks, sequential scans, bloat, chatty ORM, then hardware. The failure is scaling out a bad query. Explain the top consumers, fix the statement, then talk about boxes.
+
+## When this is the wrong tool
+
+A performance checklist is the wrong tool if the site is down because of a full disk. Do not tune Postgres to hide an N+1 you can see in logs. Checklists are for systematic triage, not a substitute for EXPLAIN on the actual query.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Database Performance Triage Checklist" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

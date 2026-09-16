@@ -3,6 +3,7 @@ title: "Why REST Stopped Working for Facebook's Mobile Apps"
 slug: "meta-graphql-origin-rest-mobile-limits"
 description: "How Facebook's 2012 mobile rewrite exposed REST's limits and led to GraphQL, a query language built around what the client actually needs."
 publishedAt: "2025-12-02"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ Facebook's answer, developed internally starting around 2012 and later open sour
 ## A typed schema as the contract
 
 GraphQL's other core piece is a strongly typed schema that describes every object, field, and relationship the API exposes. This gave Facebook's client and server teams a shared, machine-checkable contract: client code could be validated against the schema at build time, catching a broken query before it ever reached production, and tooling could auto-generate documentation and client code from the same schema. That schema-first discipline turned out to matter as much for large-scale collaboration between many teams as the flexible querying did for mobile efficiency.
+
+## A concrete failure mode for GraphQL at the edge
+
+GraphQL fixed Facebook's mobile problem of over-fetching REST resources and under-fetching nested graphs. The failure mode at everyone else's company is unbounded queries: a client asks for friends of friends of comments of likes and the gateway faithfully walks the graph until a database or the phone battery gives up. Mid-size teams should steal persisted queries, depth limits, and per-field cost, not an open playground that looks like the GraphiQL tutorial.
+
+Operational gotcha: the N+1 resolver. Each field looks cheap in traces until a list of 50 posts each triggers a user fetch. DataLoader-style batching is mandatory, and it still fails if batch keys explode past cache or if authorization differs per node so you cannot fetch a page of rows blindly. Another trap is schema ownership. Facebook could treat the graph as one product; a mid-size org with twenty teams will ship breaking field semantics without a version because "GraphQL is versionless." Use additive fields, deprecation, and a gateway schema review. Caching is harder than REST URLs: POST bodies and authorization headers mean a naive CDN will either cache too little or cache User A's feed as User B. Steal GET-safe persisted query hashes for public content only. Mobile still wins with one round trip; the server must budget that round trip as carefully as a REST fan-out.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Benchmarking Java Correctly with JMH"
 slug: "benchmarking-java-correctly-with-jmh"
 description: "A System.nanoTime() loop around your code is not a benchmark — it's a measurement of the JIT compiler warming up. JMH exists to fix exactly that."
 publishedAt: "2025-09-07"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -81,3 +82,13 @@ A result like this — a linear scan beating both map implementations for a ten-
 ## The Practical Rule
 
 Never trust a Java performance claim — including ones in blog posts, including this one's numbers above as illustrative rather than measured — that doesn't specify warmup iterations, fork count, and JVM version. If you're making a real decision based on a benchmark, run it yourself with JMH on your actual target JVM and hardware; JIT behavior, memory layout, and even CPU cache effects can meaningfully shift results between environments that look similar on paper.
+
+## A worked failure mode
+
+A microbenchmark times `new ArrayList` in a loop with the JIT compiling away the work because results are never used. It "proves" allocation is free. A second benchmark shares a mutable list across threads and measures a race. JMH without `Blackhole`, without warmup, and without stating the GC and CPU affinity is a blog comment, not a measurement. Run with forks, read the allocation profiler, and compare against a profiler on the real service.
+
+## When this is the wrong tool
+
+JMH is the wrong tool to find why a web request is slow; use a production profiler. It is the wrong tool for a 3-line method you will not ship. Do not optimize a nanosecond path that is 0.01% of CPU. Use JMH when you have a hot, isolatable kernel and you will not let the JIT delete it.
+
+Treat the counterexample as part of the spec. Someone will apply "Benchmarking Java Correctly with JMH" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

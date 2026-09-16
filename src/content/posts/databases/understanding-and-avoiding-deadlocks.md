@@ -3,6 +3,7 @@ title: "Understanding and Avoiding Database Deadlocks"
 slug: "understanding-and-avoiding-deadlocks"
 description: "Why deadlocks happen even in well-designed schemas, how to read a deadlock log, and the lock-ordering habits that prevent them."
 publishedAt: "2025-05-20"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -67,3 +68,13 @@ Applied consistently across every code path that updates more than one row from 
 ## Application-level defenses
 
 Beyond lock ordering, keep transactions short and avoid doing slow, non-database work (an external API call, a slow computation) between statements inside a transaction — the longer a transaction holds its locks, the larger the window for another transaction to collide with it. And because deadlocks can still happen even with disciplined lock ordering under enough concurrency, application code that writes to more than one row per transaction should catch the specific deadlock error code and retry the whole transaction automatically, rather than surfacing it as a user-facing failure. A deadlock that's retried transparently is invisible to the user; one that isn't handled becomes an intermittent, hard-to-reproduce bug report.
+
+## A worked failure mode
+
+Service A updates account then ledger; service B updates ledger then account. Under load they deadlock; the app retries both without backoff and deadlocks harder. Another deadlock comes from UNIQUE conflicts and FK checks in opposite order. The failure is lock order as an accident. Canonicalize lock order, keep transactions small, and retry only the victim with jitter. Log the two queries Postgres reports; they are the spec of your bug.
+
+## When this is the wrong tool
+
+A deadlock detector in the app is the wrong tool if you can take locks in one order. Killing connections is the wrong first response. Do not hold locks while calling HTTP. Deadlock avoidance is for OLTP; if you deadlock in analytics, you probably should not be sharing that transaction with writers.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Understanding and Avoiding Database Deadlocks" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

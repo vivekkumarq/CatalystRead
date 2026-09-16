@@ -3,6 +3,7 @@ title: "Secrets Management for Application Developers"
 slug: "secrets-management-for-application-developers"
 description: "API keys and database passwords leak through predictable channels — git history, logs, error messages — long before an actual attacker gets involved."
 publishedAt: "2024-12-18"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -35,3 +36,14 @@ The practical blocker to rotation is almost always coupling: a secret hardcoded 
 ## A reasonable baseline
 
 For most application teams, the baseline worth aiming for is: secrets never enter version control, enforced by a pre-commit scanner and a server-side scan as a backstop; secrets are fetched at runtime from a dedicated store rather than static environment files where practical; logging and error handling redact known-sensitive field names by default; and every secret has an owner and a rotation cadence, even if that cadence is just "rotate on any team member's departure." None of this requires exotic tooling — it requires treating secret handling as a workflow problem, not a storage problem, since storage was rarely where the leak happened in the first place.
+
+## A worked failure mode
+
+A `.env` is committed; rotation is "we will." The secret is in client JS. Logs print the Authorization header. The failure is secrets as config. Inject at runtime, short-lived creds, never to the browser, redact logs, rotate on leak without shame delay.
+
+## When this is the wrong tool
+
+A vault is the wrong tool if the app still has a second hardcoded key. Do not encrypt secrets in git with a key in git. Env on a shared host is not a plan. Use a manager when you can revoke.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Secrets Management for Application Developers" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

@@ -3,6 +3,7 @@ title: "Train/Validation/Test Splits Done Right (Including Time Series)"
 slug: "train-validation-test-splits-done-right"
 description: "Random splits are wrong more often than practitioners assume — a walkthrough of when to use them and when time-based or grouped splits are required."
 publishedAt: "2026-04-11"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -69,3 +70,13 @@ The discipline that's easy to lose in practice: the test set gets touched exactl
 ## The one question that decides everything
 
 Before picking a split strategy, ask what information will genuinely be available at prediction time in production. The split's job is to simulate that condition as closely as possible during evaluation. Everything else — the exact percentages, the number of folds — is a secondary decision that matters far less than getting this one right.
+
+## A worked failure mode
+
+Rows are shuffled despite being users with many sessions; the same user is in train and test. Hyperparameters are tuned on test because validation was burned. A time-based product is split randomly. The failure is a split that is not the production unit. Split by user or time, nest model selection inside validation, and touch test once.
+
+## When this is the wrong tool
+
+A three-way split is awkward if you have 80 rows—then you need more data or nested CV, not a fake test set. Do not hold out a test set you peek weekly. Use disciplined splits when you will make a ship decision.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Train/Validation/Test Splits Done Right (Including Time Series)" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

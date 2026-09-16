@@ -3,6 +3,7 @@ title: "Percolator: How Google Killed the Full Web Recrawl"
 slug: "google-percolator-incremental-indexing"
 description: "How Google's Percolator system replaced batch MapReduce reindexing with incremental, transactional updates and cut search index latency dramatically."
 publishedAt: "2025-11-14"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -29,6 +30,16 @@ Percolator used a two-phase commit protocol layered over Bigtable, with timestam
 The second piece was a notification framework built around "observers" — pieces of code registered to run automatically whenever a particular column in Bigtable changed. Instead of a scheduled batch job asking "what changed since last time," Percolator inverted the model: a write to a tracked column triggered the relevant downstream computation directly, cascading through however many dependent updates were needed. Indexing a newly crawled page could trigger link-graph updates, which could trigger relevance recalculations for affected pages, all driven by data changes rather than by a periodic full sweep.
 
 Google reported that moving from the batch MapReduce indexing pipeline to Percolator reduced the average age of documents in Google's search index dramatically — from the batch pipeline's multi-day cycle down to a matter of minutes — at roughly comparable overall resource cost, since Percolator's incremental work scaled with what actually changed rather than the size of the whole web.
+
+## What broke when they scaled
+
+MapReduce could rebuild a search index, but the latency of a full pass became the freshness of the web. Percolator (OSDI 2010, Peng and Dabek) layered snapshot-isolated transactions and observers on Bigtable so a crawled page could trigger incremental work — link graph, index postings — without rerunning the world. The scaling break of batch-only indexing is multi-day staleness; the scaling break of naive per-document updates is write storms and inconsistent derived views.
+
+Percolator's timestamps, locks in Bigtable columns, and worker-driven observers are a specific protocol, not "just use a queue." Failed observers must not leave the index half-updated. Google later systems (and the industry's stream processors) chase the same idea with different APIs. The paper's famous result was a large drop in average document age in the index versus the MapReduce pipeline.
+
+## A smaller-team version of the same idea
+
+When a row changes, enqueue a job to update derived data; use a transactional store if those updates must be atomic. Do not rebuild the whole search index nightly if only 1% of documents changed. Kafka + a worker is Percolator-shaped. True Percolator-on-Bigtable is for when you already have Bigtable.
 
 ## What you can borrow
 

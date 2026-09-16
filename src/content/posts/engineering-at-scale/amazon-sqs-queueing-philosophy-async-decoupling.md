@@ -3,6 +3,7 @@ title: "Why Amazon Bet Early on Queues: The Philosophy Behind SQS"
 slug: "amazon-sqs-queueing-philosophy-async-decoupling"
 description: "How Amazon's early commitment to asynchronous, queue-based decoupling shaped SQS and became a default pattern across its service architecture."
 publishedAt: "2026-07-07"
+updatedAt: "2026-09-16"
 category: "Amazon"
 tags:
   - Engineering at Scale
@@ -26,6 +27,18 @@ Dead-letter queues handle the case where a message keeps failing processing repe
 ## A pattern that spread well beyond SQS itself
 
 What makes SQS worth studying isn't really the service's specific API, it's the pattern it encoded early and made trivially easy to adopt: prefer asynchronous message passing over synchronous request-response wherever a workflow doesn't strictly require an immediate answer. That preference shows up repeatedly across Amazon's own internal architecture and across the broader industry's adoption of event-driven design — order processing pipelines, notification fan-out, background job processing, and inter-service workflows generally default to a queue or event bus rather than a direct synchronous call whenever the calling side doesn't need to block on the result.
+
+## What broke when they scaled
+
+A queue that is "always writable" becomes a liability when consumers cannot keep up. Backlogs hide latency: the producer is fine, the SLO is not. SQS's early standard queues did not preserve strict ordering, which is correct for throughput and wrong for workflows that assumed FIFO (inventory adjustments, some payment steps). FIFO queues later added ordering and exactly-once *processing* within a message group — at the cost of throughput per group — because Amazon's own retail systems discovered that "just make it idempotent" is easy to say and hard when downstream systems are banks and warehouses.
+
+Visibility timeouts are another scaling footgun. Too short, and a slow consumer duplicates work while the first attempt still runs. Too long, and a crashed consumer stalls a shard of the backlog until the timeout expires. At high parallelism you need heartbeats that extend visibility while work is healthy, plus a poison-message threshold that is not so high you burn compute forever on a bad payload.
+
+Fan-out without architecture also hurts. SNS-to-SQS (and later EventBridge) exists because Amazon's service count made point-to-point queues a complete graph. Long polling and batch receive keep empty-receive costs down when the queue is quiet.
+
+## A smaller-team version of the same idea
+
+Queue any step that need not answer the user in-request. Idempotent handlers, visibility timeout from p99, DLQ with an alarm. FIFO only for keys that require order.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Multi-Region Architecture Trade-offs Nobody Puts on the Slide"
 slug: "multi-region-architecture-trade-offs"
 description: "Multi-region architecture is sold as pure resilience, but the real trade-offs around data consistency, latency, and operational cost rarely make it into the pitch."
 publishedAt: "2025-11-17"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -61,3 +62,10 @@ A bug that only reproduces when a request is served by the secondary region, or 
 
 Beyond the doubled infrastructure spend, multi-region adds real engineering overhead: every schema migration needs a strategy for rolling out across regions without breaking replication, every new feature needs to consider which region owns a given piece of data, and on-call runbooks roughly double in complexity because failures can now be region-specific, replication-specific, or global. Teams that adopt multi-region without a genuine business requirement for it — a regulatory data-residency need, a latency SLA that a single region can't meet for a global user base, or an availability target that a single-region failure would violate — often find the ongoing complexity cost outweighs the resilience benefit for their actual failure history. A single well-architected region with strong backups, multi-AZ redundancy, and a tested restore process covers the vast majority of realistic outage scenarios at a fraction of the operational cost.
 
+## A worked failure mode
+
+A slide says "active-active, RPO 0." The database is a single primary with async replicas. A region outage becomes a 40-minute DNS and promotion story nobody practiced. Clients with sticky sessions pin to the dead region. Another team dual-writes two regions without idempotency and double-charges. The failure is multi-region as a bumper sticker. Pick a consistency story (failover vs true dual write), test promotion, and list the data that will be lost or conflicted. If you cannot name RPO/RTO with a drill date, you are single-region with extra invoices.
+
+## When this is the wrong tool
+
+Multi-region is the wrong tool for a product whose users are in one metro and whose risk is application bugs, not AWS us-east-1. It will not fix a non-replicated third-party payment API. Do not multi-region a stateful admin tool used by ten people. Use it when the business has a written outage budget that single-region cannot meet, and when the data layer is designed for it.

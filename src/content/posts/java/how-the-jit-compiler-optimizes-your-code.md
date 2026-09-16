@@ -3,6 +3,7 @@ title: "How the JIT Compiler Actually Optimizes Your Code"
 slug: "how-the-jit-compiler-optimizes-your-code"
 description: "The JVM doesn't run your bytecode as-is for long. Here's what C1, C2, and tiered compilation actually do, and why your benchmarks lie without warmup."
 publishedAt: "2025-03-28"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -70,3 +71,13 @@ Frequent deoptimization is a real performance smell — it usually means a call 
 ## Why This Matters for Benchmarking
 
 Any measurement taken before a method has reached its steady-state compilation tier is measuring the JIT's warmup behavior, not your code's actual performance. This is the entire reason JMH exists as a separate tool rather than "just time it with `System.nanoTime()`" — and it's covered in depth in a dedicated benchmarking article. For now, the takeaway is simpler: never trust a Java performance number from a run shorter than a few seconds of sustained load.
+
+## A worked failure mode
+
+A developer inlines by hand and copies a method 15 times to "help the JIT," then a bug is fixed in 3 copies. Another relies on escape analysis in a debug JVM with `-Xint` and ships a conclusion. A megamorphic call site (many implementations) stays slow while they blame GC. The failure is optimizing without a profile. Let HotSpot see hot paths, keep types monomorphic where it matters, and verify with PrintCompilation / async-profiler, not folklore.
+
+## When this is the wrong tool
+
+JIT trivia is the wrong tool for an N+1 query. Do not disable the JIT in prod to "make it fair." Micro-optimizing before a profiler is the wrong order. Care about the JIT when a hot method shows up in a flame graph.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "How the JIT Compiler Actually Optimizes Your Code" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

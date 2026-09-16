@@ -3,6 +3,7 @@ title: "Connection Pooling: Sizing It Right and Avoiding the Pitfalls"
 slug: "connection-pooling-sizing-and-pitfalls"
 description: "Why connection pool sizing is a math problem, not a guess, and the deadlocks, leaks, and saturation bugs that show up when it's sized wrong."
 publishedAt: "2024-11-14"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -59,3 +60,11 @@ For workloads with many short-lived connections — serverless functions, or a f
 ## Sizing in practice
 
 Start from the formula above as a ceiling, not a target, and load test to find where throughput actually plateaus — it's usually well below what intuition suggests. Then set the application pool's timeout aggressively short (a few seconds, not the default of 30) so that pool exhaustion fails fast and visibly instead of degrading into a slow-motion outage where every request queues silently until the whole service falls over.
+
+## A worked failure mode
+
+Each of 40 pods has a pool of 50. Postgres `max_connections` is 200. Deploy causes a thundering herd of new connections; queries wait on `connection slots` while the previous pods are still draining. A second bug: the pool is sized for average load but a request holds a connection during an outbound HTTP call, so 50 in-flight users need 50 connections each doing nothing useful. The failure is pool math without a budget and without holding connections only around queries. Set a global cap, use PgBouncer in transaction mode if you must multiplex, and never hold a client connection across other I/O.
+
+## When this is the wrong tool
+
+A giant pool is the wrong tool to hide slow queries. Pooling is the wrong conversation if you are opening a new TCP connection per query in a script; use a pool, but size it tiny. Do not add a second pool in the ORM and another in the sidecar without treating them as one budget. Serverless with 10k short functions may need a proxy, not a huge in-process pool. Size pools when you can name max_connections, replica count, and hold time.

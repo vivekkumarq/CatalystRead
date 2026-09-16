@@ -3,6 +3,7 @@ title: "Tool Calling Design Patterns for LLM Applications"
 slug: "tool-calling-design-patterns"
 description: "Practical patterns for designing tool schemas and interfaces that models call reliably, from naming conventions to error surface design."
 publishedAt: "2026-07-26"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -65,3 +66,11 @@ Models that support calling multiple tools in a single turn will sometimes issue
 ## Test tool selection accuracy as its own metric
 
 Separately from whether the final answer was correct, log and periodically review whether the model chose the right tool for a given request, independent of whether it filled in the arguments correctly. These are different failure modes with different fixes — wrong tool selection usually means naming or description ambiguity; correct tool with wrong arguments usually means the schema or the model's access to the needed values is the problem.
+
+## A worked failure mode
+
+An assistant gets a `delete_user(id)` tool whose description says "remove a user." The model infers ids from names, calls delete on a homonym, and reports success because the API returned 200 for a missing id. There is no confirm step, no dry-run, and the schema marks `id` as a free string. A safer design: search tool returns candidates, delete requires an exact id from that list, dry-run is default, and the API returns a structured error for not-found that the model must surface. The failure is a tool surface that looks like a natural-language wish list instead of a typed, least-privilege API.
+
+## When this is the wrong tool
+
+If the user can click a button that calls your API, do not route that through a model. Tool calling is the wrong abstraction for a linear form with validation. Do not expose raw SQL or shell tools to an LLM in production. If you only need structured extraction, constrained decoding to JSON may be enough without a tool loop. Tools shine when the model must choose among real side effects with schemas and policy; they are overhead when there is a single function you should just call in code.

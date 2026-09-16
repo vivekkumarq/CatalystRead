@@ -3,6 +3,7 @@ title: "How DoorDash Streams a Dasher's Location to Your Phone in Real Time"
 slug: "doordash-real-time-delivery-tracking-geospatial"
 description: "Behind DoorDash's live delivery map is a pipeline that balances Dasher battery life against location freshness across millions of concurrent deliveries."
 publishedAt: "2025-07-14"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -42,6 +43,18 @@ Raw GPS coordinates arriving every few seconds would make the map marker visibly
 ## ETAs that update as reality changes
 
 The live location feed doesn't just drive the map — it also feeds back into the delivery's estimated arrival time, which recalculates as a Dasher's actual position and current traffic conditions diverge from the original estimate made when the order was first assigned. An ETA that never updates once a Dasher is on the road quickly loses a customer's trust the first time it turns out to be wrong.
+
+## What broke when they scaled
+
+Phone GPS at 1 Hz for every Dasher is a battery and bandwidth tax, and a map that jumps 80 meters because of a canyon of buildings destroys trust. DoorDash has to sample location based on speed and proximity to pickup/dropoff — denser near the restaurant and the customer, sparser on a highway — and then smooth. Raw points are not a product.
+
+Fan-out is the Discord presence problem with a moving point: only the consumer (and maybe the merchant) for *this* delivery should get updates, not a city-wide broadcast. A pub/sub keyed by delivery id, with the consumer's app subscribed for the order's lifetime, keeps the firehose bounded. Millions of concurrent deliveries still mean a geospatial index for "Dashers near this store" for dispatch, which is a different query than "tell this one phone the next lat/lng."
+
+ETA is a model sitting on noisy GPS, traffic, and parking. If the map shows a Dasher two blocks away while ETA says 20 minutes, users believe neither. The tracking pipeline and the ETA service have to share a world model, or at least not contradict it in the UI.
+
+## A smaller-team version of the same idea
+
+Ping location every few seconds near destination, every 15–30s otherwise. Push to the one client via websocket or FCM. Snap to roads if you must, but never invent a path through a river. Compute ETA from remaining distance plus a simple speed prior. Add map-matching when users complain about teleporting pins, not before.
 
 ## What you can borrow
 

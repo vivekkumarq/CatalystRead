@@ -3,6 +3,7 @@ title: "Spring Boot Startup Performance: Lazy Init, CDS, and What Actually Helps
 slug: "spring-boot-startup-performance-lazy-init-cds"
 description: "A measured look at which Spring Boot startup optimizations move the needle in practice, from lazy initialization to Class Data Sharing and beyond."
 publishedAt: "2026-01-12"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -67,3 +68,13 @@ A few "optimizations" that show up in startup-tuning advice are worth being skep
 ### A Reasonable Order of Operations
 
 Start with CDS — it's close to free and has no behavioral downside. Check the Actuator startup timeline next and fix whichever specific bean is actually slow, usually a bigger win than any general-purpose flag. Reach for lazy initialization only after that, and only if time-to-first-request still matters for your deployment pattern. Native image is the last step, reserved for workloads where startup time is a hard requirement, not a nice-to-have — the migration cost is real and wasted if CDS plus a fixed slow bean would have gotten you close enough.
+
+## A worked failure mode
+
+`lazy` initialization hides a broken bean until the first request in prod. CDS is built from a different classpath. Actuator is excluded in the training run. The failure is startup tricks that change behavior. Measure, keep eager for critical beans, train CDS on the same bits you ship.
+
+## When this is the wrong tool
+
+CDS/AOT is the wrong first step if you create 400 beans you do not need. Lazy is the wrong tool to hide wiring errors. Trim dependencies first; then use CDS/native if startup SLOs demand it.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Spring Boot Startup Performance: Lazy Init, CDS, and What Actually Helps" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

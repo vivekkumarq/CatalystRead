@@ -3,6 +3,7 @@ title: "Reading Unfamiliar Codebases Efficiently"
 slug: "reading-unfamiliar-codebases-efficiently"
 description: "Reading someone else's large codebase top to bottom doesn't work — a more targeted approach gets you productive in days instead of weeks."
 publishedAt: "2024-10-31"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -30,3 +31,11 @@ Code tells you what the system does now. It rarely tells you why, and "why" is f
 ## Write down what you learn as you go
 
 The understanding you build reading a new codebase decays fast if it isn't captured somewhere. A short running document — not polished, just notes — of what you've figured out, what confused you and how you resolved it, and what's still unclear, does two things: it forces you to articulate understanding precisely enough to write it down, which surfaces gaps a vague mental model would hide, and it becomes genuinely useful onboarding material for whoever joins after you, who will hit the same confusing corners you just spent an afternoon untangling. Codebases rarely come with good documentation, but every new person who reads one seriously has a chance to leave it slightly better documented than they found it.
+
+## A worked failure mode
+
+An engineer greps for `TODO` and reads files alphabetically for two days. They still cannot answer "what happens when a user clicks pay." Another dumps the repo into a model and accepts an architectural story that misses the actual cron that moves money. The efficient path is runtime-shaped: find the entrypoint, the one write to the ledger, the tests that name the invariant, and the last incident doc. Draw a three-box sketch. Then read. The failure is reading as consumption instead of as hunting for the production path. Time-box each pass. Write questions in the team's channel; unread code plus silence is slow.
+
+## When this is the wrong tool
+
+Speed-reading a codebase is the wrong tool when you need to change a safety-critical path—you still owe deep reading and tests. Do not skip the domain expert who can save you a week. Auto-generated maps are the wrong authority. If the task is a one-line config, do not take a pilgrimage through the kernel. Match depth to blast radius.

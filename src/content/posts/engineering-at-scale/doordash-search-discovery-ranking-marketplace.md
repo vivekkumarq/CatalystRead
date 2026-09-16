@@ -3,6 +3,7 @@ title: "Ranking Search Results Across DoorDash's Three-Sided Marketplace"
 slug: "doordash-search-discovery-ranking-marketplace"
 description: "DoorDash's search ranking has to satisfy consumer relevance, merchant fairness, and operational reality like store hours and prep time all at once."
 publishedAt: "2025-12-08"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -45,6 +46,18 @@ Because DoorDash's marketplace has consumers, merchants, and Dashers all dependi
 ## Closing the loop with real engagement data
 
 Ranking models are only as good as the labels they're trained against, and DoorDash uses actual consumer behavior — clicks, orders, repeat visits to a merchant — as the feedback signal that continuously retrains and improves the ranking models, rather than relying on a static, hand-tuned scoring formula that goes stale as consumer preferences and the merchant catalog evolve.
+
+## What broke when they scaled
+
+Consumer relevance alone ranks closed stores, 90-minute ETAs, and merchants who cannot absorb more orders at 6:30 p.m. DoorDash's search/discovery writing treats ranking as a three-sided problem: the diner's query, the merchant's fairness and capacity, and logistics (Dasher availability, prep time, distance). A model trained only on clicks will promote the restaurant that photographs well and starve the one that actually delivers on time.
+
+Hard filters (open now, delivers to this pin, cuisine) must happen before ranking or you waste model CPU on illegal candidates — same retrieve/rank split as Airbnb search, with a time-varying inventory of "open." Personalization without exploration creates filter bubbles that hurt new merchants. DoorDash has written about mixing exploration and business constraints into ranking rather than bolting them on as afterthoughts.
+
+Marketplace fairness is operational: if ranking always sends demand to the same five chains, local restaurants churn off the platform. That is a product policy encoded as features and constraints, not a niceness slide.
+
+## A smaller-team version of the same idea
+
+Filter to feasible (open, in range, capacity). Sort by a simple score: distance, rating, ETA. Cap how often the same chain occupies the top slots. Log what you showed. When you have conversion data, train a model on the same features. Do not optimize clicks if the business cares about completed deliveries.
 
 ## What you can borrow
 

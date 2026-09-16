@@ -3,6 +3,7 @@ title: "Perceived Performance: Skeletons, Optimistic UI, and Progress"
 slug: "perceived-performance-skeletons-optimistic-ui-and-progress"
 description: "Why the fastest-feeling apps aren't always the fastest apps, and how skeletons, optimistic updates, and honest progress bars change user perception."
 publishedAt: "2025-08-14"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -49,3 +50,27 @@ Determinate progress bars are only honest when you actually know the total. Faki
 For genuinely long operations, break the work into stages and report which stage is active: "Uploading," then "Processing," then "Finalizing." Discrete stage labels give users a mental model of what's happening even without a precise percentage, and they make it obvious when something has stalled versus when it's just a naturally slow stage.
 
 The common thread across all three techniques is the same: perceived performance work is really about reducing uncertainty. Users tolerate waiting far better when they know something is happening, roughly how long it will take, and what to expect when it's done. Chasing that certainty is often a better return on effort than shaving another 50ms off a database query.
+
+## A worked example
+
+Article page: skeleton with reserved image height (no CLS), then content. Like button: optimistic increment, rollback on 409. Upload: determinate progress from `xhr.upload`. You never use a looping skeleton for a 200ms API — it flickers. Prefer showing stale cache (stale-while-revalidate) over a blank.
+
+A/B: time-to-first-meaningful-paint vs completion rate, not only LCP.
+
+## Failure modes
+
+Optimistic UI that cannot roll back (inventory). Skeletons that do not match layout. Spinners on every keystroke. Fake progress that jumps to 99% and sits. Disabling the whole page. Accessibility: not exposing `aria-busy`.
+
+Cached optimistic state after logout.
+
+## When this is the wrong tool
+
+A bank transfer confirmation should wait for the server. Skeletons will not hide a 10s query forever — users need a message. Do not optimistic-delete a record with heavy side effects. Games and video have their own loading. If the issue is JS parse time, split the bundle; skeletons on a white screen of no JS do nothing. Avoid fake progress as a lie for legal operations.
+
+## A worked failure mode
+
+Optimistic UI marks a payment succeeded; the API fails; the UI never reconciles and the user leaves thinking they paid. A skeleton layout shifts when real content has a different size (CLS). A spinner is shown for 50ms operations, making the app feel slower. The failure is lying without a recovery, and chrome that hurts Core Web Vitals. Optimistic only when you can undo; reserve skeletons for known layouts; skip spinners below a threshold.
+
+Perceived-performance tricks are the wrong tool if the request is actually broken. Do not fake success on money. Use them to hide unavoidable waits you still measure honestly.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Perceived Performance: Skeletons, Optimistic UI, and Progress", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

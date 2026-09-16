@@ -3,6 +3,7 @@ title: "useEffect Pitfalls and What to Reach for Instead"
 slug: "react-useeffect-pitfalls-and-alternatives"
 description: "Most useEffect bugs come from using it as a general-purpose lifecycle hook. Here's how to tell when you actually need it — and when you don't."
 publishedAt: "2026-01-22"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -112,3 +113,13 @@ useEffect(() => {
 ```
 
 The test worth applying before writing any effect: "is this synchronizing with something outside React, or am I just responding to a render?" The first case is what `useEffect` is for. The second almost always has a more direct, effect-free answer.
+
+## A worked failure mode
+
+An effect fetches on `[user]` but also writes to state that changes `user`, looping. Another syncs props to state and fights the parent. A subscription is missing cleanup. The failure is effects as lifecycle catch-alls. Fetch with a query library or an event; derive instead of syncing; clean up.
+
+## When this is the wrong tool
+
+`useEffect` is the wrong tool to compute a filtered list—use render. It is the wrong place for business logic that should be an event handler. Use effects for external systems, not for thinking.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "useEffect Pitfalls and What to Reach for Instead" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

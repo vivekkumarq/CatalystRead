@@ -3,6 +3,7 @@ title: "Where Discord Reached for Rust, and Why"
 slug: "discord-rust-hot-path-rewrites"
 description: "From swapping Go for Rust in the Read States service to speeding up Elixir's WebSocket handling, how Discord chose specific hot paths for a rewrite."
 publishedAt: "2025-08-01"
+updatedAt: "2026-09-16"
 category: "Discord"
 tags:
   - Engineering at Scale
@@ -33,6 +34,18 @@ This pattern — keep the orchestration and concurrency model in the language bu
 ## Choosing rewrites with data, not dogma
 
 What ties these examples together is that each one started from a concrete, measured production problem rather than a general belief that Rust is simply better. The Read States rewrite followed specifically from observed GC-driven tail latency; the Elixir acceleration followed from profiling that identified specific CPU-bound bottlenecks at the runtime's boundary. Discord's public engineering writing about these decisions consistently frames Rust as the right tool for a specific, identified job, not a wholesale platform migration — a discipline worth noting given how easy it is for a successful point rewrite to turn into pressure for an unjustified full rewrite elsewhere.
+
+## What broke when they scaled
+
+Go's GC is not uniformly bad. It becomes a product incident when the heap is large, allocation rate is high, and the SLO is a tight p99 — Read States with hot in-memory maps is that shape. Discord's engineering posts on the rewrite describe moving that service to Rust so pauses were not a function of the collector. The risk of a rewrite is semantic drift: unread badges are user-visible; a faster wrong answer is a bug. They needed parity tests against the Go service, not just a benchmark of raw writes.
+
+Elixir's BEAM remained the right place to hold millions of WebSocket processes. The break was CPU on the edge of that world: encoding, compression, or tight data transforms where BEAM's per-process GC and interpreter/JIT trade-offs lose to a Rust NIF. Native code that can crash the VM is the opposite of "let it crash" isolation, so the boundary has to be small and well-tested.
+
+A culture that celebrates Rust can over-apply it. Discord's public narrative is useful because it keeps Elixir and (historically) Go in the mix. Scaling the *organization* means a playbook: measure tail latency, identify GC or CPU, rewrite a box, stop.
+
+## A smaller-team version of the same idea
+
+Flamegraph the service that pages you. If the time is in GC or memcpy of giant JSON, consider a tighter runtime or precompute. Most CRUD APIs should stay in your main language. If you mix Rust into Elixir/Python, isolate it behind a clear C ABI and treat a NIF crash as a Sev-1 design smell. Rewrite one service after you can A/B it.
 
 ## What you can borrow
 

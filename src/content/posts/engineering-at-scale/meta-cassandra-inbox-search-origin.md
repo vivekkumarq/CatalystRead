@@ -3,6 +3,7 @@ title: "Cassandra's Origin Story: Built at Facebook, Given Away"
 slug: "meta-cassandra-inbox-search-origin"
 description: "How Facebook built Cassandra to solve inbox search at scale, then open sourced a database that outgrew the problem it was designed for."
 publishedAt: "2025-05-15"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ Rather than forcing every read and write through the same consistency guarantee,
 ## From an internal tool to an Apache project
 
 Facebook open sourced Cassandra in 2008, and it entered the Apache Incubator the following year, eventually becoming a top-level Apache project. That move meant a database purpose-built for a specific internal feature ended up shaped by, and adopted by, a much wider set of workloads outside Facebook entirely — companies with very different write patterns and durability needs picked it up precisely because its tunable, masterless design generalized well beyond inbox search. Facebook itself moved on from Cassandra for many of its own core workloads over the following years, building more specialized systems like TAO for its social graph, but Cassandra's design lineage — peer-to-peer replication, consistent hashing, tunable consistency — went on to influence a generation of distributed databases that came after it.
+
+## What a mid-size team can steal from inbox Cassandra
+
+Cassandra was born to write inbox search data at Facebook scale: lots of writes, queries by user, and a willingness to drop perfect relational joins. That origin still matters. Teams adopt Cassandra because the logo says "scale," then issue multi-partition transactions in application code and recreate the coordination they left SQL to escape. Mid-size steal: if your access is a partition key you can name — user_id, tenant_id — and writes dominate, a wide-column store or even a well-sharded MySQL table with a search sidecar may be enough. If you need inbox-style "latest N messages containing this token," design the table around that query first.
+
+Operational gotcha: tombstones from deletes and TTL on a high-churn mailbox. Compaction cannot keep up, reads slow, and the cluster looks CPU-bound when it is really death-row data. Another failure mode is changing partition keys after launch; there is no cheap ALTER that preserves the hash ring. Facebook could open-source the database after the inbox problem evolved; your company may be stuck with the data model. Steal tunable consistency only with a written rule per path: search indexing can be eventual, "mark unread" for the acting user should not be. Hinted handoff and repair are operations, not defaults you ignore until an incident. If nobody owns nodetool repair, you do not have Cassandra, you have a rumor mill with SSTables.
 
 ## What you can borrow
 

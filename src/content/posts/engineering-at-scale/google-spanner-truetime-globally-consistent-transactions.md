@@ -3,6 +3,7 @@ title: "Spanner and TrueTime: How Google Made Globally Consistent Transactions P
 slug: "google-spanner-truetime-globally-consistent-transactions"
 description: "How Google used GPS and atomic clocks to bound time uncertainty and give Spanner globally consistent ACID transactions across continents."
 publishedAt: "2025-06-19"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -40,6 +41,16 @@ Under the hood, Spanner replicates data using Paxos within each shard for fault 
 | Two-phase commit | Coordinates transactions spanning multiple shards |
 
 Spanner shipped as ACID, SQL-capable, and globally distributed with very high availability targets, and later became the basis for the public Cloud Spanner product. It remains one of the clearest examples of a distributed-systems problem solved by improving the underlying physical infrastructure (better clocks) rather than only the software protocol.
+
+## What broke when they scaled
+
+Multi-region databases without a time bound cannot order transactions: you pick between linearizability and availability, or you use ugly workarounds. Spanner (Corbett et al., OSDI 2012) uses TrueTime — GPS and atomic clocks exposing an interval, not a point — and *commit-wait* so a transaction's timestamp is guaranteed in the past for later readers. The scaling break is commit latency: you wait out uncertainty `ε`. If clocks are poorly synced, `ε` grows and transactions crawl. Spanner's engineering is as much clock discipline and Paxos groups per directory as it is SQL.
+
+What also breaks is treating Spanner like a local Postgres: chatty ORM round-trips across continents, hot ranges, and schema designs that ignore locality. External consistency is real; it is not free. Google Cloud Spanner is the public descendant; the paper's TrueTime API is the idea people should remember, not "Google has magic clocks" as a meme.
+
+## A smaller-team version of the same idea
+
+Single-region Postgres with sync replicas. If you need cross-region reads of slightly old data, use replica reads and accept staleness. CockroachDB and Cloud Spanner exist when you need the Spanner-shaped contract without GPS racks. Do not invent TrueTime with NTP and hope; commit-wait with a large `ε` is just a slow database.
 
 ## What you can borrow
 

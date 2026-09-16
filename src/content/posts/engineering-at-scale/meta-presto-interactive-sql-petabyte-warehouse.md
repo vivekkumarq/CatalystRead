@@ -3,6 +3,7 @@ title: "Presto: Interactive SQL Over a Petabyte-Scale Warehouse"
 slug: "meta-presto-interactive-sql-petabyte-warehouse"
 description: "How Facebook built Presto to give analysts interactive, seconds-scale SQL queries over a Hive warehouse that Hive's own engine took minutes to hours to query."
 publishedAt: "2025-11-18"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ LIMIT 10;
 ## From an internal tool to an open-source standard
 
 Facebook open sourced Presto in 2013, and it went on to be adopted widely outside Facebook and to fork into what's now Trino, becoming something close to a default choice for interactive SQL over large-scale data lakes across the industry. The underlying lesson behind Presto's success wasn't a single clever trick — it was recognizing that "large data" and "interactive latency" are different requirements that a single batch-oriented engine can't satisfy well simultaneously, and that serving both well required a purpose-built execution engine rather than tuning the batch engine's existing knobs further.
+
+## Operational gotchas of interactive SQL over a lake
+
+Presto made Hive data feel like a warehouse you can poke during a meeting. That success creates the failure mode: every dashboard, ETL, and curious JOIN lands on the same cluster, and a single cartesian product starves the incident query you needed in seconds. Mid-size teams steal Trino/Presto and skip isolation. Put admission control, per-user memory limits, and a separate cluster or queue for on-call before you advertise "interactive."
+
+Another gotcha is the connector lie. Queries that are fast on a well-partitioned Hive table become scans of JSON on S3 with no statistics. Users blame Presto; the table is a dump. Steal a curated layer: partitioned, typed, with stats, and a rule that production dashboards cannot query raw event slime. Schema evolution in the lake — adding columns, changing partition spec — breaks readers that cached metadata. Coordinator OOMs on planning a query with thousands of partitions are a classic outage that looks like "SQL is down." Cost-based optimization without stats will pick broadcast joins that blow workers. Mid-size steal: one well-owned mart for the questions leadership actually asks, plus Presto for exploration with timeouts. Petabyte scale is not required for the politics of shared interactive SQL to appear; a few terabytes and twenty analysts is enough.
 
 ## What you can borrow
 

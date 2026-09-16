@@ -3,6 +3,7 @@ title: "Optional in Java: Intended Use and Common Abuse"
 slug: "optional-intended-use-and-abuse"
 description: "Optional was designed for exactly one purpose: expressive return types. Used anywhere else, it tends to add ceremony without removing any risk."
 publishedAt: "2025-06-09"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -92,3 +93,27 @@ String city = findUser(id)
 ```
 
 Each `map` short-circuits automatically if any prior step was empty — no nested null checks, no early returns scattered through the method. Reach for `Optional` specifically for this composability at API boundaries, keep it out of fields, parameters, and collections, and stop calling `.get()` — if you're calling it, you probably didn't need `Optional` in the first place.
+
+## A worked example
+
+A return type `Optional<User> find(Id id)` for "maybe." Callers `map`/`orElseThrow`. You do not use `Optional` for fields in JPA entities or as method parameters (`@Nullable` or overloads). `orElseGet` for expensive defaults. Never `Optional.of(null)`.
+
+A stream: `map` to Optional then `flatMap(Optional::stream)` (Java 9+).
+
+## Failure modes
+
+`isPresent` then `get`. Optional of Optional. Serializing Optional as a bean property. `orElse` with a side-effecting default that always runs. Using Optional to wrap collections (empty list is enough). `Optional` parameters to avoid overloads.
+
+Returning `Optional` from a getter of a required field.
+
+## When this is the wrong tool
+
+Fields, parameters, DTOs, arrays. `null` in a local 5-line method is fine. Optional is not a Maybe monad for all errors — exceptions or Result types. Do not wrap `int` (use `OptionalInt` only if you must). If the API is a Map get, `getOrDefault` may be enough. Avoid Optional in serializable messages.
+
+## A worked failure mode
+
+`Optional` is a field on a JPA entity, serialized as an empty object, and used as `Optional<Optional<T>>` in an API. `orElse(expensive())` always runs expensive. `get()` is called because "we know." The failure is Optional as a type for everything. Return it from methods that may lack a value, never as fields in entities, and use `orElseGet`.
+
+Optional is the wrong tool for collections (empty list) and for primitive streams (`OptionalInt` maybe). Do not use it to hide nulls from a poorly modeled domain. Use it at API returns, sparingly.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Optional in Java: Intended Use and Common Abuse" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

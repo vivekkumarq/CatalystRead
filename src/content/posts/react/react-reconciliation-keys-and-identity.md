@@ -3,6 +3,7 @@ title: "Reconciliation, Keys, and Why Your List Animates the Wrong Row"
 slug: "react-reconciliation-keys-and-identity"
 description: "How React matches lists between renders, what keys actually identify, and the local-state bugs that index keys create."
 publishedAt: "2026-09-06"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -39,3 +40,38 @@ If a row's state is important, lift it to the parent or a store keyed by id, so 
 React 19 did not repeal this. Compiler memoization does not invent identity. If two siblings swap keys, you still told React they swapped.
 
 The code review question is: "If this array shuffles, does each component keep the state that belongs to its record?" If not, the key is decorative.
+
+## A worked example
+
+A todo list keeps a text field per row. Each `TodoRow` owns `useState` for the draft. Keys are array indexes. User filters to "active," which prepends a new item. The first row's input still shows the old draft because React reused the component at index 0. Fix: `key={todo.id}`. Add a test that types into item A, reorders the array, and expects the same text to stay with A's id.
+
+If you need to reset a form when switching records, put `key={record.id}` on the form component. That is an intentional remount, not a list bug.
+
+```jsx
+<CustomerForm key={customer.id} customer={customer} />
+```
+
+## Failure modes
+
+Stable-looking keys that collide (`email` as key when two guests share a blank email). Using the object reference as a key via `key={item}` coerces to `"[object Object]"` and collides everything. Animation libraries that also track identity will fight React if their `layoutId` does not match the key. Server-rendered lists with keys that differ from client hydration (random UUIDs generated twice) produce hydration mismatches and extra remounts.
+
+Index keys on a virtualized windowed list can be correct for the *window* if you key by record id anyway; keying by window index reintroduces the shuffle bug as you scroll.
+
+## When this is the wrong tool
+
+Keys will not make a slow list fast; virtualization will. They will not persist state across unmounts — lift state or use a store. Do not use `key={Date.now()}` to "force refresh" on every parent render; that destroys accessibility and performance. If the list is a static footer of three links, index keys are fine. If you are resetting state, prefer an explicit `key` on a focused subtree rather than remounting the entire page.
+
+## Review checklist
+
+- List keys are stable business IDs, not indexes, unless the list cannot reorder.
+- No `Math.random()` keys; no `key={item}` objects.
+- State that must survive remount lives in a parent or store keyed by id.
+- A shuffle test exists for any row with internal state.
+
+## A worked failure mode
+
+Keys are array indexes; a reorder animates the wrong row and inputs keep the wrong text. A random key remounts every render and kills state. Two siblings share a key. The failure is identity as a loop index. Stable ids from data; never Math.random in render.
+
+Keys are the wrong tool to force remount as a default pattern (sometimes you want a `key={id}` on a wizard step, not on every row). Do not use index keys on reorderable lists. Use stable identities.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Reconciliation, Keys, and Why Your List Animates the Wrong Row" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

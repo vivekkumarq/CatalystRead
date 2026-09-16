@@ -3,6 +3,7 @@ title: "Negotiating Scope and Deadlines Without Burning Trust"
 slug: "negotiating-scope-and-deadlines-without-burning-trust"
 description: "How to push back on unrealistic timelines and creeping scope in a way that strengthens your credibility with stakeholders instead of damaging it."
 publishedAt: "2025-11-03"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -32,3 +33,11 @@ When you do have to hold a firm no, deliver it with the reasoning attached and a
 ## The long game
 
 Trust in these negotiations compounds in both directions. Engineers who reflexively pad every estimate to protect themselves eventually get their numbers discounted by stakeholders who've learned to expect the padding. Engineers who commit to aggressive dates just to avoid an uncomfortable conversation eventually get a reputation for missed deadlines. The engineers who build durable credibility are the ones whose estimates turn out to be reliable often enough that "this needs more time" gets taken at face value the next time they say it — which is the entire point of having the hard conversation now instead of avoiding it.
+
+## A worked failure mode
+
+A PM asks for the world by Friday. The engineer says yes, silently drops tests, and ships a demo-quality path. Trust burns when the first real user hits it. Another engineer says no by disappearing from Slack. A better failure to avoid: trade in writing. "We can do A and B by Friday with no C, or A+C by the 20th. The risk of A+B+C is X, owned by Y." Then keep the date you named. The failure is binary yes/no without a cut line. Deadlines can stay sacred if scope is the shock absorber. Put the cut in the ticket, not in your head.
+
+## When this is the wrong tool
+
+Negotiation is the wrong tool when the date is a legal or launch-event constraint you already accepted; then you cut scope earlier, not at the eleventh hour. Do not negotiate quality on security or money paths as if they were fonts. If the organization punishes bad news, the skill is documenting the risk and considering your options, not a friendlier Slack tone. Use explicit trades when both sides still prefer a working relationship after the date.

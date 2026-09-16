@@ -3,6 +3,7 @@ title: "Scaling Memcached: How Facebook Made Look-Aside Caching Work at Web Scal
 slug: "meta-scaling-memcached-leases-and-lookaside-caching"
 description: "How Facebook turned a simple key-value cache into a cluster of thousands of memcached servers without drowning in stale reads and thundering herds."
 publishedAt: "2025-06-01"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ Facebook's answer was a lease mechanism built into memcached. When a client miss
 ## Scaling out: pools, regions, and invalidation
 
 A single memcached tier wasn't enough either. Facebook grouped machines into pools by access pattern — some data was small and hot, other data was large and rarely read — so a flood of low-value traffic in one pool couldn't evict valuable items in another. As Facebook expanded to multiple data center regions, they had to decide how cache invalidation should travel between them. The solution routed invalidation through the same replication stream used to propagate database writes: when a write landed in the master region's database, an invalidation for the affected key was piggybacked on the replication feed and applied in follower regions as soon as it arrived, well ahead of the slower database replication itself catching up. This kept read-through caches in remote regions from serving stale data for longer than necessary, without requiring synchronous cross-region cache updates.
+
+## A concrete failure mode for look-aside caches
+
+Facebook's memcached work is famous for leases against thundering herds and for treating the cache as look-aside, not as truth. Mid-size teams copy memcached, skip leases, and then a popular key expiry turns into a database incident. The steal is cheap: on miss, only one caller may refill; others wait or serve stale. The other steal is never computing a value in the cache that you cannot recompute from the database, unless you have a write-through story with failure handling.
+
+Operational gotcha: invalidation races. Update MySQL, delete cache key, a parallel reader refills from a replica that is behind, and the stale value lives until TTL. Leases and version numbers help; so does reading the primary for refill of strongly consistent keys. Another failure is key design. A huge serialized object as one key means a tiny field change busts a megabyte write and encourages dogpile. Split hot fields. Multi-get amplification — pages that fetch 200 keys — timeouts and partial pages. Client-side hashing to a fleet must handle node replacement without moving every key at once; consistent hashing with virtual nodes is the minimum. Mcrouter-style sidecars add a hop and a new outage mode if misconfigured. Measure hit rate by key prefix, not global average, or you will celebrate a cache that only hits on session tokens while the expensive product queries miss.
 
 ## What you can borrow
 

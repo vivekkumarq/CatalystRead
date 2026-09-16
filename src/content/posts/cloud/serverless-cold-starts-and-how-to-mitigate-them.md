@@ -3,6 +3,7 @@ title: "Serverless Cold Starts and How to Actually Mitigate Them"
 slug: "serverless-cold-starts-and-how-to-mitigate-them"
 description: "What causes cold starts in serverless functions, why runtime and package size matter more than most tuning knobs, and the mitigations that actually move the needle."
 publishedAt: "2025-09-08"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Serverless
@@ -75,3 +76,19 @@ aws lambda put-provisioned-concurrency-config \
 ```
 
 This isn't free — you pay for those environments whether or not they're handling traffic — so it's best reserved for functions with a known, sustained baseline of traffic where the cost is predictable, not for spiky or rarely-invoked functions where it would mean paying to keep capacity idle most of the time. For those, reducing package size and choosing a faster runtime usually delivers most of the benefit at zero ongoing cost.
+
+## A worked example
+
+A Lambda in Java with SnapStart or a smaller Node function. Provisioned concurrency for the p99 login path during business hours. Measure init vs invoke in traces. Keep the package small; avoid VPC unless needed (ENI attach). A warmup ping is a last resort and still costs.
+
+Compare p99 with provisioned vs on-demand on a load test, not from a console click.
+
+## Failure modes
+
+Gigabyte images. Init that downloads models. Global state that assumes one request. Timeouts shorter than cold start. Provisioned concurrency on all functions. VPC + NAT for no reason. Hidden cold starts on scale-from-zero containers that are "not lambda" but the same physics.
+
+Blaming the language when the issue is a 80 MB framework.
+
+## When this is the wrong tool
+
+A steady 500 RPS service may be cheaper and simpler as always-on. Cold-start mitigation will not fix a 2s business query. Do not use provisioned concurrency as a substitute for a smaller artifact. Long-running WebSockets may not fit. If you cannot accept any cold start, do not choose scale-to-zero. GPU model loads need a different serving shape.

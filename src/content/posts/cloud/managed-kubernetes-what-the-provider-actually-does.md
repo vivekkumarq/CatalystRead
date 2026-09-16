@@ -3,6 +3,7 @@ title: "Managed Kubernetes: What the Provider Actually Does for You"
 slug: "managed-kubernetes-what-the-provider-actually-does"
 description: "EKS, GKE, and AKS all promise to take Kubernetes operations off your plate, but the actual division of responsibility is narrower than most teams assume."
 publishedAt: "2025-12-15"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Kubernetes
@@ -61,3 +62,12 @@ A control plane upgrade to a version that removes a deprecated API your Helm cha
 ## What you should actually budget engineering time for
 
 Realistically, running managed Kubernetes well still requires ongoing investment in: RBAC and network policy configuration, workload resource requests and limits, cluster autoscaler or Karpenter tuning, add-on lifecycle management (ingress controllers, cert-manager, service mesh), and security patching cadence for anything running inside the cluster. The provider removes a substantial, genuinely hard operational burden — but "managed" here means "the control plane is managed," not "your Kubernetes operations team can be smaller than zero." Plan staffing and on-call accordingly, especially for the first year after adoption when most of these gaps get discovered the hard way.
+
+## A worked failure mode
+
+A team chooses a managed control plane and assumes patching, backups of etcd, and node CVEs are "handled." Nodes run an ancient AMI because the node group was pinned. When the provider rotates the control plane, a deprecated API the app still uses breaks at 2am. The failure is confusing "they run etcd" with "they run your cluster." You still own node images, add-ons, PDB, and API versions. Read the shared-responsibility page and put node upgrades on a calendar with a staging cluster.
+
+## When this is the wrong tool
+
+Managed Kubernetes is the wrong tool if you need a single VM and a process; it is also the wrong tool if your team cannot staff upgrades. Do not buy a cluster to run one cron. A PaaS or serverless may be cheaper. Self-managing Kubernetes is the wrong default for most product teams. Use a managed control plane when you actually need Kubernetes primitives and will pay the remaining operational tax.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

@@ -3,6 +3,7 @@ title: "Why Uber Walked Away From Postgres"
 slug: "uber-postgres-to-mysql-migration"
 description: "The write amplification, replication, and connection-handling problems that pushed Uber off Postgres and onto a MySQL-based storage stack."
 publishedAt: "2025-05-14"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ Uber's stateless application fleet meant a large number of application processes
 ## The reaction, and the nuance that got lost
 
 The original blog post drew significant pushback from the Postgres community, who pointed out — correctly — that several of the issues Uber described had been addressed or were addressable through configuration, extensions, or newer Postgres versions, and that MySQL has its own well-known sharp edges. Uber's engineers were fairly transparent that this wasn't a claim that MySQL is categorically superior; it was that MySQL's specific behavior matched their specific replication topology, write patterns, and connection model better at the time they evaluated it. The migration went on to underpin later Uber storage systems, including the sharded-MySQL-backed Schemaless datastore.
+
+## Operational gotchas of a Postgres-to-MySQL move
+
+Uber's well-known migration away from Postgres was about replication, failover, and how the database behaved under their write pattern, not a generic "MySQL is faster" slogan. Mid-size teams that copy the destination without copying the diagnosis get the worst of both: a data move and the original bottleneck. Steal a written list of the Postgres behaviors that actually page you — replica lag, vacuum, failover time — and check whether a version upgrade, pooling, or partitioning would remove them first.
+
+The concrete failure mode is SQL dialect drift: a transaction isolation assumption, a CTE, or a `RETURNING` clause that silently changes meaning. Dual-run a shadow MySQL with sampled queries and diff results. Operational gotcha: sequences and id generation, boolean types, and `NULL` sorts. Another is a cutover that moves primaries but leaves a long-running analytics replica on the old engine, then a job writes back. Freeze writes to the old side. Uber-scale had custom patching history; you probably have RDS. Do not take a blog flame war as architecture. If you do migrate, treat it as an online dual-write program with a rollback of hours, not a weekend. The steal is honesty about why the current engine fails, plus a compatibility test suite. The anti-steal is rewriting the data layer as a résumé event while the product still fits in one well-run primary and two replicas.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "CDNs Are More Than Static Asset Caches"
 slug: "cdns-beyond-static-assets"
 description: "CDNs now run edge compute, cache dynamic responses, and shield origin from thundering herds — far more than a cache for static files."
 publishedAt: "2025-07-24"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -54,3 +55,27 @@ Sitting in front of every request gives a CDN a natural vantage point for DDoS a
 ## The Reframe
 
 Treat the CDN as a layer of the architecture, not an afterthought bolted onto asset URLs: what should be cached and for how long, what can be decided at the edge instead of at origin, and what protection origin gets for free just by not being directly exposed. Teams that only ever configure it for `/static/*` are paying for a CDN and using a fraction of it.
+
+## A worked example
+
+HTML for a news article cached at the edge with `s-maxage=60`, `stale-while-revalidate=600`, Vary on `Accept-Encoding` only. An API GET `/public/prices` cached 5s at the edge with a cache key that excludes cookies. A purge API on publish. TLS and WAF at the CDN. You log cache status headers (`HIT`/`MISS`) in RUM.
+
+Authenticated HTML is not cached, or is cached with a key that includes a hashed session group you actually understand.
+
+## Failure modes
+
+Caching `Set-Cookie`. Cache key too coarse (personalized pages). Cache key too fine (every query string) → origin still melts. Purging by URL but forgetting encoded variants. `no-store` on everything "to be safe." Stale error pages cached for hours.
+
+A CDN that buffers SSE/WebSockets and breaks them.
+
+## When this is the wrong tool
+
+Private dashboards with per-user JSON: origin + app cache, or don't. CDNs are the wrong tool to hide a 2s origin if every request is unique. Do not use a CDN as a database. POSTs are not cacheable in the useful sense. If you need strong consistency of stock counts, do not serve them from a 60s edge cache without a disclaimer or a live overlay.
+
+## A worked failure mode
+
+HTML with `Set-Cookie` is cached at the edge; users share sessions. A purge API is unused after a bad deploy. Origin shielding is off and a miss storm kills origin. The failure is caching personalized content and no purge drill. Cache public bytes, vary correctly, and practice purge.
+
+A CDN is the wrong tool for a private API with no cacheability. It will not fix a 2s origin. Use it for cacheable, purgeable content and DDoS absorption.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "CDNs Are More Than Static Asset Caches" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

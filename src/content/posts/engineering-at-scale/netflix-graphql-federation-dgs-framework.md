@@ -3,6 +3,7 @@ title: "From Falcor to Federated GraphQL: Netflix's API Layer Grows Up"
 slug: "netflix-graphql-federation-dgs-framework"
 description: "Why Netflix moved its API layer from the homegrown Falcor model to federated GraphQL, and built the open-source DGS framework to get there."
 publishedAt: "2026-02-11"
+updatedAt: "2026-09-16"
 category: "Netflix"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ DGS's schema-first approach — define the GraphQL schema, generate strongly typ
 ## A gradual migration, not a rewrite
 
 Netflix didn't rip out Falcor overnight; the migration to GraphQL played out gradually, service by service and client by client, with both models coexisting for an extended period while teams migrated at their own pace. That's consistent with how Netflix has approached most major infrastructure transitions — Samza to Flink, Hystrix's retirement, Mesos to Kubernetes-style APIs for Titus — favor a long coexistence window and incremental migration over a risky, coordinated big-bang cutover across a company with hundreds of independently deployed services.
+
+## Operational gotchas of federated GraphQL
+
+Federation lets each domain own a slice of the schema while a gateway plans a query across subgraphs. That is how a studio-sized org avoids one GraphQL monolith. The failure mode is a query that fans out to fifteen subgraphs, each with its own p99, so the client times out while every subgraph looks "fine." Mid-size steal: a small number of subgraphs, strict query cost, and entity keys that are actually indexed.
+
+Operational gotcha: schema composition. A field type change in one subgraph breaks the supergraph at deploy time — or worse, at query time if composition is loose. Gate deploys on composition tests. Another is the N+1 across services: the gateway resolves a list of titles then calls the artwork subgraph per id without batching. DGS and similar frameworks help, but only if teams implement dataloaders. Authz is easy to get wrong: a subgraph trusts the gateway, a later caller hits the subgraph directly, and field restrictions vanish. Steal a uniform identity context and never expose subgraphs to the internet. Versioning is political; "the graph is the product" needs an owner who can reject a field that explodes cardinality. If you have four services, a single GraphQL server may be simpler until organizational seams are real.
 
 ## What you can borrow
 

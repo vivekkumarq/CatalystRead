@@ -3,6 +3,7 @@ title: "Time-Series Databases: When to Reach for One"
 slug: "time-series-databases-when-to-reach-for-one"
 description: "When a time-series database earns its place over a general-purpose one, and what you give up in exchange for the speed it buys you."
 publishedAt: "2025-07-28"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -65,3 +66,13 @@ Purpose-built time-series databases are usually worse at, or entirely unsuited t
 ## The actual threshold
 
 The trigger isn't "we have timestamps," it's a specific pain: aggregation queries over historical ranges getting slower as data accumulates, retention jobs becoming an operational burden, or storage cost outgrowing what compression in a general-purpose database can address. Below that threshold, a well-indexed table with a scheduled rollup job is often simpler to operate than adding a new category of database to the stack.
+
+## A worked failure mode
+
+Metrics land in Postgres as `(ts, device, value)` with a btree on ts. Cardinality explodes; vacuums never finish; dashboards time out. A TSDB would compress, downsample, and expire. The opposite failure: a TSDB is used for customer orders because it was good at inserts; updates and joins are misery. The failure is the data's lifecycle. If you mostly append, expire, and aggregate by time, use a TSDB or a partitioned hypertable. If you mutate rows with relations, use a general database.
+
+## When this is the wrong tool
+
+A dedicated TSDB is the wrong tool for 10k points a day. It is the wrong place for billing ledgers. Do not store traces as unbounded tags that become series cardinality bombs. Reach for a TSDB when volume and retention would punish a row store, and you can live with its query model.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Time-Series Databases: When to Reach for One" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

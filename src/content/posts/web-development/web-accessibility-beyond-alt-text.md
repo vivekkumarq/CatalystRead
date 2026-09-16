@@ -3,6 +3,7 @@ title: "Accessibility Beyond Alt Text: What Actually Blocks Real Users"
 slug: "web-accessibility-beyond-alt-text"
 description: "Alt attributes are the easy 10% of accessibility work. Focus management, semantic structure, and keyboard flow are where most sites actually fail."
 publishedAt: "2026-01-30"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -84,3 +85,13 @@ WCAG contrast ratios (4.5:1 for normal text, 3:1 for large text) catch more than
 ## Automated Tools Catch a Third of the Problem
 
 Axe, Lighthouse's accessibility audit, and similar tools reliably catch missing alt text, insufficient contrast, and missing form labels — genuinely useful, but by their own documentation's estimate, they catch roughly a third of WCAG success criteria. Focus order, whether a modal actually traps focus, whether an error message is announced to a screen reader — none of that is detectable by static analysis. Manual keyboard testing and, ideally, testing with an actual screen reader (VoiceOver on macOS, NVDA on Windows, both free) remain the only way to catch the failures that block real users most.
+
+## A worked failure mode
+
+Alt text is present; the custom select is not keyboard operable; focus is lost on update; contrast fails in a dark theme. An axe run on the closed page is green. The failure is alt as a complete strategy. Keyboard, name/role/value, focus, contrast, and real assistive-tech passes on interactive states.
+
+## When this is the wrong tool
+
+An a11y overlay widget is the wrong tool. Do not ship inaccessible custom widgets when native exists. Accessibility is not a one-time audit. Build with native semantics first.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Accessibility Beyond Alt Text: What Actually Blocks Real Users" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

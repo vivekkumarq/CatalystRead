@@ -3,6 +3,7 @@ title: "Leaving the Data Center: Shopify's Move to Google Cloud and Kubernetes"
 slug: "shopify-google-cloud-kubernetes-platform-migration"
 description: "Why Shopify migrated its core commerce platform out of self-managed data centers onto Google Cloud and Kubernetes, and how it did so without downtime."
 publishedAt: "2026-07-08"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -31,6 +32,12 @@ Shopify chose Google Cloud Platform as its cloud provider and Kubernetes as the 
 ## Migrating a live platform without downtime
 
 Because Shopify's pod architecture already partitioned the platform into independent units serving a defined subset of shops, the cloud migration could happen incrementally, pod by pod, rather than as a single cutover for the entire platform. Traffic for a given pod could be validated on the new cloud infrastructure, compared against its behavior on the old data center hardware, and only then cut over, with the ability to roll a pod back if something looked wrong. That incremental strategy — enabled directly by the isolation the pod architecture already provided — is what made a multi-year infrastructure migration survivable for a platform that couldn't afford an extended maintenance window.
+
+## Operational gotchas of a cloud-and-K8s migration
+
+Shopify's move toward Google Cloud and Kubernetes was a bet on elasticity for flash sales and on a platform that could shed data-center toil. Mid-size teams copy the destination and underestimate the middle: dual-running, identity, networking, and the database that does not lift. The concrete failure mode is a cutover that moves stateless pods while sessions, Redis, and MySQL stay behind a high-latency VPN, so tail latency explodes and nobody blames the map.
+
+Steal a strangler order: move an isolated, stateless edge first, then caches, then datastores, with kill criteria on p99. Operational gotcha: IAM and secret distribution. A cluster that can pull images but cannot talk to Cloud SQL because a service account was bound in the old world will fail in ways that look like application bugs. Another is autoscaling that scales pods into a quota wall at the exact moment of a sale. Game-day the quotas. Kubernetes YAML drift between environments recreates the snowflake servers you left. Shopify's size justified a custom platform layer; your size may justify Autopilot plus a golden chart. Do not migrate "because Kubernetes." Migrate because a measured constraint — capacity, hiring, hardware lead time — is real, and keep a rollback to the previous region or provider until the first peak on the new stack has passed.
 
 ## What you can borrow
 

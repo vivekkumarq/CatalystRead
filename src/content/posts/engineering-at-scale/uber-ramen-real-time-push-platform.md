@@ -3,6 +3,7 @@ title: "RAMEN: Replacing Polling With a Real-Time Push Platform"
 slug: "uber-ramen-real-time-push-platform"
 description: "How Uber built RAMEN, a persistent-connection push platform, to replace polling and cut latency and backend load across its rider and driver apps."
 publishedAt: "2025-09-02"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Making that shift work at Uber's scale required solving problems that a polling 
 ## A platform, not a one-off feature
 
 Because Uber's real-time needs weren't limited to one screen or one feature — driver location, trip status, pricing changes, and later a growing set of live in-app notifications all needed the same underlying delivery mechanism — RAMEN was built as a general-purpose push platform that other teams' services could publish events into, rather than a special-cased pipe for any single use case. That let new features get real-time delivery essentially for free once RAMEN existed, instead of every team re-solving connection management, fan-out, and mobile network reliability from scratch.
+
+## What a mid-size team can steal from Ramen
+
+Ramen-style push delivers trip updates to phones without the app hammering HTTP. The failure mode is a websocket or FCM fan-out that still originates from every microservice directly, recreating N-squared connections. Mid-size steal: one push gateway, server-side subscriptions by user or trip id, and payload budgets so a chatty service cannot blow mobile radios.
+
+The concrete failure mode is offline buffering that replays stale offers — a ride that was already accepted — because the client applied events without version checks. Sequence numbers per topic. Operational gotcha: presence and push mixed on one connection; a blip in presence storms the gateway. Split. Multi-region: a user hands off from cell tower to Wi-Fi and lands on another POP with a different cache of the trip. The source of truth must be the trip service, with the gateway as a projection. Auth tokens on long-lived connections expire; silent 401s look like "Uber is stuck." Refresh in-band. If you cannot build Ramen, FCM/APNs plus a small payload and a fetch-on-wake is enough for many products. Steal the idea that the phone is not a poller. Do not steal a custom protocol until a vendor channel is the measured limiter. Watch fan-out to a city-scale event (an airport outage) as the load test, not a single trip.
 
 ## What you can borrow
 

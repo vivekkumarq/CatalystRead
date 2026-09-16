@@ -3,6 +3,7 @@ title: "A Practical Tour of java.util.concurrent"
 slug: "java-util-concurrent-building-blocks-tour"
 description: "Beyond synchronized and Thread, java.util.concurrent has a purpose-built tool for nearly every coordination problem. Here's when to reach for each."
 publishedAt: "2025-05-15"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -91,3 +92,13 @@ public Response call(Request request) throws InterruptedException {
 Creating and managing `Thread` objects directly doesn't scale past a handful of ad hoc tasks. `ExecutorService` decouples task submission from thread management, and since JDK 21 includes `Executors.newVirtualThreadPerTaskExecutor()` for I/O-bound workloads alongside the traditional fixed and cached thread pools for CPU-bound work.
 
 The common thread through all of these classes is the same design principle: pick the primitive whose contract matches your actual coordination need, rather than reaching for `synchronized` and hand-rolled state checks as a default. Each of these was built, tested, and hardened against the exact race conditions that hand-written coordination code tends to reintroduce.
+
+## A worked failure mode
+
+A `ConcurrentHashMap` is used with `get`, mutate the value, `put`—lost updates. A `BlockingQueue` with a `cached` thread pool grows to 8,000 threads on a stuck dependency. `wait/notify` is reinvented poorly. The failure is picking a concurrent collection without an atomic update story, and unbounded pools. Use `compute`, bounded executors, and higher-level libraries for pipelines.
+
+## When this is the wrong tool
+
+`java.util.concurrent` is the wrong tool if a single-threaded event loop would do. Do not use `ThreadLocal` as a hidden parameter bus. Skip clever lock-free code until a profiler says so. Use the toolkit's high-level executors and maps with atomic APIs.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "A Practical Tour of java.util.concurrent" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

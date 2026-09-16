@@ -3,6 +3,7 @@ title: "The View Transitions API: Native Animation Between States"
 slug: "view-transitions-api-guide"
 description: "Smooth page and state transitions used to require a JavaScript animation library and careful DOM choreography. The View Transitions API does it natively."
 publishedAt: "2026-02-27"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -99,3 +100,13 @@ Users with `prefers-reduced-motion: reduce` set should see the state change happ
 ## Where It Actually Fits
 
 Reach for this on state changes that benefit from spatial continuity — filtering a grid, expanding a card, switching tabs, navigating between a list and a detail page — where showing the relationship between old and new state genuinely helps the user track what happened. It's a poor fit forced onto every DOM update indiscriminately; a transition on content that has no meaningful before/after relationship just adds latency to the interaction for no comprehension benefit.
+
+## A worked failure mode
+
+A view transition animates a list keyed poorly; the wrong row flies. Reduced-motion users still get a 500ms fade. A transition holds a large snapshot and janks on low-end phones. The failure is animation without identity and a11y. Stable names, respect `prefers-reduced-motion`, and keep snapshots small.
+
+## When this is the wrong tool
+
+View transitions are the wrong tool if you need IE11. They are extra for a settings form. Do not animate layout that users are trying to read. Use them for navigations where motion helps orientation.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "The View Transitions API: Native Animation Between States" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

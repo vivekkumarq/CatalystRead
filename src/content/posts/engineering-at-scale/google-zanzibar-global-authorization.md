@@ -3,6 +3,7 @@ title: "Zanzibar: How Google Built One Authorization System for Everything"
 slug: "google-zanzibar-global-authorization"
 description: "Inside Zanzibar, the globally consistent authorization system that decides who can access what across Google Drive, Calendar, Photos, and Maps."
 publishedAt: "2026-08-03"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -27,6 +28,18 @@ This uniform representation is what let Zanzibar serve wildly different products
 ## "New enough" consistency instead of always-latest
 
 The hardest technical problem Zanzibar had to solve is a subtle consistency issue: when someone revokes another user's access, every subsequent access check anywhere in the world needs to reflect that revocation, immediately, with no window where a stale check could still say "access granted." But requiring every single check to hit the absolute latest global state, everywhere, would be prohibitively slow at Zanzibar's request volume. Zanzibar's answer is a mechanism it calls "zookies," tokens that let a check request specify it needs to see at least as recent a state as some reference point, giving callers a way to get strong, "new enough" consistency exactly when the safety guarantee actually matters (right after a permission change) without paying that cost on every single check globally.
+
+## What broke when they scaled
+
+Per-product ACL tables do not compose: Drive sharing a document with a Group that contains a Group, Calendar, Photos — each reinventing "who can read." Zanzibar (Pang et al., USENIX ATC 2019) stores relationship tuples and evaluates "does user U have relation R on object O" with a consistent-enough global snapshot (the zookie / consistency token model). What breaks authorization at Google scale is graph depth (nested groups), hot objects (a viral doc), and the latency SLO of a check on every request.
+
+"New enough" consistency is the product decision: a check can be slightly stale so the system stays fast, while a caller that just wrote an ACL can pass a zookie to avoid checking against a snapshot from before their write. Teams that demand linearizable checks on every Read pay in tail latency. Namespace configuration (object types, relations, rewrite rules) is a programming language; a bad rewrite can make checks explode into millions of edges.
+
+OpenFGA and SpiceDB are public implementations of the idea; they are not Zanzibar's fleet.
+
+## A smaller-team version of the same idea
+
+A central `can(user, rel, object)` service with tuples in Postgres and a cache. Support groups as tuples. Return a token after ACL writes for read-your-writes. Flatten only to a depth you can bound. Do not put authorization logic in every microservice's if-statements once you have three products.
 
 ## What you can borrow
 

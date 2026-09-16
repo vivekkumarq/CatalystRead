@@ -3,6 +3,7 @@ title: "Writing Engineering Docs People Actually Read"
 slug: "writing-engineering-docs-people-read"
 description: "Docs organized around questions instead of topics, with explicit freshness and ownership, are the ones that stay accurate and get reused."
 publishedAt: "2026-03-16"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -44,3 +45,14 @@ Doc quality is a subtraction problem as much as an addition problem. A wrong doc
 ## Optimize for Skimming First
 
 Most doc reads are not cover-to-cover — they're a scan for one fact, under time pressure, often during an incident. Front-load the answer, then the reasoning: a reader who needs the command should find it in the first few lines, not after three paragraphs of architectural context they can come back for if they want it. The doc that respects a skimming reader gets trusted enough to become someone's next bookmark; the one that doesn't gets replaced by a Slack DM to whoever remembers the answer, which is where undocumented tribal knowledge comes from in the first place.
+
+## A worked failure mode
+
+A wiki page of 40 screenshots from last year; the commands 404. The doc starts with history. Readers need the command and the rollback. The failure is docs as archives. Put the task first, date it, and test the commands in CI if you can.
+
+## When this is the wrong tool
+
+A long guide is the wrong tool for a self-explanatory flag. Docs will not fix an unpublished API. Do not document a lie. Write when the next on-call will need the path.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Writing Engineering Docs People Actually Read", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

@@ -3,6 +3,7 @@ title: "The Hidden Cost of Training Data Quality"
 slug: "hidden-cost-of-training-data-quality"
 description: "Bad labels and inconsistent data cost more than bad models do, because they're harder to detect and they cap your ceiling no matter how good the model gets."
 publishedAt: "2026-06-22"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -55,3 +56,13 @@ A dataset can have perfectly correct labels and still be low quality for your pu
 ## Where to actually spend the marginal hour
 
 Given a fixed amount of time before a model needs to ship, the return on an hour spent auditing high-confidence label disagreements, checking inter-annotator agreement on ambiguous categories, or comparing training data distribution against production traffic tends to exceed the return on an additional hour of hyperparameter tuning, especially once tuning has already found a reasonable configuration. Model quality has a ceiling set by label quality; past a certain point, better tuning just gets you closer to that ceiling faster — it doesn't raise it.
+
+## A worked failure mode
+
+A model is retrained weekly on production labels from a weak heuristic. Accuracy vs the heuristic rises; accuracy vs a held-out human set falls. Nobody budgeted relabeling. A second dataset has 12% swapped labels on the minority class; a bigger net memorizes them. The failure is treating data as free fuel. Spend on agreement checks, gold slices, and a process to stop training on your own bad outputs.
+
+## When this is the wrong tool
+
+A data-quality program is the wrong first hire if you have no task definition. Do not delay a v0 with 10k clean rows to wait for a perfect lake. Audits will not help if the label cannot be observed. Invest in data quality when models already fit and errors look like the training set.
+
+Treat the counterexample as part of the spec. Someone will apply "The Hidden Cost of Training Data Quality" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

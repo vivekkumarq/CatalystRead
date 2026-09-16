@@ -3,6 +3,7 @@ title: "Hyperparameter Tuning Strategies That Don't Waste Compute"
 slug: "hyperparameter-tuning-strategies-that-dont-waste-compute"
 description: "Grid search doesn't scale and random search leaves gains on the table — a practical comparison of tuning strategies and when each one earns its cost."
 publishedAt: "2026-06-16"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -88,3 +89,13 @@ study = optuna.create_study(direction="maximize", pruner=pruner)
 | Bayesian + pruning | Same as above, plus trials that reveal early whether they're worth finishing |
 
 The general lesson holds regardless of which tool you pick: treat the search strategy itself as a decision with a cost, not a formality to run once and forget, and match the sophistication of the search to how expensive each individual trial actually is — Bayesian optimization's overhead isn't worth it for a model that trains in two seconds, but it pays for itself quickly once individual trials take twenty minutes.
+
+## A worked failure mode
+
+A 10,000-trial grid searches learning rate and tree depth while the target is leaked. The "best" model is a lottery ticket on the test set. Random search on a log grid with 40 trials and early stopping would have been cheaper and more honest. Another team tunes on production live. The failure is compute as a substitute for a clean split. Budget trials, use successive halving, and freeze test.
+
+## When this is the wrong tool
+
+Giant search is the wrong tool before a baseline works. Do not tune 30 knobs on 200 rows. AutoML will not fix leakage. Tune when the pipeline is clean and extra points of metric matter.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Hyperparameter Tuning Strategies That Don't Waste Compute" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

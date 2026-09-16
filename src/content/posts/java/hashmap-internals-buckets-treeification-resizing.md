@@ -3,6 +3,7 @@ title: "HashMap Internals: Buckets, Treeification, and Resizing"
 slug: "hashmap-internals-buckets-treeification-resizing"
 description: "HashMap's average O(1) performance depends on assumptions about hash distribution and load factor that are worth understanding before they're violated."
 publishedAt: "2025-08-12"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -59,3 +60,13 @@ This treeification requires the key type to be `Comparable`, or falls back to co
 ## Why a Bad hashCode Still Hurts
 
 Even with treeification as a safety net, a hash function that clusters most keys into a handful of buckets — as opposed to one truly malicious key set — still means most lookups traverse a tree instead of hitting a near-empty bucket directly. O(log n) is far better than O(n), but it's still worse than the O(1) a well-distributed hash gives you. This is the practical payoff of a correct, well-distributed `hashCode()`: it's not just about correctness (covered by the `equals`/`hashCode` contract), it's what keeps every bucket close to empty in the first place, which is the entire basis for `HashMap`'s average-case performance claim.
+
+## A worked failure mode
+
+A map is sized with `new HashMap(1_000_000)` thinking that is capacity in items; load factor still resizes. Keys are `URL` objects whose `hashCode` does DNS. Under attack, many keys collide in one bucket (pre-treeification Java) and requests spin. The failure is keys with expensive or hostile hashes and capacity folklore. Use well-distributed immutable keys, size with expected cardinality / load factor, and do not expose maps to untrusted key types.
+
+## When this is the wrong tool
+
+HashMap is the wrong tool for concurrent writers (`ConcurrentHashMap` or a lock). It is the wrong cache without eviction. Do not micro-tune treeification. Use it for in-thread dictionaries with decent keys.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "HashMap Internals: Buckets, Treeification, and Resizing" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

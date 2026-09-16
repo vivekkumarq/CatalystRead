@@ -3,6 +3,7 @@ title: "Iguazu: DoorDash's Kafka-Based Backbone for Analytics and ML"
 slug: "doordash-iguazu-kafka-event-backbone"
 description: "How DoorDash built a unified, Kafka-based event pipeline named Iguazu to feed analytics and machine learning from a sprawling microservices fleet."
 publishedAt: "2025-09-28"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -38,6 +39,18 @@ A key design goal was serving two very different consumption patterns from the s
 ## Reliability at the edges, not just the middle
 
 Because Iguazu sits between hundreds of producing services and dozens of consuming systems, DoorDash had to design carefully for the failure modes at both edges — a producing service having a bad deploy shouldn't be able to flood the pipeline with malformed events, and a slow or failing consumer shouldn't be able to back up the whole system for everyone else. Isolating producers and consumers from each other's failure modes, while still sharing the same underlying event backbone, was as much of the engineering effort as the initial pipeline build.
+
+## What broke when they scaled
+
+Microservices without a paved event path produce a zoo of "I'll POST to your webhook" integrations, each with its own retry and schema. DoorDash's Iguazu work (named in their engineering blog) is a Kafka-centered backbone: producers emit once, many consumers (analytics, ML, search index, billing) subscribe. The break at scale is poison schemas and silent field reuse. A boolean that used to mean "is_dashpass" now means something else and every downstream model quietly degrades.
+
+Schema registry and compatibility checks are the unglamorous core. So is partitioning: a hot restaurant id as a key concentrates a lunch rush on one partition. Consumer lag during that rush is a product outage for anything that thought Kafka was "real time." Exactly-once is a myth across the whole company; Iguazu-style platforms usually give at-least-once plus idempotent consumers and a documented lag SLO.
+
+Dual use — stream processing and dump-to-warehouse — means one bad producer can both page the feature store and blow the data lake bill.
+
+## A smaller-team version of the same idea
+
+One Kafka (or even one SQS) topic per important fact (`order_placed`), Avro/JSON schema in git, a warehouse sink, and one streaming consumer. Prohibit ad-hoc HTTP fan-out for analytics. Add a registry when the third consumer appears. Watch lag. Compact topics that are really changelogs.
 
 ## What you can borrow
 

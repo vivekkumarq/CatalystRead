@@ -3,6 +3,7 @@ title: "MLOps Pipelines: From Notebook to Production"
 slug: "mlops-pipelines-notebook-to-production"
 description: "How to turn a working Jupyter notebook into a reproducible, monitored production pipeline without rewriting everything from scratch."
 publishedAt: "2026-03-08"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -65,3 +66,13 @@ By the time a model misbehaves in production, it's too late to add logging. At m
 Standard software CI/CD checks that code compiles and tests pass. ML CI/CD needs an additional gate: does the newly trained model actually perform better (or at least not worse) than the current production model, on a fixed evaluation set? Skipping this gate is how teams end up silently regressing accuracy for weeks before someone notices in a dashboard, if they notice at all.
 
 The overarching lesson is that MLOps isn't a separate discipline bolted onto data science — it's the recognition that a model in a notebook is a research artifact, and a model in production is a piece of infrastructure with all the reliability requirements that implies.
+
+## A worked failure mode
+
+A notebook is "productionized" by scheduling it. Paths are local, secrets in cells, no model registry, and the job overwrites the only artifact. A silent package bump changes preprocessing. Rollback is git blame. The failure is a pipeline without versions. Pin data snapshots, code, and model IDs; promote artifacts, do not retrain into prod unattended without eval gates.
+
+## When this is the wrong tool
+
+A full MLOps platform is the wrong tool for a one-off analysis. Do not delay a useful batch job for a catalog of 40 tools. Use lightweight jobs until more than one person must retrain safely. Graduate when silent overwrites would hurt customers.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "MLOps Pipelines: From Notebook to Production" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

@@ -3,6 +3,7 @@ title: "Workers and the Bet Against Containers"
 slug: "cloudflare-workers-v8-isolates-instead-of-containers"
 description: "Why Cloudflare built its serverless platform on V8 isolates rather than containers or VMs, and what that architectural choice buys in cold-start latency."
 publishedAt: "2025-06-03"
+updatedAt: "2026-09-16"
 category: "Cloudflare"
 tags:
   - Engineering at Scale
@@ -36,6 +37,18 @@ The tradeoff surfaces most clearly in what Workers doesn't do well: long-running
 ## Why this mattered beyond Cloudflare
 
 The isolate approach also reframed a debate the industry was having about serverless cold starts. AWS Lambda and similar platforms were built around container or micro-VM isolation (Firecracker), which is a reasonable choice for longer-running, more privileged functions, but it structurally can't match isolate-level startup times. Workers proved that a shared-process, memory-safe sandbox could run untrusted multi-tenant code safely at a density and speed that container-based systems could not reach, which is part of why isolate-style runtimes later showed up elsewhere in the industry.
+
+## What broke when they scaled
+
+Shared-process multi-tenancy means one V8 bug or one runaway isolate is a host problem. Cloudflare's isolate bet depends on V8's security track record, tight CPU accounting, and an API that cannot `mmap` a neighbor's heap. As Workers gained Durable Objects, streams, and more I/O, the runtime had to grow without becoming Node — each new host capability is a new attack surface. CPU limits and I/O wait are different resources; a Worker that is "idle" on fetch can still pin event-loop capacity.
+
+Cold starts stay small only if the script is small and V8 snapshots help. Giant bundles, huge WASM modules, or first-request JIT can push isolate creation out of the "invisible" budget. Platform features like preload and isolate reuse exist because naive spawn-per-request does not survive a stampede.
+
+The industry comparison to Lambda/Firecracker is not "Workers won." Long-running jobs, native addons, and arbitrary binaries still want a VM or container — which is why Cloudflare later added containers alongside Workers rather than stretching isolates into a general OS.
+
+## A smaller-team version of the same idea
+
+For request-scoped logic at the edge (auth, redirects, header rewrites), a Worker-like isolate or a simple proxy script beats a container per tenant. Constrain the API. Time-box CPU. If you need a compiler or a GPU, do not fake it with V8. On a single-tenant backend, ordinary processes are fine; isolates shine when you multiplex untrusted code onto one box and care about milliseconds of start time.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Reading Flame Graphs: From a Wide Plateau to a Line of Code"
 slug: "reading-flamegraphs-cpu-and-allocation"
 description: "How to interpret width versus height, distinguish on-CPU from off-CPU, and use allocation flames to catch the copy you cannot see in the source."
 publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -44,3 +45,42 @@ Color is usually hash of function name, not heat. Do not invent a temperature le
 If two consecutive flames look unrelated, you do not have a stable workload. Fix the experiment before "optimizing."
 
 Keep Gregg's site as the reference for the visual language. Vendor UIs rename buttons; width-as-cost does not change.
+
+## A worked CPU plateau
+
+A Java service’s p99 jumped after a library bump. A 30-second async-profiler CPU flame shows a wide plateau labeled `com.fasterxml.jackson.databind`. Zoom: most of the width sits in `BeanDeserializer` for a DTO with nested maps, called from a new “enrich every row” filter. The method is not “slow Jackson”; it is “Jackson × N rows × a fatter tree.” The fix is fewer objects or a slimmer JSON, not a faster CPU.
+
+If the same ticket had shown a thin `jackson` tower and a wide `epollWait` / `Unsafe.park`, you would stop reading the CPU flame and capture an off-CPU or JFR wall-clock view of the JDBC call.
+
+## Failure modes of the picture
+
+**Too short a capture.** A 200ms sample during GC or during a one-off admin call is a random comic. Prefer tens of seconds under the load that matches the SLO window.
+
+**Mixed processes.** A host-wide flame without PID/container filters blends sidecars into your app. Filter first.
+
+**Inlined frames missing.** Aggressive inlining folds callees into parents. That is correct cost accounting and a bad map to source. Use a tool that can show inlined children, or accept that the plateau is “this compilation unit.”
+
+**Allocation flame mistaken for CPU.** Bytes are not milliseconds. A huge allocator may still be cheap if the young generation dies in nursery. Use allocation flames to find *who* allocates; use GC and CPU to decide if it *matters*.
+
+**Comparing colors.** Default palettes hash the name. Two red frames are not “hotter.”
+
+## When a flame graph is the wrong first tool
+
+Rare 2-second stalls at 3am want tracing with timestamps, not a 30-second average histogram. Multi-modal workloads (batch + serving in one process) want two captures, not one blended graph. If you cannot reproduce, fix observability (exemplars, logs with trace ids) before staring at a laptop profile of a different shape.
+
+## Review checklist
+
+- Width is the cost metric; height is depth only.
+- Capture length and workload match the incident.
+- On-CPU vs off-CPU vs allocation is an explicit choice.
+- One change, then recapture; unstable graphs mean an unstable experiment.
+
+## A worked failure mode
+
+A CPU flame graph is inverted in the reader's head; they optimize a wide plateau that is GC, not their code. Allocation graphs are ignored while young-gen churn is the latency. A 2-second sample during a GC pause is treated as the steady state. The failure is misreading width vs depth and sampling bias. Confirm with longer profiles and allocation views.
+
+## When this is the wrong tool
+
+Flame graphs are the wrong tool for a distributed wait; you need traces. Do not optimize a 0.3% frame. Use them when on-CPU or allocating hot methods are the hypothesis.
+
+Treat the counterexample as part of the spec. Someone will apply "Reading Flame Graphs: From a Wide Plateau to a Line of Code" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

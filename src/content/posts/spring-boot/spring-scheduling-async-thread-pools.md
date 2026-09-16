@@ -3,6 +3,7 @@ title: "@Scheduled and @Async: The Thread Pools You Can't Leave on Default"
 slug: "spring-scheduling-async-thread-pools"
 description: "Why the default executors behind @Scheduled and @Async are wrong for production, and how to configure thread pools that actually match your workload."
 publishedAt: "2025-08-05"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -95,3 +96,14 @@ public CompletableFuture<Report> generateQuarterlyReport(Long accountId) { ... }
 ```
 
 Sizing either kind of pool starts from the same question: is the work CPU-bound or I/O-bound? I/O-bound work (HTTP calls, database queries) tolerates a larger pool because threads spend most of their time waiting, not computing; CPU-bound work should stay close to the number of available cores, since more threads than that just adds context-switching overhead without more throughput.
+
+## A worked failure mode
+
+`@Scheduled` and `@Async` share the default single-thread executor; a stuck job blocks all async controller work. An unbounded async pool grows on a slow dependency. There is no error handler; failures vanish. The failure is default pools. Separate schedulers, bound queues, and log failures.
+
+## When this is the wrong tool
+
+`@Async` is the wrong tool for a workflow you should put on a queue. Scheduling is the wrong HA story without a lock (jobs run on every pod). Use a real scheduler/queue when work must be once-only.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "@Scheduled and @Async: The Thread Pools You Can't Leave on Default" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

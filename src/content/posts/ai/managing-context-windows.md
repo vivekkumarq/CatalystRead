@@ -3,6 +3,7 @@ title: "Managing Context Windows: Chunking, Summarization, and Memory"
 slug: "managing-context-windows"
 description: "Practical strategies for fitting long conversations and large documents into a context window without losing what actually matters."
 publishedAt: "2026-06-23"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -56,3 +57,11 @@ Models attend more reliably to information near the start and end of the context
 | Multi-step agent task | Structured scratchpad the agent writes to, not raw transcript replay |
 
 The common thread is that context budget is a resource to allocate deliberately, the same way you'd think about memory or bandwidth in any other system — not a pool to fill until it overflows.
+
+## A worked failure mode
+
+A coding assistant stuffs the last 40 files into context "so the model has everything." The relevant test is in file 41. Summarization memory then compresses the conversation into a paragraph that drops the constraint "do not migrate the database." The next turn proposes a migration. A sliding window that kept the system contract and the last tool results would have been safer than a lossy summary. The failure is treating the window as a junk drawer. Reserve tokens for the policy, the retrieved snippets with citations, and the latest tool output; summarize only the middle of the chat, and verify summaries against a checklist of invariants.
+
+## When this is the wrong tool
+
+If the task fits in a few thousand tokens, skip memory machinery. Infinite-context marketing is the wrong reason to stop retrieving: attention still dilutes, and cost still scales. Do not summarize legal or numeric tables into prose. Do not use conversation memory as a substitute for a database of user preferences you can edit. Chunk-and-retrieve beats stuffing when the corpus is large; stuffing beats retrieval when the artifact is one small spec the user just pasted. Pick the cheap thing that preserves the constraints that would make a wrong answer expensive.

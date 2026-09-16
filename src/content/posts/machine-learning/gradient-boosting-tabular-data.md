@@ -3,6 +3,7 @@ title: "Why XGBoost and LightGBM Still Win on Tabular Data"
 slug: "gradient-boosting-tabular-data"
 description: "Deep learning dominates images and text, but gradient boosted trees remain the default choice for tabular data — here's the technical reason why."
 publishedAt: "2026-03-19"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -63,3 +64,19 @@ None of this means trees are universally superior. On very high-cardinality spar
 ## The practical default
 
 For a new tabular problem, start with LightGBM (or XGBoost if categorical native handling matters less than raw speed), tune `num_leaves`/`max_depth`, `learning_rate`, and `min_child_samples` before anything else, and treat a neural tabular model as something you reach for only after boosting has plateaued and you have a specific reason to believe embeddings would help — usually high-cardinality categoricals or a need to fuse tabular features with text or images in one model.
+
+## A worked example
+
+A 50-column churn table. Train LightGBM with early stopping on a time-based split. SHAP on a sample for a sanity check (not a legal explanation by itself). Compare to a regularized logistic baseline. You log AUC and a calibration plot. Categorical features use the library's native handling, not random one-hot of 100k IDs.
+
+A leakage check: `customer_id` as a feature should not explode AUC unless it is a bug.
+
+## Failure modes
+
+Random split on time series. Target leakage from post-event columns. Default depth overfitting. Encoding high-cardinality IDs poorly. Tuning 40 hyperparameters on the test set. Ignoring class imbalance metrics.
+
+Assuming GBDT beats a well-specified linear model on 500 rows.
+
+## When this is the wrong tool
+
+Images, audio, free text — deep models. Unstructured sequences. If you need a strictly linear, auditable scorecard, boosting may be politically wrong even if it wins AUC. Online learning with tiny memory: other algorithms. Do not gradient-boost a problem that is a rule (`if unpaid > 90 days`). Neural nets on huge tabular with embeddings can win — measure, do not tweet.

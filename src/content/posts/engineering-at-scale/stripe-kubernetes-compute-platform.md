@@ -3,6 +3,7 @@ title: "Running Stripe's Compute on Kubernetes"
 slug: "stripe-kubernetes-compute-platform"
 description: "Why Stripe moved its compute platform onto Kubernetes, and the engineering work required to run a payments company's workloads on top of it safely."
 publishedAt: "2026-03-25"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ The point of the migration wasn't Kubernetes for its own sake — it was what st
 ## The trade-off of adopting a general-purpose platform
 
 Kubernetes is a general-purpose system built to serve a huge range of use cases, which means some of its defaults and abstractions don't map perfectly onto a payments company's specific needs around reliability, compliance, and workload isolation. Part of the engineering work in adopting it is building the internal layer on top — policies, guardrails, and platform tooling — that constrains Kubernetes's generality down to the specific, safer subset of behavior Stripe's workloads actually need, rather than exposing the full flexibility of the underlying platform directly to every service team.
+
+## Operational gotchas of running payments on Kubernetes
+
+A Kubernetes platform under a payments company still has to drain connections without dropping a capture, pin images, and explain which pod talked to which datastore. The failure mode is treating pods as cattle while PCI and audit need a pedigree. Mid-size steal: immutable deploys, short TTLs on credentials, and disruption budgets that respect in-flight work, not only replica counts.
+
+Operational gotcha: sidecars that retry and the app that retries, doubling charges if idempotency is missing. Another is cluster autoscaler removing a node that held a worker mid-job. Use preStop hooks and queue visibility. Network policies that miss a payment processor IP will fail in one AZ's egress path and look like "Stripe is down" when it is you. Watch egress. Multi-tenant clusters that also run batch ML will noisy-neighbor a latency SLO; isolate the money path. Stripe can build a custom compute platform. You can use GKE/EKS with a dedicated node pool, PodSecurity, and no SSH. The steal is not a control plane clone. It is admitting that orchestration is part of the threat model: anyone who can schedule a pod in the payments namespace is in the payments business. RBAC reviews belong on the same calendar as key rotation.
 
 ## What you can borrow
 

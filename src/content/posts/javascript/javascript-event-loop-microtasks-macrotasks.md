@@ -3,6 +3,7 @@ title: "The Event Loop, Microtasks, and Macrotasks, Explained Properly"
 slug: "javascript-event-loop-microtasks-macrotasks"
 description: "A precise walkthrough of how the JS event loop orders microtasks and macrotasks, with the interleaving bugs that actually bite in production code."
 publishedAt: "2025-06-01"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Event Loop
@@ -84,3 +85,13 @@ Both functions run synchronously up to their first `await`, then queue their con
 Node's loop has more phases than the browser (timers, pending callbacks, poll, check, close callbacks), and `process.nextTick()` runs even before the microtask queue on each phase transition — it has higher priority than promises. If you're debugging ordering issues in Node and only reasoning about promises vs `setTimeout`, you're missing a queue. `setImmediate` also behaves differently from `setTimeout(fn, 0)`: inside an I/O callback, `setImmediate` is guaranteed to run before any timer, which is the opposite of what intuition suggests from the name.
 
 If you're chasing an ordering bug, the fastest way to build the right mental model is to actually log at every boundary — call stack, microtask drain, macrotask pickup — rather than guessing from the API names.
+
+## A worked failure mode
+
+A `Promise.then` chain starves rendering because it never yields to macrotasks; a progress bar freezes. `setTimeout(0)` is used as a fairness hack and still batches wrong. An unhandled rejection from a microtask crashes a test runner later. The failure is assuming async means yield. Insert real yields for long work (`scheduler.yield` or chunking) and know that promises run before paint.
+
+## When this is the wrong tool
+
+Event-loop trivia is the wrong tool to fix a 200ms JSON parse—move it off the main thread. Do not `await` in a loop to "be nice" without measuring. Learn the loop to debug ordering, not to write puzzles.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "The Event Loop, Microtasks, and Macrotasks, Explained Properly" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

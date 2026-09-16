@@ -3,6 +3,7 @@ title: "Iterators and Generators: The Machinery Behind for...of"
 slug: "javascript-iterators-and-generators"
 description: "How the iterator protocol and generator functions work under the hood, and where they solve real problems like pagination and lazy sequences."
 publishedAt: "2025-08-24"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Generators
@@ -101,3 +102,13 @@ for await (const item of fetchAllPages('/api/orders')) {
 ```
 
 `async function*` combines the generator protocol with promises — `for await...of` pulls one item at a time, fetching the next page only when the consumer asks for more. The caller never sees `nextUrl`, cursors, or page boundaries; they just iterate items. This is also how Node's streams and many database driver cursors are implemented internally, so understanding generators makes those APIs far less mysterious. Before `async/await` existed, this same pause-and-resume mechanism (`yield` combined with a driver function that fed results back via `.next(value)`) was how libraries like co simulated async functions — worth knowing if you ever run into that pattern in an older codebase.
+
+## A worked failure mode
+
+A generator is used as an event bus; `throw` into it is forgotten and cleanup in `finally` never runs, leaving a socket open. An iterator is consumed twice; the second is empty. Infinite generators are spread into an array and OOM. The failure is protocol vs collection. One-shot iterators, explicit cleanup, and bounds.
+
+## When this is the wrong tool
+
+Generators are the wrong tool for a simple array map. Do not hide control flow in `yield*` mazes. Use them for lazy sequences and cooperative parsers you can test.
+
+Treat the counterexample as part of the spec. Someone will apply "Iterators and Generators: The Machinery Behind for...of" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

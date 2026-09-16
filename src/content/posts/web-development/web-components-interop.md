@@ -3,6 +3,7 @@ title: "Web Components Interop: Making Custom Elements Play Nice With Frameworks
 slug: "web-components-interop"
 description: "Web Components promise framework-agnostic UI, but the interop details — props vs attributes, events, and Shadow DOM styling — are where real integration breaks."
 publishedAt: "2026-03-13"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -102,3 +103,13 @@ CSS custom properties are the sanctioned bridge — they pierce Shadow DOM bound
 ## The Realistic Integration Checklist
 
 Before shipping a custom element for cross-framework use: expose both attributes and properties for every input, dispatch `CustomEvent`s with `composed: true` for every output, and expose styling hooks through custom properties and `::part()` rather than assuming host styles will reach in. Skipping any one of these doesn't break the component in isolation — it breaks silently, exactly when someone tries to consume it from a framework other than the one it was tested in.
+
+## A worked failure mode
+
+A shadow DOM component swallows events React cannot see; form data does not include the custom input because it is not form-associated. SSR HTML mismatches. Styles leak or do not apply. The failure is a component model that fights the host. Use `ElementInternals`, retarget events as needed, and test inside the real framework.
+
+## When this is the wrong tool
+
+Web Components are the wrong tool for an app that is 100% one framework and will stay that way. They are the wrong choice if you need SSR of a rich tree without a plan. Use them at team or document boundaries.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Web Components Interop: Making Custom Elements Play Nice With Frameworks" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

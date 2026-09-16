@@ -3,6 +3,7 @@ title: "One IP Address, Hundreds of Cities: How Anycast Runs Cloudflare's Networ
 slug: "cloudflare-anycast-one-ip-hundreds-of-cities"
 description: "How Cloudflare uses anycast routing so a single IP address is announced from hundreds of data centers, with BGP steering each visitor to the nearest one."
 publishedAt: "2025-08-09"
+updatedAt: "2026-09-16"
 category: "Cloudflare"
 tags:
   - Engineering at Scale
@@ -36,6 +37,18 @@ Anycast also simplifies failover: if a data center goes offline for maintenance 
 ## The engineering cost of anycast
 
 None of this is free. Running anycast well means Cloudflare has to keep every data center capable of terminating any connection for any customer, since a router's path decision — not Cloudflare's application layer — decides where a given packet lands, and that decision isn't sticky in the way a load balancer's session affinity would be. That's part of why the config-propagation problem Quicksilver solves and the need for globally consistent edge software matter so much: anycast only works cleanly if every location genuinely is a peer of every other, running the same configuration and code.
+
+## What broke when they scaled
+
+Anycast is not session-sticky. A TCP handshake that lands in Frankfurt can, after a BGP shift, see follow-on packets try another city unless you terminate state at the first hop or use protocols that tolerate it. HTTP/3 and connection migration make this more interesting, not less. Cloudflare has to make every PoP a full peer: same software, same config (Quicksilver), enough capacity that "the nearest city" is never a tiny leftover POP that melts when a transatlantic path flaps.
+
+BGP itself is the control plane. A leak, a more-specific prefix from a third party, or a datacenter that keeps announcing while sick will suck traffic into a black hole. Withdrawal has to be fast and coordinated with health. Anycast DDoS spreading also means *you* absorb a share of every volumetric attack aimed at a customer IP — capacity planning is global, not per VIP.
+
+Uneven internet topology produces "wrong" cities: a user in one country routed to another because of peering, not geography. Latency SLOs then need measurement from real client vantage points, not map distance.
+
+## A smaller-team version of the same idea
+
+You probably should not run global anycast. Use a CDN or DNS geo-steering. If you have two regions, announce independently and fail over with health-checked DNS or a load balancer. The borrowable idea is: identical serving stacks and a routing-layer failover that does not require clients to change IPs. Keep a VIP's backends equivalent. Test withdrawal.
 
 ## What you can borrow
 

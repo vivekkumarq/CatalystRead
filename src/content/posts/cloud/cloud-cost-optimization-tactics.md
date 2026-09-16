@@ -3,6 +3,7 @@ title: "Cloud Cost Optimization Tactics That Don't Sacrifice Reliability"
 slug: "cloud-cost-optimization-tactics"
 description: "Concrete cloud cost optimization tactics, from rightsizing to commitment discounts, ranked by effort versus savings so you know where to start."
 publishedAt: "2025-10-20"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -84,3 +85,27 @@ aws ce get-cost-and-usage \
 ```
 
 Grouping cost explorer output by usage type, rather than just by service, is usually what surfaces these — a line item for `DataTransfer-Regional-Bytes` that's a meaningful fraction of total EC2 spend is a signal worth investigating architecturally, not just accepting as a fixed cost of doing business.
+
+## A worked example
+
+Rightsizing: p95 CPU 15% on a 4xlarge → smaller instance + HPA. Disk: gp3 vs io2 measured. Idle: turn off non-prod at night with a schedule that on-call knows. Storage lifecycle on S3. Commit discounts only after a stable baseline. A weekly report: cost per checkout, not only total bill.
+
+You tag `service` and `env` and refuse untagged spend.
+
+## Failure modes
+
+Killing redundancy for savings. Reserved instances for a service you will delete. Spot for a stateful primary without a story. "Optimization" that increases engineer time more than the bill. Ignoring data transfer. Autoscaling min=10 forever.
+
+FinOps dashboards nobody owns.
+
+## When this is the wrong tool
+
+Cost cuts during an incident. Do not optimize a $20 sandbox. Premature Graviton rewrites without a perf test. If the product is unused, turn it off — that beats kube tuning. Negotiating enterprise discounts is not an engineer-only tactic. Avoid "move to serverless" as a cost story without measuring.
+
+## A worked failure mode
+
+Finance mandates a 30% cut. Someone turns off NAT, halves RDS, and deletes "unused" EBS that was the only copy of a queue. The bill drops; so does checkout. A better failure to remember: rightsizing from a week of CPU average while the app is memory-bound, or buying a reserved instance for a service you will kill next quarter. Cost work needs the same change management as reliability: identify waste (idle, wrong size, forgotten snapshots), simulate, then change with a rollback. Attribution tags come first or you will cut the wrong team.
+
+Cost cutting is the wrong tool when the product is still finding PMF and the bill is a rounding error versus engineering time. Do not optimize a sidecar before you delete the unused environment. Spot instances are the wrong default for a stateful primary. Optimize once you have tags, an owner, and a reliability floor.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Cloud Cost Optimization Tactics That Don't Sacrifice Reliability" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

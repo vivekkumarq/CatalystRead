@@ -3,6 +3,7 @@ title: "Radar: How Stripe Fights Payment Fraud in Real Time with Machine Learnin
 slug: "stripe-radar-machine-learning-fraud-detection"
 description: "How Stripe's Radar system scores payments for fraud risk in real time using machine learning trained across its network, without adding checkout friction."
 publishedAt: "2025-12-15"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ A fraud system that blocks everything questionable will also block a meaningful 
 ## Models that keep learning
 
 Fraud patterns shift constantly as bad actors adapt to whatever is currently working against them, so a model trained once and left static degrades over time. Radar's models are retrained on an ongoing basis against fresh data across the network, incorporating outcomes — confirmed fraud, disputed charges, false positives caught after the fact — so the system adapts to new fraud patterns rather than staying frozen against techniques that stopped being used months earlier.
+
+## Operational gotchas of fraud models in the charge path
+
+Radar-like systems sit on the authorization path: they must return in tens of milliseconds and fail in a defined direction. The concrete failure mode is a model timeout that either fails open (you eat fraud) or fails closed (you kill conversion) without a written policy for the hour the feature store is down. Mid-size steal: a rule layer that always runs, a model that can be skipped, and a budgeted latency with a default.
+
+Operational gotcha: training on yesterday's labels while attackers shift today; a sudden drop in precision looks like a "good" week of low declines until chargebacks arrive. Watch delayed labels. Another is features that leak future information or include the decline itself. Point-in-time joins again. False positives concentrate on a country, a BIN, or a legitimate travel pattern; without per-segment dashboards you will think the model is healthy. Allowlists for known-good customers must be first-class, or support will invent a side door. Do not log raw card data in feature logs. Shadow-mode new models on live traffic before they can decline. If you cannot staff ML, steal velocity rules and device fingerprints with the same fail-open/closed decision. The model is optional. The decision SLA and the audit log of why a charge was blocked are not.
 
 ## What you can borrow
 

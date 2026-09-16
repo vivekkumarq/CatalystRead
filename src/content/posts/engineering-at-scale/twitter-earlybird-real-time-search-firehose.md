@@ -3,6 +3,7 @@ title: "Earlybird: Real-Time Search Over Twitter's Firehose"
 slug: "twitter-earlybird-real-time-search-firehose"
 description: "How Twitter built Earlybird, a Lucene-based inverted index engineered to make freshly posted tweets searchable within seconds of being sent."
 publishedAt: "2025-08-12"
+updatedAt: "2026-09-16"
 category: "Twitter"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ Query-time ranking combined relevance signals with recency, since a search engin
 ## Serving a firehose without falling behind
 
 The operational challenge underlying all of this was sustaining ingestion at the rate of Twitter's full tweet volume without indexing lag creeping in, since any accumulated backlog would directly undermine the real-time promise that was the entire point of building Earlybird instead of using an off-the-shelf search engine. That meant treating ingestion throughput as a metric to protect as jealously as query latency, with capacity planning and monitoring built around both sides of the system rather than optimizing query performance in isolation.
+
+## What a mid-size team can steal from Earlybird
+
+Earlybird indexed the tweet firehose in near real time so search could see a breaking word in seconds, not after a nightly Hadoop job. Mid-size steal: a nearline index for the documents that must be found now, and a batch index for the rest. Do not put every field of every row into a real-time search cluster.
+
+The concrete failure mode is a mapping explosion — a new nested field per client — that takes the cluster down at ingest. Schema-on-write. Another is deleting or protecting a tweet that remains searchable because the real-time replica lagged the protection bit. Privacy updates must be a high-priority ingest path, not eventual. Operational gotcha: query load during a world event that is also the ingest peak. Isolate ingest and query, and have a syntax that can shed expensive operators. Relevance for real-time is not the same as web search; recency can dominate and hide better documents. Steal a simple blending rule and a kill switch to recency-only. If you use Elasticsearch, the same lesson applies: hot/warm tiers, and a dedicated ingest pipeline. Twitter could drop tweets; a regulated product may not. Know which. The firehose is an availability and a moderation problem as much as an IR problem.
 
 ## What you can borrow
 

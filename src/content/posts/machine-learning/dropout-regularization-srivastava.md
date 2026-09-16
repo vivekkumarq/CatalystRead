@@ -3,6 +3,7 @@ title: "Dropout: Regularization by Silence, and Why It Still Shows Up in 2026 Tr
 slug: "dropout-regularization-srivastava"
 description: "Srivastava et al. 2014: randomly dropping units as an ensemble trick, inverted dropout at inference, and when batch norm made the habit less automatic."
 publishedAt: "2026-08-06"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -39,3 +40,42 @@ Batch norm already injects noise through minibatch statistics and, for a while, 
 The paper's ensemble interpretation is the part to keep in interviews. You are not "adding noise for fun." You are preventing co-adaptation of features. If your regularization is already strong (weight decay, huge data, early stop, augmentation), extra dropout is a knob to measure, not a default checkbox from a 2014 tutorial.
 
 When a training curve memorizes by epoch 3, dropout is still a cheap first experiment — after you have checked a data leak. Regularization will not save a leaked label.
+
+## A worked training/eval mismatch
+
+A model trains with inverted dropout (`mask / p`) and someone ports inference to a C++ runtime that multiplies by `p` “because the paper said scale at test.” Activations are now `p` too small (or too large if they also left the train-time divide). Validation in Python looked fine; production accuracy drops. The fix is one convention: either inverted dropout everywhere, or paper-style scale-at-test everywhere, documented in the export path.
+
+MC dropout (leaving dropout on at test and averaging) is a different product: a cheap uncertainty sketch. It is not the paper’s default inference. Do not mix MC dropout averages with a point-estimate calibration set and call it a posterior.
+
+## Failure modes
+
+**Dropout on the wrong tensor.** Dropping raw embeddings with `p=0.5` on a small-data NER model can erase rare tokens. Input dropout was milder in the original heuristics.
+
+**Dropout + BN in the same block without a sweep.** Train loss plateaus; people add more dropout. Often you wanted less of one regularizer, not more of both.
+
+**Eval mode forgotten.** `model.train()` in a validation loop keeps dropping units; you report a pessimistic, noisy accuracy and then “improve” it by overfitting to that noise.
+
+**Rate copied from a tutorial.** Transformers using 0.5 on every residual stream will underfit. Current defaults are often 0.1 or stochastic depth on blocks.
+
+## When not to reach for dropout
+
+Huge data, strong augmentation, and weight decay already holding train/test together. Then dropout is a parameter you can set to zero and not miss. Also skip it as a first fix for exploding loss — that is usually LR, init, or a bad residual scale.
+
+For tabular models with a few dozen features, dropout is a blunt instrument; simpler weight decay or a smaller net is easier to explain.
+
+## Review checklist
+
+- Train vs eval: dropout off (or inverted scaling) is tested in the export pipeline.
+- Rate is swept; 2014 MNIST defaults are not pasted into a 7B training run.
+- Data leak checked before interpreting a generalization gap as “need more dropout.”
+- Ensemble interpretation is the story you tell; “add noise” is not.
+
+## A worked failure mode
+
+Dropout is left active at evaluation; production scores jitter and a downstream threshold flaps. A 0.8 dropout is used to paper over 80 training images. Another team applies dropout to a calibrated medical probability without reporting Brier score. The failure is a regularizer as a ritual and eval-mode mistakes. Turn dropout off at eval, retune when data is tiny (prefer more data or simpler models), and monitor proper scores if you ship probabilities.
+
+## When this is the wrong tool
+
+Dropout is the wrong tool for gradient-boosted trees and for tiny tabular problems. Do not stack dropout, weight decay, and heavy augmentation to hide leakage. Use it in large neural nets with a correct eval path.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Dropout: Regularization by Silence, and Why It Still Shows Up in 2026 Training Runs" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

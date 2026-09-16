@@ -3,6 +3,7 @@ title: "Edge Computing and Edge Functions: What They're Actually Good For"
 slug: "edge-computing-and-edge-functions"
 description: "Edge functions promise lower latency by running closer to users, but they come with real constraints on runtime and state. Here's where they genuinely help."
 publishedAt: "2025-12-01"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Edge Computing
@@ -65,3 +66,12 @@ Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400
 ## Matching the workload to the model
 
 Edge functions earn their complexity for latency-sensitive, stateless, request-scoped logic — auth token validation, header-based routing, lightweight personalization, image transformation. They're a poor fit for anything requiring heavy computation, a large in-memory model, or frequent round trips to a centralized data store, where the constrained runtime and per-invocation cold start work against the very latency goal that motivated moving to the edge in the first place. The right mental model isn't "move everything to the edge" — it's "identify the narrow slice of logic that's genuinely request-local, and leave everything else where centralized infrastructure already does it well."
+
+## A worked failure mode
+
+A team moves session auth to an edge function to "be fast." The function calls the origin database on every request because the session store was never replicated. p99 is worse than regional compute, and a region-specific bug logs users out only in APAC. Another edge rewrite caches HTML with a `Set-Cookie` and serves mixed personalization. The failure is putting logic at the edge without putting the data it needs there, or caching what must not be cached. Edge is for cacheable, partitionable work with a clear consistency story.
+
+## When this is the wrong tool
+
+Edge functions are the wrong tool for long-running jobs, heavy CPU, and anything that needs a sticky connection to a single VM. They are the wrong place for a monolith's business rules. Do not use the edge to hide an origin that cannot scale. A single region plus a CDN for static assets is enough for many products. Use the edge for latency-sensitive, mostly-stateless decisions and cache hits.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

@@ -3,6 +3,7 @@ title: "Airbnb's Two-Year React Native Experiment, and Why It Ended"
 slug: "airbnb-react-native-two-year-sunset"
 description: "Airbnb adopted React Native to unify mobile development across iOS and Android, then spent two years learning why it decided to sunset the experiment."
 publishedAt: "2025-07-18"
+updatedAt: "2026-09-16"
 category: "Airbnb"
 tags:
   - Engineering at Scale
@@ -29,6 +30,18 @@ The friction Airbnb described publicly fell into a few recurring categories. Deb
 ## A public postmortem, not a quiet reversal
 
 What distinguished Airbnb's exit from React Native was how openly it was documented. Rather than quietly reverting and letting outside observers guess why, Airbnb engineer Gabriel Peal wrote a detailed, multi-part account of the decision, walking through what worked, what didn't, and the reasoning behind sunsetting the framework in favor of native development on each platform. That honesty made it one of the more cited cross-platform-mobile case studies in the industry — not because Airbnb's conclusion was universally right, but because the reasoning was concrete and specific to their situation rather than a general verdict on the technology.
+
+## What broke when they scaled
+
+Airbnb's React Native screens did not live in a greenfield app. They were nested inside mature native binaries, which meant every navigation event, shared element, and deep link could cross the bridge. The asynchronous bridge of that era copied serialized data between JavaScript and native; lists with lots of cells, maps, and transition-heavy booking flows amplified that cost. Engineers ended up writing native modules to escape the bridge, which reintroduced the dual-stack maintenance RN was supposed to avoid — now with a third language in the middle.
+
+Initialization and bundle size showed up as product metrics, not just engineering pride. A second JS runtime, plus the native infrastructure to host it, competed with cold-start budgets on Android in particular. Airbnb also hit the "who owns the upgrade" problem: React Native's release train moved quickly, and pinning an old version to keep a custom native integration working created a private fork. At a few screens that is survivable. At many product surfaces it becomes a platform team whose entire job is rebasing.
+
+Peal's write-up also stressed people systems. Native specialists measured quality in platform terms (Instruments, systrace, App Store review subtleties). JavaScript-first engineers measured iteration speed. Hybrid bugs required both, so on-call and debugging rotated poorly. That organizational mismatch is a scaling failure as real as a dropped frame.
+
+## A smaller-team version of the same idea
+
+A small team with one mobile surface and little existing native code can still get RN's original bet: shared product logic, one hiring pool, fast iteration. Keep the native surface area tiny — no half-migrated navigation stack. Budget an explicit owner for upgrades. If you already have two healthy native apps and a design system implemented natively, treat RN as a tactical tool for a bounded feature, not a company-wide unification strategy. Revisit the bet when bridge crossings, startup time, or hiring friction show up in the same dashboards you use for product.
 
 ## What you can borrow
 

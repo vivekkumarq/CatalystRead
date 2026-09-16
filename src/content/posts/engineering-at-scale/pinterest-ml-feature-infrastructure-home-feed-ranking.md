@@ -3,6 +3,7 @@ title: "The Feature Infrastructure Behind Pinterest's Home Feed Ranking"
 slug: "pinterest-ml-feature-infrastructure-home-feed-ranking"
 description: "How Pinterest built shared machine learning feature infrastructure to rank home feed content consistently across training and real-time serving."
 publishedAt: "2026-02-02"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -33,6 +34,12 @@ As with any large-scale recommendation system, Pinterest's feature infrastructur
 ## Feature reuse across many ranking surfaces
 
 Home feed is only one of several places at Pinterest where ranking matters — search results and related-pins recommendations also depend on overlapping sets of features, like a pin's engagement history or a user's interest profile. Building shared feature infrastructure meant these different ranking surfaces could reuse the same underlying feature definitions and computation pipelines rather than each product surface's team independently rebuilding similar signals, which reduced both engineering duplication and the risk of subtly inconsistent versions of "the same" signal existing across different parts of the product.
+
+## Operational gotchas of homefeed features
+
+Homefeed ranking needs features that are fresh enough to reflect a just-saved pin and stable enough to train on yesterday's logs. The gap between those clocks is where quality dies. Mid-size teams train on warehouse tables and serve from Redis keys that were never the same columns. Steal a feature log: persist the vector you served, join it in training, and alert on missing-feature rates.
+
+The concrete failure mode is a pipeline delay after a producer outage; the model silently scores zeros and the feed becomes generic popularity. Users think the product "got worse" with no deploy. Another gotcha is leaked labels: using a feature that is only known after the click, or using the viewer's own subsequent action, which will not exist online. Point-in-time correctness is an ops problem, not only a science one. Feature stores with online/offline skew on types — float vs stringified float — produce tiny numeric bugs that A/B tests misread as wins. Capacity: computing huge user embeddings on the request path without a cache will miss SLA and skip personalization, which can look like a successful fallback until engagement tanks. Budget a stale-but-present embedding over a missing one. Own a pager for feature freshness the same way you own API latency.
 
 ## What you can borrow
 

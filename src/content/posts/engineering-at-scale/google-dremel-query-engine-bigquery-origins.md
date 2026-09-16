@@ -3,6 +3,7 @@ title: "Dremel: How Google Made Trillion-Row Queries Feel Interactive"
 slug: "google-dremel-query-engine-bigquery-origins"
 description: "The columnar storage and execution-tree design behind Google's Dremel engine, and how it became the foundation for BigQuery."
 publishedAt: "2026-05-26"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -31,6 +32,18 @@ Because the execution tree is designed for aggregation-style queries rather than
 ## From an internal tool to a public product
 
 Google made Dremel's capability available externally as BigQuery, launched as a public service not long after the underlying paper was published, giving customers outside Google SQL-like access to the same interactive-query-over-massive-datasets capability that Dremel provided internally, without needing to run any of the underlying infrastructure themselves. Beyond BigQuery, Dremel's ideas about columnar storage of nested data directly influenced the open source ecosystem — Apache Parquet, a columnar storage format widely used across Spark, Hive, and other big-data tools, credits Dremel's paper as a direct inspiration for its handling of nested schemas, and Apache Drill was built explicitly as an open source system inspired by Dremel's architecture.
+
+## What broke when they scaled
+
+MapReduce is a poor interactive SQL engine: you wait for a job, not a query. Dremel (Melnik et al., VLDB 2010) stored nested data column-wise (the "column-striped" representation of protocol-buffer-like records) and executed aggregations as a serving tree of intermediate servers, not a single coordinator. That is why BigQuery can scan trillions of rows with a SQL box. What breaks columnar analytics is wide `SELECT *`, nested explosion, and a serving tree that becomes a hot root if you do not fan out.
+
+In-memory vs on-disk, and the cost of shuffling joins, still apply. Dremel-style systems bill by bytes scanned — a product that trains users to be sloppy with `SELECT *` becomes a finance incident (DoorDash's cost post is the cousin). Google's nested columnar format is a specific invention; Parquet/ORC are the industry descendants.
+
+Interactive latency also needs caching of hot aggregations and admission control so one whale query cannot starve the tree.
+
+## A smaller-team version of the same idea
+
+Put analytics in a columnar warehouse (BigQuery, Snowflake, DuckDB on Parquet). Do not run interactive SQL on OLTP Postgres for trillion-row scans. Project only the columns you need. If DuckDB on a laptop answers the question, you do not need Dremel.
 
 ## What you can borrow
 

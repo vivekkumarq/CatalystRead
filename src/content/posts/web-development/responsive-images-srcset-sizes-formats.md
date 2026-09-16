@@ -3,6 +3,7 @@ title: "Responsive Images: srcset, sizes, and Modern Formats"
 slug: "responsive-images-srcset-sizes-formats"
 description: "How srcset and sizes let the browser pick the right image resolution automatically, and how to layer AVIF and WebP on top with picture and source."
 publishedAt: "2026-08-11"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Performance
@@ -78,3 +79,37 @@ img {
 ```
 
 `loading="lazy"` defers offscreen image requests until the user scrolls near them, native to the browser with no library required — reserve it for genuinely below-the-fold images, since applying it to a hero image or anything near the initial viewport delays a paint that should have started immediately, directly hurting Largest Contentful Paint.
+
+## A worked example
+
+```html
+<img
+  alt=""
+  width="1200" height="800"
+  src="/hero-800.jpg"
+  srcset="/hero-400.jpg 400w, /hero-800.jpg 800w, /hero-1200.jpg 1200w"
+  sizes="(max-width: 600px) 100vw, 600px"
+/>
+```
+
+`sizes` matches the actual layout width, not 100vw if the image is in a 600px column. You serve AVIF/WebP via `<picture>` with JPEG fallback. Width/height attributes prevent CLS.
+
+A lab test: narrow viewport downloads the 400w resource, not the 1200w.
+
+## Failure modes
+
+Wrong `sizes` so the browser picks a 3x file. Only 1x in srcset. Forgetting density in `sizes`. Hero as CSS background without image-set. Art direction needed but you only resized. CDN that strips srcset. No width/height.
+
+Using 100vw for a sidebar image.
+
+## When this is the wrong tool
+
+Tiny icons should be SVG or a sprite, not five raster srcsets. Do not srcset a 20 KB logo five ways. User-generated images without an image pipeline cannot magically grow srcset. Background videos are a different problem. If the image is decorative CSS, `image-set` may fit better than `<img>`. Skip AVIF if encode time in the upload path is the product bottleneck and WebP is enough.
+
+## A worked failure mode
+
+`srcset` lists widths but `sizes` is `100vw` for a 200px column; mobile downloads a 2000px image. Art direction is skipped and a cropped face is unreadable. A WebP is served without a JPEG fallback to an old webview. The failure is srcset without sizes. Match sizes to layout, provide fallbacks, and test DPR.
+
+Responsive images are the wrong tool for a 12kb SVG icon. Do not generate 20 variants for a tiny thumbnail. Use them when photographic bytes dominate LCP.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Responsive Images: srcset, sizes, and Modern Formats", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

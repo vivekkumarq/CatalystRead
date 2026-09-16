@@ -3,6 +3,7 @@ title: "Blaze and Bazel: The Build System a Monorepo Requires"
 slug: "google-blaze-bazel-build-system"
 description: "How Google's internal Blaze build system, and its open-source descendant Bazel, made fast, reproducible builds possible across a codebase of billions of lines."
 publishedAt: "2026-05-19"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -33,6 +34,18 @@ Blaze and Bazel require every build target to explicitly declare its dependencie
 ## From internal tool to industry standard
 
 Google open-sourced a reimplementation of Blaze as Bazel in 2015, and it's since been adopted well beyond Google by companies with their own large, multi-language monorepos or multi-repo builds that need the same hermetic, cacheable, precisely-dependency-tracked properties. Its adoption outside Google is itself evidence that the problems Blaze solved weren't unique to Google's scale — they show up, in smaller form, anywhere a codebase and engineering organization grow past what ad hoc build scripts and Makefiles can comfortably handle.
+
+## What broke when they scaled
+
+Make and recursive CMake do not know the whole graph of a billion-line monorepo. Blaze (internal) / Bazel (open source) require hermetic, declared dependencies so remote cache hits are correct. What broke earlier systems was hidden deps ("it worked on my machine") and non-reproducible outputs that poisoned the cache. Google's build is a distributed system: a scheduler, workers, a content-addressed cache.
+
+Bazel's cost for smaller teams is BUILD file boilerplate and fighting languages that want implicit imports. Non-hermetic actions silently break remote execution. Test sprawl still needs a test strategy (tap, affected targets) or CI time dominates. Bazel shines when the graph is huge and cache hits matter; it is heavy when you have a 20-file app.
+
+The CACM monorepo paper and Bazel docs are the public trail, not a fictional "Blaze: OSDI" paper.
+
+## A smaller-team version of the same idea
+
+Pin dependencies, run tests in CI, cache `node_modules`/pip. Adopt Bazel when multiple languages and a large graph make incremental builds the bottleneck. Hermeticity: no undeclared network in tests. Remote cache from a vendor if you cannot build one.
 
 ## What you can borrow
 

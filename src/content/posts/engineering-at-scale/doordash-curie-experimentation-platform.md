@@ -3,6 +3,7 @@ title: "Curie: How DoorDash Runs Thousands of Experiments Without Losing the Sig
 slug: "doordash-curie-experimentation-platform"
 description: "DoorDash built an internal experimentation platform, Curie, so any team can run statistically sound A/B tests without a data scientist gatekeeping every test."
 publishedAt: "2026-02-24"
+updatedAt: "2026-09-16"
 category: "DoorDash"
 tags:
   - Engineering at Scale
@@ -44,6 +45,18 @@ An experiment's stated success metric might look great while quietly damaging so
 ## Thousands of experiments running at once, without stepping on each other
 
 With enough concurrent experiments running across a platform this size, tests inevitably start to overlap on the same users and the same surfaces, which risks interaction effects where one experiment's treatment skews another experiment's results. Managing this requires careful traffic allocation and namespacing — deciding which experiments can safely run concurrently against overlapping populations, and which need to be mutually exclusive — so that the platform's own scale doesn't undermine the validity of the results it's producing.
+
+## What broke when they scaled
+
+When every team can launch a test, the platform becomes a collision engine: overlapping experiments on the same checkout funnel, underpowered tests called early, and "success" on a vanity metric that tanks delivery time. Curie's job, as DoorDash has described it, is self-service *with* statistics baked in — assignment, exposure logging, CUPED-style variance reduction, SRM checks, and guardrail metrics — so a product manager cannot silently ship a p-hack.
+
+Interaction effects scale with the number of concurrent tests. A naive orthogonal assignment still couples through the marketplace: a Dasher-side experiment changes ETAs that a consumer-side ranking experiment measures. DoorDash's marketplace makes this worse than a single-player SaaS. The platform has to know units (consumer, Dasher, store, time window) and spillover.
+
+Peak meal times also break experiments: lunch-only effects vanish in a week-long average. Segmentation and holdouts need to respect weekly seasonality, not just i.i.d. users.
+
+## A smaller-team version of the same idea
+
+One assignment service, sticky hashing on user id, logged exposures, a pre-registered primary metric, and two guardrails (latency, cost, cancellation). Do not peek every hour without a sequential-testing rule. If two tests share a funnel, run them in sequence or use disjoint populations. Spreadsheets are fine until two teams ship overlapping flags.
 
 ## What you can borrow
 

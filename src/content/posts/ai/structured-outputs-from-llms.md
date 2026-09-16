@@ -1,8 +1,9 @@
-﻿---
+---
 title: "Structured Outputs from LLMs: JSON Schemas and Validation"
 slug: "structured-outputs-from-llms"
 description: "How to reliably get valid, typed JSON out of an LLM in production, from schema-constrained decoding to validation and repair strategies."
 publishedAt: "2026-06-29"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -69,3 +70,11 @@ When validation fails, three escalating strategies:
 3. **Fall back to a safe default and flag for review**: for cases where retries aren't worth the latency cost, degrade gracefully â€” a low-confidence default plus a human-review flag beats a hung request or a crash.
 
 Log every validation failure with the input and the malformed output. These logs are the highest-signal source for improving your schema and prompt â€” a field that fails validation repeatedly usually means the schema is asking for something the model doesn't have enough information to reliably produce, which is a design problem, not a model problem.
+
+## A worked failure mode
+
+A pipeline asks for JSON in the prompt and `json.loads` the reply. One in 40 responses wraps the object in markdown fences or drops a comma after a long string. The job retries the entire 8k-token prompt, doubling cost, and a "repair" prompt sometimes invents a field that was never in the source. Schema-constrained decoding would have forbidden the fence. Validation should fail closed: missing required fields retry with the schema error only, not a free-form rewrite. The failure is treating JSON as a vibe. Constrain generation, validate with the same schema, and repair only by filling missing keys from the source text, not by letting the model invent values.
+
+## When this is the wrong tool
+
+Constrained decoding is the wrong tool if you need unconstrained prose. A JSON schema will not make facts true; it only makes types parse. Do not schema-wrap a task that is a single enum classification. If the provider has no constrained API, a grammar-based parser with a small retry budget beats an unbounded chat. Avoid nested schemas so deep the model collapses into empty arrays. Structured output is for boundaries between models and code, not for replacing your database types with whatever keys the model felt like today.

@@ -3,6 +3,7 @@ title: "SharedArrayBuffer and Atomics: Shared Memory Without Inventing a Mutex W
 slug: "javascript-atomics-and-sharedarraybuffer"
 description: "When worker threads should share a buffer, how Atomics.wait and compareExchange actually work, and the security history that still gates SAB."
 publishedAt: "2026-08-11"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - JavaScript
@@ -42,3 +43,42 @@ A compare-exchange spinlock is a teaching toy. In the browser it can livelock wi
 WASM threads (pthreads) sit on this same primitive. If your build enables threads, you inherited SAB requirements and a data-race story in C++ as well as JS. Treat the linear memory as hostile shared state: no JS object graphs, no assuming `Date.now` is a fence.
 
 Use shared memory when profiling said copies were the tax. Use messages when a race would be worse than a copy. That split will keep you out of the comments on a three-year-old GitHub issue titled "random NaNs in the audio thread."
+
+## A worked SPSC ring
+
+Producer worker writes samples into a `Float32Array` view on SAB. Head and tail are `Int32` indexes updated with `Atomics`. Producer advances tail after the payload is written; consumer waits with `Atomics.wait` on a seq word, then `load`s tail, copies a chunk out, advances head, `notify`s the producer if the buffer was full. No mutex. Two producers on the same ring is undefined — that is the “single” in SPSC.
+
+Document byte offsets in one comment block. Tests should run two workers in Node (`worker_threads`) with a deterministic fill pattern and assert no torn reads (a sequence number next to the payload, or wrap the payload in a checksum for the test).
+
+## Failure modes
+
+**Non-atomic `++` on indexes.** Classic lost updates; buffer overruns.
+
+**`wait` on the main thread.** Throws or is forbidden; freeze risk.
+
+**Missing COOP/COEP.** SAB is undefined; you “fix” it by polyfilling with copies and lose the point.
+
+**Endianness and WASM.** Mixed views without a documented endian story.
+
+**Background tab throttling.** Spinlocks livelock; wait/notify still needs a timeout story so a dead producer does not park a worker forever.
+
+## When not to use SAB
+
+UI state, Redux stores, DOM nodes — message passing. Anything where a race is a security or money bug and you have not written a memory-model review. If copies of 128-byte messages are not in the profile, skip shared memory. If you cannot set isolation headers because of third-party iframes, you do not have SAB in the browser; use workers + transferables.
+
+## Review checklist
+
+- Isolation headers verified in production, not only localhost.
+- Only Atomics on shared indexes; layout documented.
+- No main-thread `wait`; prefer SPSC over a homemade mutex.
+- Profiled copies-before-SAB; teardown unparks waiters on worker exit.
+
+## A worked failure mode
+
+A SAB is used as a lock without `Atomics.wait`/`notify`; a spin loop burns a core. Another posts the buffer to a worker after transferring it and still writes from the main thread. COOP/COEP headers are missing; the feature is silently unavailable in browsers. The failure is shared memory without a protocol. Define who writes which index, use Atomics, and set isolation headers.
+
+## When this is the wrong tool
+
+SharedArrayBuffer is the wrong tool for passing JSON to a worker; `postMessage` is enough. Do not invent a mutex if a queue message would do. Use SAB for high-rate numeric pipelines you can prove correct.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "SharedArrayBuffer and Atomics: Shared Memory Without Inventing a Mutex Wrong" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

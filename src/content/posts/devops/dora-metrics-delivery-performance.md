@@ -3,6 +3,7 @@ title: "DORA Metrics: What Four Numbers Measure, and What They Hide"
 slug: "dora-metrics-delivery-performance"
 description: "Lead time, deploy frequency, change fail rate, and time to restore — how to collect them honestly, and how teams game the dashboard."
 publishedAt: "2026-08-24"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - DevOps
@@ -42,3 +43,40 @@ None of these are illegal. They just disconnect the metric from the thing the re
 Plot the four together. High frequency with high fail rate is a pipeline that ships unfinished work. Low frequency with long restore is a scary combination: you do not practice recovery. Improving CI cache and test selection often moves lead time more than a pep talk about culture.
 
 Read *Accelerate* for the survey methodology and the warning that copying elite percentiles without copying the practices (trunk-based development, test automation, loosely coupled architecture) is cargo cult. The numbers are a diagnostic. The work is still in the pipeline and the architecture.
+
+## A worked reading of a dashboard
+
+Frequency is daily, lead time is four days, change-fail is 25%, restore is 90 minutes. The story is not “we deploy a lot.” It is “code sits in review or a slow e2e, then production breaks often, and we are merely okay at recovery.” The first lever is usually the wait before the first production-bound artifact (review SLA, flaky tests), not a pep talk about deploying more. After you shrink lead time, watch fail rate: if it climbs, you sped up an unsafe pipeline.
+
+Compare quarters, not individuals. A team that owns a hardware integration will not match a serverless CRUD squad; the research compared *organizations* and capabilities, not tickets per engineer.
+
+## Failure modes
+
+**Per-person scoreboards.** People split PRs and stop touching risky code. The metric dies as a system sensor.
+
+**Clock games.** Lead time from “pipeline start” instead of first commit; frequency that counts helm-only no-ops.
+
+**One metric OKRs.** “Increase deploy frequency 2×” without a fail-rate cap produces the no-op deploy pattern.
+
+**Mixing batch size with microservice count.** Ten repos released together are one user-facing change.
+
+## When not to use DORA as the frame
+
+A platform team that ships once a quarter because of a store review still has internal CD (build, test, promote) worth measuring, but public “elite” percentiles will only shame them. Research prototypes with no production users do not need restore-time dashboards. If you lack even a definition of production deploy, fix that event first — DORA on top of undefined deploys is fiction.
+
+## Review checklist
+
+- Written definitions: deploy, failure, restore start/stop, lead-time start.
+- All four plotted together; no individual ranking.
+- Gaming patterns reviewed quarterly (no-ops, flag-hidden launches).
+- Practices (trunk, tests, coupling) are the work items, not “hit elite.”
+
+## A worked failure mode
+
+A team games lead time by opening PRs that are already merged locally and by excluding hotfixes from change-fail rate. Dashboards go elite; customers still wait six weeks for a feature behind a flag that never turns on. Another org pages engineers for failing to ship daily on a hardware product with a certification gate. The failure is treating DORA as a scoreboard instead of a diagnostic. Use the four metrics to find bottlenecks (review queues, flaky tests, scary deploys), not to punish.
+
+## When this is the wrong tool
+
+DORA charts are the wrong tool if leaders will rank teams with them. They are a poor fit for work that is not software deploy (research, legal). Do not optimize deploy count by shipping empty commits. Use DORA when you want to improve flow and have a shared definition of a production change.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "DORA Metrics: What Four Numbers Measure, and What They Hide" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

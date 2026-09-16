@@ -3,6 +3,7 @@ title: "Lazy Loading Strategies Across the Stack"
 slug: "lazy-loading-strategies-across-the-stack"
 description: "Lazy loading isn't just deferred images — the same principle applies to JS bundles, database relations, and API responses, each with its own trade-offs."
 publishedAt: "2025-02-10"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -48,3 +49,13 @@ Lazy loading extends naturally into API contract design, even though it's rarely
 ## The general rule
 
 Across all of these layers, the same two questions decide whether lazy loading is the right call: is the resource genuinely unlikely to be needed for a meaningful share of requests, and is the cost of loading it on-demand — a spinner, a second round trip, a cache miss — cheaper than the cost of always loading it upfront. When both answers are yes, lazy loading is close to free performance. When the resource is needed almost every time anyway, lazy loading just moves the cost later and adds a loading state on top of it.
+
+## A worked failure mode
+
+Images are lazy-loaded below the fold including the LCP hero; LCP gets worse. A JS module for checkout is lazy and the button does nothing for 2s on 3G. Backend lazy-loads ORM graphs in a loop. The failure is lazy as a default, not as a trade. Eager the critical path; lazy the rest with loading UI.
+
+## When this is the wrong tool
+
+Lazy loading is the wrong tool for the thing the user came to do. Do not lazy-split a 2kb helper into a waterfall. Use it for truly optional weight.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Lazy Loading Strategies Across the Stack", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

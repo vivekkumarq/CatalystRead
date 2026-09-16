@@ -3,6 +3,7 @@ title: "Generics Variance: Covariance, Wildcards, and PECS"
 slug: "generics-variance-covariance-wildcards-pecs"
 description: "Wildcard generics confuse most developers on sight, but the PECS rule turns a wall of question marks into a mechanical, memorable decision."
 publishedAt: "2025-08-25"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -73,3 +74,27 @@ public static <T> void copy(List<? super T> dest, List<? extends T> src)
 ```
 
 `src` only ever gets read from — it's a producer of `T`, so `extends`. `dest` only ever gets written to — it's a consumer of `T`, so `super`. Once you're naming parameters by the role they play (does this argument hand data *out*, or take data *in*?) rather than trying to reason about subtyping directly, PECS stops being a mnemonic you look up and becomes the obvious shape of the method signature.
+
+## A worked example
+
+PECS: `copy(List<? extends T> src, List<? super T> dst)`. You cannot add to `List<? extends Animal>` except `null`. Arrays are covariant and broken; prefer lists. A helper `Consumer<? super T>` for listeners.
+
+A compile error when you `add` a `Dog` to `List<? extends Animal>` is the lesson.
+
+## Failure modes
+
+Raw types. `List<List<?>>` confusion. Arrays of parameterized types. `Class<T>` vs wildcards. Heap pollution with varargs. Forcing `T` where a wildcard would allow reuse.
+
+`@SuppressWarnings("unchecked")` as architecture.
+
+## When this is the wrong tool
+
+If all types are the same concrete class, skip wildcards. Reflection-heavy code will fight generics. Do not PECS a public API into unreadability for one call site. Kotlin declaration-site variance is not Java — do not copy the syntax. If you need heterogeneous trees, visitors or sealed types may be clearer than `?`.
+
+## A worked failure mode
+
+An API is `List<Animal>` and callers cannot pass `List<Dog>`. Someone uses raw `List` to silence the compiler and heap pollution follows. `List<? extends T>` is used in a setter that needs to add. The failure is PECS ignored and raw types as an escape. Producer extends, consumer super, and no raw types in new code.
+
+Variance gymnastics are the wrong tool if a precise type or a copy would do. Do not wildcard every parameter. Use PECS at API boundaries where it removes casts; keep internals simple.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Generics Variance: Covariance, Wildcards, and PECS" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

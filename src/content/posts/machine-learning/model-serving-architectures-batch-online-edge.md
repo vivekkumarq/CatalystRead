@@ -3,6 +3,7 @@ title: "Model Serving Architectures: Batch, Online, and Edge"
 slug: "model-serving-architectures-batch-online-edge"
 description: "A comparison of the three main ways to serve ML predictions in production, and how to pick the right one based on latency and data freshness needs."
 publishedAt: "2026-06-04"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -65,3 +66,13 @@ The trade-off is that edge deployment constrains the model heavily: you're bound
 A common hybrid: use batch inference for the expensive, slow-changing part of a prediction (a user's long-term preference profile, computed nightly) and combine it at request time with a cheap online computation that incorporates only what just happened (the last few actions in this session). This gets most of batch's cost efficiency while still reacting to real-time context, without needing the full model to run online.
 
 Choosing between these three isn't a one-time architectural decision made at project kickoff — it's worth revisiting as a product's latency and freshness requirements change, since a model that started as a nightly batch job can genuinely outgrow that architecture once the product starts needing same-session responsiveness.
+
+## A worked failure mode
+
+An "online" service loads a 2GB model per request in a serverless function; cold starts miss the SLA. Features are computed differently than training. An edge model is quantized until recall collapses on rare classes. The failure is serving mode as a fashion. Batch for delayed decisions, online for bounded-latency scores with shared features, edge only with a quality floor and an update story.
+
+## When this is the wrong tool
+
+Online serving is the wrong tool for a nightly email. Edge is the wrong place for a 1B-parameter net. Do not build a feature store for a model with three inputs. Match serving to how fresh the decision must be.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Model Serving Architectures: Batch, Online, and Edge" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

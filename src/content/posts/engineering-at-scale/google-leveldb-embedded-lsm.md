@@ -3,6 +3,7 @@ title: "LevelDB: How a Library Inherited Bigtable's LSM Lessons"
 slug: "google-leveldb-embedded-lsm"
 description: "Jeff Dean and Sanjay Ghemawat's embedded key-value store: tables, compaction, and why so many databases still speak its file format."
 publishedAt: "2026-08-01"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -32,6 +33,16 @@ The API is tiny on purpose: `Put`, `Get`, `Delete`, snapshots, iterators. There 
 
 LevelDB assumed a relatively gentle compaction thread and a single writer mindset that did not match Facebook's multi-threaded, write-heavy MySQL-replacement workloads. RocksDB added more compaction styles, column families, and a lot of stall-tuning knobs. The file format family stayed recognizable. That is a successful library: people fork the runtime without throwing away the on-disk idea.
 
+## What broke when they scaled
+
+LevelDB's single-writer, gentle compaction model (Ghemawat and Dean's library, inheriting SSTable/LSM ideas from the Bigtable OSDI 2006 paper) stalls when many threads ingest at Facebook-scale write rates — hence RocksDB. Write amplification and space amplification are the LSM tax: too-aggressive compaction kills throughput; too-little compaction kills reads with a pile of L0 files. Embedded in Chrome or a Bitcoin node, that trade is local. Embedded on a network filesystem, you discover LevelDB never promised distributed locking.
+
+Process-crash safety depends on the log; a bug in fsync policy is data loss, not a "cache miss." Range tombstones and deletions that do not compact away create the "I deleted everything and disk is still full" incident. Forks added column families and stall-tuning because production workloads are not the LevelDB test suite.
+
+## A smaller-team version of the same idea
+
+Use SQLite if you need SQL and one file. Use LevelDB/RocksDB when you need an ordered key-value store in-process and can budget compaction CPU and disk. Put a mutex around writers if you are not RocksDB. Never NFS. Read the LevelDB `doc/` notes before turning RocksDB knobs; the vocabulary is the same.
+
 ## When an embedded LSM is the right product choice
 
 - You need ordered iteration and range scans, not only a hash map.
@@ -41,3 +52,32 @@ LevelDB assumed a relatively gentle compaction thread and a single writer mindse
 When you cannot, you wanted SQLite (one-file SQL, different trade-offs) or a hosted store. Putting LevelDB on a network share is a way to discover that the library never promised distributed consensus.
 
 Read a slice of the LevelDB `doc/` implementation notes if you are about to tune RocksDB. The vocabulary — levels, tables, version set — is the same conversation Google's storage engineers were already having after Bigtable, just without the cluster.
+
+## Compaction is the operator
+
+Writes are fast until L0 files pile up and compaction cannot keep up. Then reads open too many files and writers stall. LevelDB’s single compaction thread made that stall obvious. RocksDB’s multiple threads and leveled vs universal styles move the stall; they do not delete it. Disk headroom is part of the API: if the volume is 95% full, compaction has nowhere to write the output table.
+
+MANIFEST / CURRENT files record which tables are live. Killing the process is fine; killing the process and deleting “those extra SST files” is how you lose a version. Treat the directory as one database, not a folder of independent files.
+
+## Failure modes
+
+**Shared filesystem.** NFS or a networked block device with weak fencing was never the design. Two processes opening one directory is corruption. One process, local disk.
+
+**Huge values.** LSM loves small keys and modest values. Multi-megabyte values bloat tables and compaction. Put blobs in object storage and store pointers.
+
+**Iterators and snapshots held too long.** They pin old versions; compaction cannot drop files. A long analytical scan inside the same process that serves writes will look like a space leak.
+
+**Checksums off in a fork.** LevelDB verifies block checksums by default for a reason. Turning them off for speed is a data-loss setting.
+
+## When not to embed an LSM
+
+You need SQL, secondary indexes, and a well-understood backup story — SQLite or a hosted Postgres. You need multi-writer across hosts — not LevelDB. You need only a cache with TTL — an in-memory map or memcached. Chrome’s use of LevelDB is “embedded, single writer, local disk,” which is the original product.
+
+If you are choosing RocksDB because “Google used LSM,” read the compaction stats you will have to page on. The library is small; the operational surface is the background merge.
+
+## Review checklist
+
+- Single process, local disk, backup of the whole directory.
+- Compaction and stall metrics on the same dashboard as QPS.
+- Values sized so tables stay reasonable; blobs live elsewhere.
+- Snapshots/iterators have bounded lifetimes.

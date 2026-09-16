@@ -3,6 +3,7 @@ title: "What Slack's January 2021 Outage Teaches About Cascading Failure"
 slug: "slack-january-2021-outage-postmortem"
 description: "Inside the public postmortem for Slack's January 2021 outage, where a networking degradation turned into a self-reinforcing overload across the stack."
 publishedAt: "2025-10-30"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -36,6 +37,12 @@ network degradation --> internal calls slow/fail --> retries add load
 ## Why the postmortem mattered beyond that one day
 
 What made Slack's writeup valuable to the wider engineering community wasn't just the specific AWS dependency — it was the general shape of the failure: a lower layer degrades, higher layers react in ways that assume that lower layer is healthy, and the recovery mechanisms themselves turn out to share a fate with the thing they're supposed to recover from. Slack's follow-up work included examining dependencies between provisioning and scaling systems and the infrastructure they scale, specifically looking for these kinds of circular dependencies where a system's remediation path quietly depends on the exact resource that's failing.
+
+## A concrete failure mode from a well-known Slack outage
+
+Public Slack incident writing is useful because the failure is rarely "we forgot HA." It is a cascade: a control-plane or cache issue, a retry storm from millions of clients, and a recovery plan that itself overloads the system you are trying to bring back. Mid-size steal: a reconnect budget. Clients must back off with jitter and a cap, or your restoration is a second outage. Load-shed non-critical work — emoji, presence, search — so message send can return.
+
+Operational gotcha: status pages that lie because they depend on the same DNS or provider that is down. Host status independently. Another is restoration order: if you warm caches by letting all traffic in, you recreate the stampede. Recover in slices of workspaces or regions. The January-era lesson that transfers is client behavior as part of the architecture. Desktop apps that retry immediately are distributed denial of your own site. Test that path with Toxiproxy-like stalls. Postmortems that only list vendor root causes miss the amplification you own. Write down which queues you will drop, which features go read-only, and who may press the shed button without a meeting. Then rehearse it. An outage runbook that has never been run is fiction. Slack's scale makes the cascade spectacular; the shape appears at 100k connected clients too.
 
 ## What you can borrow
 

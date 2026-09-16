@@ -3,6 +3,7 @@ title: "The OWASP Top 10 as a Code Review Checklist"
 slug: "owasp-top-10-code-review-checklist"
 description: "A practical translation of the OWASP Top 10 into concrete questions you can ask during pull request review, not just categories to memorize."
 publishedAt: "2024-08-05"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -47,3 +48,13 @@ A checklist only works if it's short enough to actually use. Trying to run the f
 - Auth, session, or token code touched — ask the cryptographic failure and session management questions.
 
 Put this mapping in your PR template as a short comment block rather than a separate document nobody opens. The goal isn't to make reviewers OWASP experts — it's to make sure the five or six questions that catch most real bugs get asked automatically, every time, without anyone having to remember the full list from a training session six months ago.
+
+## A worked failure mode
+
+A review ticks OWASP items while missing a business-logic over-refund. SSRF is listed but the reviewer only greps for `http://`. The Top 10 becomes a cargo cult. The failure is a checklist without the app's threat model. Use OWASP as prompts, then follow data flows for money and identity.
+
+## When this is the wrong tool
+
+A Top 10 checklist is the wrong tool for crypto design review. It is not a pentest. Do not fail a PR for a missing header while SQL is concatenated. Use it as a memory aid, not a score.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "The OWASP Top 10 as a Code Review Checklist" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

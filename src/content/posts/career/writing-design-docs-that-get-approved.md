@@ -3,6 +3,7 @@ title: "Writing Design Docs That Get Approved"
 slug: "writing-design-docs-that-get-approved"
 description: "Design docs stall for predictable reasons — missing context, buried trade-offs, no clear ask — and each one has a specific, fixable cause."
 publishedAt: "2025-05-07"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -34,3 +35,11 @@ This isn't about pre-emptively winning every argument — sometimes the honest a
 ## End with an explicit ask
 
 Docs frequently trail off without stating clearly what kind of response is being requested — is this asking for a sign-off to start building, feedback on the general direction, or just visibility into a decision that's already been made. State it directly: "I'm looking for approval to start implementation" reads completely differently to a reviewer than "I'd like feedback on the approach before I go further," and a doc that doesn't specify which one it wants tends to get the vaguer, slower version of both.
+
+## A worked failure mode
+
+A design doc opens with history and tools, and hides the decision on page six. Reviewers argue about the diagram tool. The actual open question—single writer vs multi-region—is never posed as a choice with consequences. A later "approved" doc is reread during an incident and does not match production because the dissenting comment was "resolved" without a change. The failure is a memo that does not force a decision. Start with context, the decision, alternatives, risks, and how you will roll back. Put names on who can say yes. Update the doc when the decision changes.
+
+## When this is the wrong tool
+
+A long RFC is the wrong tool for a reversible, one-file change; a ticket is enough. Docs will not get approval if the political decision is already made in a hallway—name that and stop writing fiction. Do not design-doc a vendor choice you are not allowed to reverse. Use a design doc when the cost of being wrong exceeds the cost of writing, and when multiple groups must live with the result.

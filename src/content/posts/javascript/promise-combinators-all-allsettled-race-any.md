@@ -3,6 +3,7 @@ title: "Promise.all, allSettled, race, and any: Picking the Right Combinator"
 slug: "promise-combinators-all-allsettled-race-any"
 description: "A practical guide to choosing between Promise.all, allSettled, race, and any, with the failure modes each one is actually designed to handle."
 publishedAt: "2025-07-27"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Promises
@@ -90,3 +91,13 @@ This is the combinator for redundancy: multiple CDNs serving the same asset, mul
 ## The mistake that shows up most
 
 The recurring bug across all four is treating `Promise.all` as the default and only reaching for `allSettled` after a postmortem. If you're fanning out to more than two independent operations, ask explicitly whether one failure should void the others — that answer tells you which combinator you actually need, before you write the code.
+
+## A worked failure mode
+
+`Promise.all` on five independent APIs fails the page if one ads pixel 500s. `race` is used for timeout but the loser keeps running and mutating state. `any` hides the first success from a flaky server that returned an empty body. The failure is the wrong combinator. Use `allSettled` for independent side displays, abort the losers on timeout, and define success.
+
+## When this is the wrong tool
+
+`all` is the wrong tool for optional widgets. `race` is the wrong timeout if you cannot cancel. Combinators are not a substitute for a real scheduler. Pick the failure policy first.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Promise.all, allSettled, race, and any: Picking the Right Combinator" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

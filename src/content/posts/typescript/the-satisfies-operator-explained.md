@@ -3,6 +3,7 @@ title: "The satisfies Operator: Type Safety Without Losing Inference"
 slug: "the-satisfies-operator-explained"
 description: "Learn why satisfies beats plain annotations and as const for config-like objects, keeping literal types intact while still checking shape."
 publishedAt: "2025-11-02"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -69,3 +70,19 @@ The sweet spot is any object literal you both want validated and want to keep wo
 It's not a replacement for interfaces on function parameters or return types — those still benefit from explicit annotations because callers need a stable contract, not the literal type of whatever you happened to write inline. Reach for `satisfies` specifically when the value is being defined and consumed in the same file or module, and the literal shape matters downstream. For anything crossing a module boundary, an exported type still does more work than an inferred one.
 
 One caveat: `satisfies` doesn't excess-property-check the same way object literal assignment does in every case, so don't assume it catches every stray property the way assigning directly to an interface-typed variable would — test the specific pattern you're relying on before trusting it blindly.
+
+## A worked example
+
+`const palette = { primary: '#09f', danger: '#f30' } satisfies Record<string, `#${string}`>` keeps literal keys (`palette.primary`) while checking values. Contrast `as const satisfies` for a route table. `as Record<string, string>` would widen keys and lose autocomplete.
+
+A config object `satisfies PluginOptions` fails the build if a required field is missing, without widening inferred callback return types.
+
+## Failure modes
+
+`satisfies` on a value that then gets a later mutation not rechecked. Thinking it exists at runtime. Combining with `as` that undoes the check. Using it instead of a function that validates env vars at boot. Forgetting that excess property checks still depend on how the object is declared.
+
+`satisfies never` puzzles in generic helpers.
+
+## When this is the wrong tool
+
+A typed function parameter already checks the argument. `satisfies` is noise on `const x: Foo = ...` when you want the annotation. Do not use it to "document" `any`. Runtime schema validation is required at trust boundaries. If you need the widened type, annotate explicitly. Enums and unions may be simpler for small sets.

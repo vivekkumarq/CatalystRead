@@ -3,6 +3,7 @@ title: "Stripe's Four-Phase Pattern for Migrating Databases Without Downtime"
 slug: "stripe-online-database-migrations-dual-writing"
 description: "How Stripe moves data between database schemas and systems while staying live, using a four-phase dual-write and backfill pattern instead of a maintenance window."
 publishedAt: "2026-02-09"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -31,6 +32,12 @@ Before any read traffic moves to the new location, Stripe's pattern calls for ve
 ## Phase four: cut over reads, then retire the old writes
 
 Only after verification shows the new location is trustworthy does read traffic move over, typically incrementally — a percentage of reads at a time, or one internal consumer at a time — so a discrepancy that verification missed shows up as a small, contained problem rather than an outage. Writes to the old system are the last thing to stop, kept around as a safety net until confidence in the new system is high enough that maintaining two write paths is no longer worth the cost. Each of the four phases is independently reversible: if a problem turns up, the previous phase's state is still the source of truth and the migration can pause or roll back without needing an emergency fix under pressure.
+
+## What a mid-size team can steal from dual-writing
+
+Stripe's online migrations — dual-write, backfill, dual-read, cutover — exist because money cannot go read-only for a weekend. Mid-size steal the state machine even for a single Postgres: add the new column or table, write both, backfill in chunks with throttling, compare, then switch reads. Skip none of the compare step.
+
+The concrete failure mode is dual-write that is not in the same transaction as the old write, so a crash leaves one side updated. If you cannot transactionally write both, use an outbox. Operational gotcha: backfill that races live writes and "wins" with older data because it used a stale snapshot. Key by updated-at or version. Another is dual-read that randomly disagrees and you log it but still serve the new path; that is an incident in slow motion. Serve old until the mismatch rate is below a written threshold. Stripe can staff migration tooling. You can staff a checklist and a feature flag. Never mix a data migration with a product behavior change in the same flag. Index builds on large tables need the same care as code deploys; they are production traffic. If you are tempted to stop writes, ask whether a customer is submitting a payment at that moment. Someone is.
 
 ## What you can borrow
 

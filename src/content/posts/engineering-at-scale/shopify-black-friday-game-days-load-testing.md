@@ -3,6 +3,7 @@ title: "Game Days: How Shopify Rehearses for Its Biggest Traffic Day of the Year
 slug: "shopify-black-friday-game-days-load-testing"
 description: "Shopify runs months of scripted load tests and failure drills against production infrastructure to prepare for Black Friday Cyber Monday."
 publishedAt: "2025-07-18"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Because BFCM traffic is highly predictable in timing but not in exact shape — 
 ## Closing the loop after the real thing
 
 After BFCM itself, the cycle repeats: real production telemetry from the weekend becomes the new baseline and the next game day's target multiplier, feeding a continuous loop of load testing, fixing weak points, and re-testing throughout the following year. This turns a single scary calendar date into an ordinary, well-worn engineering process rather than an annual fire drill.
+
+## What a mid-size team can steal from BFCM game days
+
+Shopify treats Black Friday as a season, not a day: load tests, game days, and freeze windows. Mid-size steal: pick your actual peak — a drop, a TV slot, a tax deadline — and rehearse it with production-shaped data, including checkout, payments, and admin, not only the homepage. A load test that hits cached GETs will lie.
+
+The concrete failure mode is a game day that finds nothing because the test orchestrator could not obtain OAuth tokens or skipped third parties. Stubbing every payment provider trains you to miss the provider's rate limit. Another gotcha is scaling the app tier while leaving the database, Redis, or a webhook worker at Tuesday sizes. Steal a dependency map and scale the bottleneck you found last year first. Feature freezes without a hotfix path guarantee a black-market of emergency deploys. Write the exception process. Chaos during peak should be tightly scoped; the rehearsal is weeks before. Communicate to merchants: status pages and known limits beat silent 503s. After the event, the most valuable artifact is the list of alerts that fired uselessly and the one that did not fire. Tune those before the next peak. You do not need Shopify's fleet; you need one realistic peak test on the calendar that leadership cannot reschedule for a product launch.
 
 ## What you can borrow
 

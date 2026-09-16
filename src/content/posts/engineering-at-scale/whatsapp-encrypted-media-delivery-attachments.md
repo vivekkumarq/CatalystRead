@@ -3,6 +3,7 @@ title: "Encrypting and Distributing Billions of Photos and Videos on WhatsApp"
 slug: "whatsapp-encrypted-media-delivery-attachments"
 description: "How WhatsApp delivers encrypted media efficiently by separating attachment transfer from message delivery and verifying content by hash."
 publishedAt: "2025-10-20"
+updatedAt: "2026-09-16"
 category: "WhatsApp"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ A cryptographic hash of the encrypted content is included alongside the key, so 
 ## Efficient distribution at global scale
 
 Because media blobs are content-addressed and immutable once uploaded, WhatsApp can lean on standard caching and content-delivery techniques to distribute popular or frequently re-shared media — the same forwarded video landing in many chats doesn't need to be re-uploaded or independently stored for every recipient — while each recipient still needs a valid decryption key delivered through their own encrypted message envelope to actually access the content. This split between "how the bytes move efficiently" and "who is cryptographically allowed to read them" is what lets WhatsApp handle enormous media volume without either compromising the encryption model or paying the storage and bandwidth cost of full duplication for every share.
+
+## Operational gotchas of encrypted attachments
+
+WhatsApp media is encrypted on the client and fetched from a blob store via a pointer in the message. The failure mode is a CDN or store outage that looks like "chat is down" while text still works, or a key that never arrives so the client retries the blob forever. Mid-size steal: separate SLOs for text and media, bounded retries, and a blob URL that does not require the chat server on every byte.
+
+The concrete failure mode is a thumbnail that is encrypted under a different key than the full asset, so one succeeds and the other fails; users send the picture again and you store it twice. Version the media keys with the message. Operational gotcha: fan-out of a video to a large group. If you encrypt per recipient naively, you multiply CPU and storage; if you encrypt once with a group key, membership change is a crypto event. Know which. Expiring blobs that the client did not download yet create "media not found" after a legal hold or a device restore. Document retention. Never log plaintext paths that include decryption keys. Range requests, resumable downloads, and cellular vs Wi-Fi policies are product, not polish. If you are not WhatsApp, S3 plus envelope encryption and a short-lived signed URL is the steal. Do not put media bytes through the same Erlang process that holds the TCP connection for chat; a slow upload will otherwise stall messaging.
 
 ## What you can borrow
 

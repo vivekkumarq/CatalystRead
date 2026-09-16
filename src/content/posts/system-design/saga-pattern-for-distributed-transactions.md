@@ -3,6 +3,7 @@ title: "The Saga Pattern for Distributed Transactions"
 slug: "saga-pattern-for-distributed-transactions"
 description: "Choreography versus orchestration, compensating actions, and the eventual consistency you actually get from the saga pattern."
 publishedAt: "2025-05-15"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -61,3 +62,27 @@ A saga gives you eventual consistency, not atomicity. There is a real window —
 ## When Not to Bother
 
 If the steps genuinely all belong to one service and one database, use a real transaction — a saga is solving a distribution problem you don't have yet, and it adds compensating-action code for failure modes a `ROLLBACK` already handles for free. Reach for sagas only once the steps are owned by services that don't share a database, because that's the actual constraint the pattern exists to work around.
+
+## A worked example
+
+Order: reserve inventory, charge card, create shipment. Each step is a local transaction plus a message. Compensations: release inventory, refund, cancel shipment. Orchestrator state machine stores current step. Choreography: each service emits events; you draw the graph so it cannot loop.
+
+A test: charge fails, inventory reservation is released.
+
+## Failure modes
+
+Compensations that are not themselves idempotent. No timeout on a stuck step. Orchestrator as a god DB. Choreography with hidden cycles. Assuming compensations undo side effects that already emailed the customer. Dual-write without outbox.
+
+Using sagas for a single database.
+
+## When this is the wrong tool
+
+One Postgres transaction is better. Sagas are the wrong tool for a money transfer you can do with a ledger table and a single DB. 2PC/consensus inside a region may be simpler for a small set of stores you own. If compensation is impossible (irreversible physical action), you need a different business process, not a saga library. Do not saga for a CRUD update of one service.
+
+## A worked failure mode
+
+A saga has no compensating action for a payment capture; a later step fails and money is stuck. Orchestrator state is in memory. Compensations are not idempotent and double-refund. The failure is a happy-path diagram. Design compensations, persist saga state, and make every step retry-safe.
+
+Sagas are the wrong tool for a single database transaction. They are not 2PC. Use them when you cannot have one ACID boundary and you can compensate.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "The Saga Pattern for Distributed Transactions" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

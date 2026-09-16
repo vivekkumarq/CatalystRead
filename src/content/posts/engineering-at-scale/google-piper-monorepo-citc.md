@@ -3,6 +3,7 @@ title: "Why Google Keeps Billions of Lines of Code in One Repository"
 slug: "google-piper-monorepo-citc"
 description: "Inside Piper and Client in the Cloud, the infrastructure that lets Google run a single monorepo at billions of lines of code without collapsing under its own weight."
 publishedAt: "2026-04-02"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -29,6 +30,18 @@ Client in the Cloud, CitC, is the workspace layer that makes working against a r
 ## The tradeoff: tooling investment for organization-wide benefits
 
 Google's argument for the monorepo centers on a few concrete advantages: a single, unambiguous version of the truth for what "the current state of any given library" is, so there's no dependency-versioning drift between teams each pinned to different revisions of shared code; the ability to do atomic, cross-project changes in one commit (rename a widely-used function and update every caller across the company simultaneously); and full visibility for code search and large-scale refactoring tools across the entire codebase rather than across whatever subset of repos a tool happens to have access to. The tradeoff is that none of this works without heavy investment in tooling — Piper, CitC, Blaze/Bazel for builds, and large-scale automated refactoring tools all exist specifically because a naive monorepo without that infrastructure would grind to a halt.
+
+## What broke when they scaled
+
+A single Git repo of Google's size does not work as a developer laptop clone. Piper (described in the 2016 CACM paper "Why Google Stores Billions of Lines of Code in a Single Repository" by Potvin and Levenberg) is a custom VCS with trunk-based development at planetary file counts. CitC (Client in the Cloud) gives a virtual workspace so engineers do not wait on checkouts of billions of lines. What breaks a naive monorepo is history, access control, and build graph size — hence Blaze/Bazel, Code Search, and presubmit.
+
+The organizational win is atomic refactors across products. The cost is tooling you will not get from GitHub.com. Sparse checkouts and virtual file systems are the small-company echo; they are not Piper.
+
+Merge contention on trunk is managed with small commits and powerful CI, not long-lived branches that Google's model discourages.
+
+## A smaller-team version of the same idea
+
+One repo for the product you actually ship together. Trunk-based, small PRs. Don't build Piper. Use Git sparse checkout when the repo is merely large. Split only when access control or independent release trains demand it. Invest in search and CI before you invest in a custom VCS.
 
 ## What you can borrow
 

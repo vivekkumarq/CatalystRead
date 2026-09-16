@@ -3,6 +3,7 @@ title: "Table Partitioning Strategies That Actually Pay Off"
 slug: "table-partitioning-strategies"
 description: "A comparison of range, list, and hash partitioning strategies, when each one earns its operational complexity, and when it's premature."
 publishedAt: "2024-12-02"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -61,3 +62,13 @@ Partitioning is not a substitute for indexing — each partition needs its own i
 ## A reasonable threshold
 
 In practice, the trigger for partitioning is rarely a row count in isolation — it's a specific pain point: `VACUUM` taking hours on one enormous table, bulk deletes timing out or bloating the table, or a clear, stable access pattern where 95% of queries only touch the last 30 days. If none of those are true yet, adding partitioning early mostly adds migration risk and query-planning edge cases without a payoff to show for it.
+
+## A worked failure mode
+
+A table is partitioned by hash of id because "scale." Every query is `WHERE created_at > now()-7d` without id, so all partitions are scanned. Maintenance is worse than a single table. Another monthly range partition is never dropped; 400 partitions make planning slow. The failure is partitioning for the wrong key and never aging data. Partition on the column you prune, cap partition count, and automate drop/detach.
+
+## When this is the wrong tool
+
+Partitioning is the wrong tool under a few tens of millions of rows that already index well. It will not replace a missing index. Do not hash-partition a time-series you always query by time. Use partitioning for retention and partition pruning you can show in EXPLAIN.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Table Partitioning Strategies That Actually Pay Off" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

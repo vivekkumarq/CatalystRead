@@ -3,6 +3,7 @@ title: "Spinnaker: How Netflix Turned Deployment Into a Repeatable Pipeline"
 slug: "netflix-spinnaker-multi-cloud-continuous-delivery"
 description: "Why Netflix built Spinnaker to standardize continuous delivery across hundreds of teams and multiple cloud providers instead of scripting deploys by hand."
 publishedAt: "2025-09-22"
+updatedAt: "2026-09-16"
 category: "Netflix"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ That multi-cloud generality became one of Spinnaker's biggest adoption drivers o
 ## Judgment stages and organizational reality
 
 Not every deployment should be fully automatic, and Spinnaker's pipeline model explicitly supports manual judgment stages — points where a pipeline pauses and waits for a human to approve continuing. That's not a compromise on the automation vision, it's a recognition that different services have different risk profiles: a low-traffic internal tool might deploy fully automatically end to end, while a customer-facing payment path might require a person to eyeball canary results before the rollout proceeds to full production. Letting each team configure that trade-off for their own service, rather than imposing one deployment policy company-wide, was central to getting broad adoption across teams with very different risk tolerances.
+
+## Operational gotchas of a multi-cloud delivery plane
+
+Spinnaker made multi-cloud deploy look like a pipeline of stages: bake, deploy, verify, promote. Mid-size teams install it and then encode every snowflake in JSON until nobody can change a server group without a platform engineer. Steal the stage model — artifact in, health checks, canary, fast rollback — on top of the orchestrator you already have, whether that is GitHub Actions talking to Kubernetes or a lighter CD tool.
+
+The concrete failure mode is a canary that compares the wrong metrics, declares success, and 100% of traffic follows a memory leak. Another is baking AMIs or images that differ from what developers ran in CI because a late package update snuck in. Pin everything. Multi-cloud Spinnaker without a real multi-cloud need adds two IAM models and a lowest-common-denominator networking story. Operational gotcha: pipeline as the only source of truth while Terraform also mutates the same ASG. Pick an owner. Red/black deploys that forget to drain connections drop in-flight streams — painful for video and for any long poll. Steal connection draining and session-aware cutover. If your deploy tool can hit every cluster, it is a production credential; treat pipeline editors like production access, with two-person review on new bake configs.
 
 ## What you can borrow
 

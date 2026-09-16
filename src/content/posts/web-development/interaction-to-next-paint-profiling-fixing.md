@@ -3,6 +3,7 @@ title: "Interaction to Next Paint: Profiling and Fixing Slow Interactions"
 slug: "interaction-to-next-paint-profiling-fixing"
 description: "A practical walkthrough of measuring Interaction to Next Paint and the concrete techniques for cutting down long input handlers that cause it."
 publishedAt: "2026-08-25"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Performance
@@ -76,3 +77,14 @@ input.addEventListener('input', (e) => {
 ## React and framework-specific culprits
 
 In component-based frameworks, a common INP killer is an event handler that triggers a state update cascading into a large re-render of unrelated UI. Splitting state so an interaction only re-renders what actually changed — rather than a shared parent forcing siblings to re-render too — often fixes INP issues that look like "the framework is slow" but are actually a re-render scope that's wider than it needs to be. Profile first, as with any performance problem: the fix for input delay, processing time, and presentation delay differ enough that guessing wastes the effort.
+
+## A worked failure mode
+
+INP is blamed on the network; a profiler shows a 180ms JSON.parse on the main thread after click. `requestAnimationFrame` work is piled into the same turn. A third-party script uses long tasks. The failure is not measuring the handler. Break up work, defer non-UI, and audit third parties.
+
+## When this is the wrong tool
+
+INP tuning is the wrong tool if the click does a full navigation you wanted. Do not micro-yield a 2ms handler. Profile when field INP is actually bad.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Interaction to Next Paint: Profiling and Fixing Slow Interactions", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

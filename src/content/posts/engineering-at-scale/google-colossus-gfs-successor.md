@@ -3,7 +3,7 @@ title: "Colossus: What Google Built After GFS Ran Out of Runway"
 slug: "google-colossus-gfs-successor"
 description: "Why Google's original GFS design hit a scaling wall and how its successor, Colossus, fixed the single-master bottleneck underneath nearly every Google product."
 publishedAt: "2025-09-10"
-updatedAt: "2026-09-12"
+updatedAt: "2026-09-16"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -35,6 +35,16 @@ Colossus also moved to smaller block sizes than GFS's original 64MB chunks, whic
 ## The storage layer other papers assume
 
 Colossus doesn't get its own famous conference paper the way GFS, Bigtable, or Spanner do, but it's the storage substrate referenced, often just briefly, underneath several systems that do have famous papers: Spanner's paper describes it running atop a Colossus-based storage layer, and Google Cloud's external storage products (Google Cloud Storage, and pieces of BigQuery's storage) are built on it as well. That's a useful data point about system design at Google's scale generally: not every foundational piece of infrastructure gets a paper. Some of the most load-bearing systems are the ones nobody outside the company writes deeply about, because they succeeded at being boring, reliable infrastructure rather than a novel research contribution.
+
+## What broke when they scaled
+
+GFS's single master (SOSP 2003) held the namespace in memory. When Google's file count and metadata ops exceeded one machine, failover and RAM became the product. Colossus distributed metadata and shrank block sizes because Gmail, YouTube, and GCS were not MapReduce-sized sequential writes. Google never published a Colossus conference paper comparable to GFS; Cloud blog posts and references in the Spanner OSDI 2012 paper are the public trail. The scaling lesson is still sharp: distributing data but not metadata only delays the wall.
+
+Smaller blocks help random I/O and small files; they increase metadata volume — which is why metadata *had* to scale first. Clients and systems built for 64MB chunks (Bigtable, MapReduce) needed a migration story, not a flag day.
+
+## A smaller-team version of the same idea
+
+HDFS-style one NameNode is GFS at home; HA NameNode and later observer nodes are the first Colossus-shaped move. Object stores hide this. If you run a custom FS, plan to shard the inode table before you celebrate petabytes of chunkservers. Keep a compatibility layer for the old block size until the last batch job dies.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "The Core Web Vitals Optimization Playbook"
 slug: "core-web-vitals-optimization-playbook"
 description: "LCP, INP, and CLS each fail for different reasons. A practical, metric-by-metric playbook for diagnosing and fixing each one."
 publishedAt: "2026-01-15"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -66,3 +67,13 @@ Lighthouse and other lab tools run on a single, controlled device and connection
 ## Prioritization
 
 Fix LCP first if it's failing — usually the most visible to users and the most straightforward to diagnose. INP next, since main-thread blocking tends to compound across other metrics. CLS last, not because it matters less, but because it's typically the cheapest fix once you find the specific unsized element, and chasing it before the bigger issues are resolved often means re-measuring against a moving baseline.
+
+## A worked failure mode
+
+LCP is "fixed" by lazy-loading the hero. INP is ignored while a 200ms handler runs on every click. CLS is patched with a min-height that is wrong on mobile. Lab scores are 100; field data is red because of a heavy A/B tag. The failure is chasing lab and the wrong vital. Use field RUM, fix the hero eager, break up handlers, reserve space that matches.
+
+## When this is the wrong tool
+
+A CWV playbook is the wrong tool if the product is a native app WebView you do not control. Do not ship a worse UX to game a metric. Optimize the vital users fail, with field data.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "The Core Web Vitals Optimization Playbook" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

@@ -3,6 +3,7 @@ title: "Virtual Threads in Java: What Actually Changes"
 slug: "virtual-threads-what-actually-changes"
 description: "Virtual threads remove the cost of blocking, not the need for careful concurrency design. Here's exactly what improves and what stays your problem."
 publishedAt: "2025-01-08"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -58,3 +59,13 @@ synchronized (lock) {
 ```
 
 The fix is usually mechanical: swap `synchronized` for `java.util.concurrent.locks.ReentrantLock` around any block that also does blocking I/O. JDK 24 removed most `synchronized`-related pinning, but if you're on an earlier version, this is the first thing to audit when virtual threads don't deliver the throughput you expected. Run with `-Djdk.tracePinnedThreads=full` during load testing and you'll see exactly where it happens.
+
+## A worked failure mode
+
+Virtual threads are enabled; a `synchronized` block calls JDBC and pins, then a pool of 10 million virtual threads is created with a semaphore of 8 around the DB—except one path forgets the semaphore and the database melts. Thread locals from a MDC library bloat per task. The failure is "unlimited threads" without bounding the blocking resources. Virtual threads change the cost of waiting, not the capacity of Postgres. Bound I/O, avoid pinning, and treat thread-locals carefully.
+
+## When this is the wrong tool
+
+Virtual threads are the wrong tool to speed CPU-bound crypto. They will not fix a synchronized bottleneck on a hot lock. Skip them if your stack still pins everywhere. Use them to simplify blocking I/O code once you bound the real resources.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Virtual Threads in Java: What Actually Changes" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

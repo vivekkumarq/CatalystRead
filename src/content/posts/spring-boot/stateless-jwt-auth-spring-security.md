@@ -3,6 +3,7 @@ title: "Building Stateless JWT Authentication with Spring Security"
 slug: "stateless-jwt-auth-spring-security"
 description: "A working approach to stateless JWT authentication in Spring Security, covering filter placement, claims, and the token revocation problem it doesn't solve."
 publishedAt: "2025-03-28"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -85,3 +86,27 @@ Statelessness cuts both ways: the server can't force-expire a token it never sto
 - **A `tokenVersion` claim** tied to the user record — bump it on password change or deactivation, and reject any token whose version doesn't match current state.
 
 None of these bring back true statelessness, but they bound the damage without reintroducing a full session store, which is usually the actual goal behind choosing JWTs in the first place.
+
+## A worked example
+
+Resource server: `oauth2ResourceServer().jwt()`. JWKs from the issuer. `sub` as principal. Authorities from a `roles` claim converter. No session. Tests use `jwt()` postprocessor. Rotation: two keys in the JWK set.
+
+A 401 when `exp` is past; a 403 when role missing.
+
+## Failure modes
+
+HS256 with a shared secret in every microservice. Accepting `alg: none`. Storing JWTs in localStorage on a web XSS-prone app without thought. Fat tokens with PII. No `aud` check. Long-lived access tokens without refresh. Using JWT as a database (state that must be revoked, but you cannot).
+
+Clock skew `nbf` failures.
+
+## When this is the wrong tool
+
+First-party browser apps often want BFF + cookie session. Service-to-service may want mTLS. If you need instant revoke, a session store or token introspection beats a 12h JWT. Opaque tokens plus introspection at the gateway can be simpler. Do not JWT-encode a shopping cart. Login for humans is OIDC; do not hand-roll JWT password grants.
+
+## A worked failure mode
+
+A JWT filter trusts `alg` and a symmetric secret in a repo. There is no audience check. Logout is a client delete while the token is valid for 24h. The failure is stateless as unrevocable. Short TTL, rotate, pin alg, validate iss/aud, and a denylist if you must kill tokens.
+
+JWTs are the wrong session for a simple server-rendered app. Do not put roles you cannot revoke for a day in a token without a plan. Use opaque sessions when you need instant kill.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Building Stateless JWT Authentication with Spring Security" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

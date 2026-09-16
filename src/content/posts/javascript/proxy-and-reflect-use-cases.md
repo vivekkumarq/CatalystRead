@@ -3,6 +3,7 @@ title: "Proxy and Reflect: Practical Metaprogramming in JavaScript"
 slug: "proxy-and-reflect-use-cases"
 description: "Real-world Proxy traps for validation, reactivity, and guardrails, plus why Reflect exists and when skipping it silently breaks your object."
 publishedAt: "2025-09-21"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Proxy
@@ -91,3 +92,13 @@ const withDefault = (obj, fallback) =>
 ```
 
 The common thread across all of these: `Proxy` earns its complexity when you need a rule to apply uniformly across every property of an object, not per-property. If you only need special behavior on one or two known fields, a regular getter/setter is simpler and faster — save `Proxy` for when the property set is dynamic or unknown ahead of time.
+
+## A worked failure mode
+
+A reactive Proxy wraps a DOM node and intercepts too much; `console.log` triggers getters that recurse. A validation Proxy throws on read of missing keys and breaks `JSON.stringify`. The failure is a leaky abstraction over objects that expect plain data. Proxy data, not host objects, and keep traps small.
+
+## When this is the wrong tool
+
+Proxy is the wrong tool for a one-field getter. It is a poor public API (identity, serialization). Use it for instrumentation and reactive libraries with tests, not for everyday domain models.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Proxy and Reflect: Practical Metaprogramming in JavaScript" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

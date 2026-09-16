@@ -3,6 +3,7 @@ title: "Shipping Hundreds of Times a Day: Shopify's Merge Queue and Deploy Pipel
 slug: "shopify-deploy-pipeline-merge-queue-continuous-deployment"
 description: "How Shopify keeps a single large Rails monolith deployable dozens of times daily using merge queues, canaries, and fast automated rollback."
 publishedAt: "2025-10-05"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ This progressive approach matters especially for a monolith serving many unrelat
 ## Making continuous deployment a cultural default
 
 The technical pipeline only works because Shopify paired it with an engineering culture that expects small, frequent, independently deployable changes rather than large batched releases. Feature flags let incomplete work merge to trunk safely and get toggled on later, decoupling "merged" from "released" so engineers aren't incentivized to hold back changes waiting for a perfect moment. The combination — a merge queue that protects trunk stability, progressive canary rollouts with automatic rollback, and a culture built around small flagged changes — is what lets a monolith with a huge number of contributors stay both fast-moving and stable at the same time.
+
+## A concrete failure mode for merge queues
+
+A merge queue serializes main so each commit is tested with the commits ahead of it, which reduces the "green on the branch, red on main" tax. The failure mode is a queue so slow that engineers batch huge diffs or bypass it. Mid-size steal: a queue when CI is expensive and main is sacred, plus a fast path for reverts.
+
+Operational gotcha: flaky tests that bounce the whole queue. One flake burns an hour of everyone else's work. Invest in quarantine with owners, or the queue becomes a flake amplifier. Another is combining the merge queue with mandatory preview apps that cannot keep up, so the queue waits on under-provisioned Kubernetes. Capacity-plan the queue like a production service. Shopify-scale monorepos need path-based CI so a docs change does not rebuild the world; without that, the queue is political. Hotfixes that skip tests will land, then the next queued item rebases onto a landmine. Steal a rule that skips still produce an artifact and a follow-up test. If your team is eight people and CI is twelve minutes, a simple "rebase and retest" bot may be enough. The lesson is protecting main as a deployable artifact, not installing a particular GitHub feature. Measure time-to-green after a broken main; that is the metric the queue exists to shrink.
 
 ## What you can borrow
 

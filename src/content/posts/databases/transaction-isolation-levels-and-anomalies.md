@@ -3,6 +3,7 @@ title: "Transaction Isolation Levels and the Anomalies They Allow"
 slug: "transaction-isolation-levels-and-anomalies"
 description: "A tour of READ UNCOMMITTED through SERIALIZABLE, the dirty reads and phantom rows each level permits, and how to pick one without guessing."
 publishedAt: "2024-10-10"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -50,3 +51,13 @@ COMMIT;
 ## Picking a level deliberately
 
 For most CRUD workloads, READ COMMITTED is genuinely fine because individual statements are short and the anomalies it permits rarely matter at that grain. The cases that need something stronger are usually narrow: financial balance checks, inventory decrements, anything with a read-modify-write pattern where two concurrent instances of the same logic could both pass their check and both act. For those, either use SERIALIZABLE with retry logic, or sidestep isolation levels entirely with an explicit `SELECT ... FOR UPDATE` to lock the specific rows you're about to modify — often simpler to reason about than transaction-wide isolation guarantees.
+
+## A worked failure mode
+
+Two tickets decrement inventory at READ COMMITTED. Both read 1, both write 0, both sell. A later switch to SERIALIZABLE without retry loops causes random user-facing failures. The failure is an invariant enforced only in application memory. Use a single UPDATE ... WHERE quantity >= 1, a version column, or serializable with retry. Name the anomaly you fear (lost update, write skew) and pick the cheapest control that prevents it.
+
+## When this is the wrong tool
+
+SERIALIZABLE everywhere is the wrong tool for a read-heavy catalog. Isolation lore is the wrong fix for missing unique constraints. Do not raise isolation to hide race conditions you can express as one statement. Use stronger isolation when the business rule spans multiple reads and writes you cannot make atomic otherwise.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Transaction Isolation Levels and the Anomalies They Allow" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

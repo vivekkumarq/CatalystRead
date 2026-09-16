@@ -3,6 +3,7 @@ title: "Thrift: Cross-Language RPC Before gRPC Existed"
 slug: "meta-thrift-cross-language-rpc"
 description: "How Facebook's Thrift let services written in different languages call each other efficiently, years before gRPC popularized the same idea."
 publishedAt: "2025-10-05"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -40,6 +41,12 @@ Unlike text-based formats such as XML or JSON that were common for RPC at the ti
 ## An idea that later defined an entire category
 
 Facebook open sourced Thrift in 2007 and donated it to the Apache Software Foundation, where it continued to be developed independently of Facebook's own internal fork. The core idea — a language-neutral interface definition, generated stubs, and an efficient binary protocol — later became the standard shape of the entire cross-language RPC category, most visibly in Google's gRPC, which combined a similar IDL-and-codegen approach with HTTP/2. Thrift's early bet, that services at scale would routinely be written in different languages and that interface generation was the only sane way to keep them talking to each other reliably, turned out to be exactly right.
+
+## Operational gotchas of a polyglot RPC stack
+
+Thrift solved Facebook's mix of C++, Java, Python, and PHP talking without ad-hoc JSON. The failure mode today is two IDL ecosystems — Thrift and proto — plus hand-rolled REST, so you paid the polyglot tax three times. Mid-size steal: one IDL, generated stubs, and a ban on editing generated code. gRPC is fine; the lesson is the contract, not the Facebook logo.
+
+Operational gotcha: backwards compatibility of structs. Adding a required field, reusing field ids, or changing a type in place breaks old binaries that stay on hosts for weeks. Steal additive optional fields and a compatibility test in CI that deserializes golden payloads from the last two versions. Timeouts and connection pooling differ per language binding; Python clients will behave unlike C++ clients under the same IDL, so load tests must include each caller. Another trap is using RPC for what should be a message bus: fan-out to twenty Thrift services in a user request creates a latency lottery. Thrift does not include a distributed trace by default; without one you cannot see which downstream ate the budget. Mid-size teams should standardize deadlines, error codes, and auth on the first RPC framework they pick. Replacing Thrift later is a multi-year tax Facebook could absorb. You should pick once, then be boring.
 
 ## What you can borrow
 

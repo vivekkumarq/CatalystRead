@@ -3,6 +3,7 @@ title: "Hack and HHVM: Making PHP Fast and Typed at Facebook's Scale"
 slug: "meta-hack-hhvm-typed-php-at-scale"
 description: "How Facebook rebuilt PHP's execution model with HHVM and added a type system with Hack, without forcing a rewrite of its enormous existing codebase."
 publishedAt: "2025-07-10"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Speeding up execution solved one problem; it didn't solve a second one that got 
 ## Why gradual adoption mattered more than the language design itself
 
 The technical design of Hack's type system — generics, nullable types, collections — mattered, but the thing that made the whole effort actually land inside Facebook was that both HHVM and Hack were built to be adopted incrementally, on the existing codebase, by an organization that couldn't stop shipping product features to do a rewrite. That constraint shaped both projects as much as any language-design decision: performance and safety were treated as things to retrofit under and around a live, constantly changing codebase, not preconditions requiring a clean slate.
+
+## What a mid-size team can steal from Hack and HHVM
+
+Facebook could not stop writing PHP, so they made PHP fast and then gradually typed. Mid-size teams rarely need HHVM, but they often need the same sequence: keep the language the staff knows, invest in a runtime or JIT that is actually measured, and add types where the blast radius of a wrong array shape is production data loss. Sorbet at Stripe and Hack at Facebook are the same political move: do not wait for a greenfield rewrite.
+
+The concrete failure mode is a gradual type system with too many "any" escapes. The checker goes green, the production types are fiction, and a refactor still ships notices. Steal a ratchet: new files must be strict, boundary APIs must be typed, and untyped calls from typed code are errors. Operational gotcha: a VM or JIT that is faster in synthetic benches and slower on real request shapes because of warmup, extension compatibility, or a library that pins an old interpreter. Run production-like traffic before a cutover. Another trap is splitting the org into "typed services" and "legacy PHP" without a shared request path; you then debug encoding bugs at the boundary forever. HHVM's lesson is that a huge codebase moves by mechanical migration and CI gates, not by inspiration. If you cannot parse the AST of your app, you are not ready for a language-level migration.
 
 ## What you can borrow
 

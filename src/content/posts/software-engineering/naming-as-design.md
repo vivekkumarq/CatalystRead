@@ -3,6 +3,7 @@ title: "Naming as Design, Not Decoration"
 slug: "naming-as-design"
 description: "A name is a promise about behavior, cost, and side effects — bad names mislead quietly, and that cost compounds across every reader."
 publishedAt: "2025-10-20"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -43,3 +44,27 @@ At the same time, `numberOfActiveUsersInCurrentBillingPeriod` is precise but unr
 ## Renaming Is Cheap; Living With a Bad Name Isn't
 
 Modern IDEs make a rename a mechanical, safe refactor — the actual cost of a bad name isn't fixing it, it's the compounding interest of everyone who reads it before someone finally does. Treating "this name doesn't say what it does" as worth a PR comment, the same way a bug would be, is the cultural shift that keeps names honest — not a naming convention doc nobody rereads after onboarding, but an ongoing willingness to say "this promise doesn't match what's inside" whenever it doesn't.
+
+## A worked example
+
+`chargeCard` vs `processPayment` vs `handleData`. You name the module after the domain (`invoice`) not the pattern (`manager`). A PR that only renames after the model settled. Glossary in the README for `Leg` vs `Slice`. You avoid `Util`, `Helper`, `Manager` unless you can say what it manages.
+
+A bad name that encoded a lie (`TemporaryCache` that is the source of truth) gets a ticket.
+
+## Failure modes
+
+Hungarian notation in 2026. Names that encode types TypeScript already has. Joke names in prod. Inconsistent synonyms (`user`/`account`/`customer`). Renaming without updating logs and metrics. Abbreviations nobody shares.
+
+`data2`.
+
+## When this is the wrong tool
+
+A 20-minute spike. Do not bikeshed a throwaway script. Mass renames that break git blame for no semantic gain can wait. If the domain is unsettled, a slightly wrong name plus a comment beats a weekly rename. Generated code names should stay generated. Skip poetry.
+
+## A worked failure mode
+
+`data2` and `ManagerImpl` hide that the method charges a card. A rename PR bikesheds while the invariant is unnamed. The failure is names that do not encode the contract. Name after the domain event and the failure mode; then the code review is shorter.
+
+Renaming is the wrong tool to fix a wrong abstraction. Do not spend a week on synonyms. Name when the wrong word caused a bug.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Naming as Design, Not Decoration", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

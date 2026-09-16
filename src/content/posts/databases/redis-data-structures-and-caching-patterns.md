@@ -3,6 +3,7 @@ title: "Redis Data Structures and the Caching Patterns Built on Them"
 slug: "redis-data-structures-and-caching-patterns"
 description: "A tour of Redis's core data structures and the caching, rate-limiting, and leaderboard patterns each one is actually built for."
 publishedAt: "2025-06-24"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -67,3 +68,11 @@ Sets give you `SADD`/`SISMEMBER` for O(1) membership checks (deduplicating event
 ## The caching pattern that actually needs care
 
 The part of "just cache it in Redis" that bites teams isn't the write, it's invalidation and the thundering-herd problem: a hot key expiring and a burst of concurrent requests all missing the cache at once and hammering the database simultaneously. The fix is usually a short jittered TTL (so keys don't all expire in lockstep) combined with the `SET ... NX` lock pattern above to make sure only one request repopulates the cache while the rest wait briefly or serve slightly stale data — a pattern worth building once as a shared utility rather than reinventing per feature.
+
+## A worked failure mode
+
+A cache-aside pattern uses `GET` then `SET` without a stampede lock. After expiry, 200 pods hit the database for the same key. Another stores a mutable object in a STRING and `GET`/`SET` the whole blob for a one-field change; concurrent writes lose fields. A LIST is used as a job queue without visibility timeouts; crashed workers lose jobs or double-run. The failure is picking a structure without the concurrency story. Use SETNX/locks or request coalescing for thundering herds, hashes for partial updates, and a real queue with ACKs for work.
+
+## When this is the wrong tool
+
+Redis is the wrong source of truth for money. It is the wrong cache if you cannot describe invalidation. Do not use KEYS in production. A local in-process cache may beat Redis for a tiny, static config. Use Redis when the data structure matches and loss is acceptable for cache, or when you operate it as a designed datastore with persistence you understand.

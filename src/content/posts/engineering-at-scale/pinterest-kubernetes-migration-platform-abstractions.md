@@ -3,6 +3,7 @@ title: "Moving Pinterest's Fleet to Kubernetes"
 slug: "pinterest-kubernetes-migration-platform-abstractions"
 description: "How Pinterest migrated thousands of services onto Kubernetes and built internal platform abstractions so product teams didn't need to become infrastructure experts."
 publishedAt: "2025-12-08"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ resources: standard-medium
 ```
 
 This is a common and important pattern in large infrastructure migrations: adopting a powerful, complex underlying platform is only half the win if every team then has to individually absorb that complexity. The other half is building a thin, well-designed abstraction layer that captures sane defaults and internal conventions, so most engineers interact with a much simpler interface while the platform team owns and evolves the complexity underneath.
+
+## What a mid-size team can steal from Pinterest's K8s move
+
+Pinterest did not "move to Kubernetes" as a slogan; they wrapped it so developers kept a Pinterest-shaped interface instead of raw YAML. That is the steal. Mid-size companies dump Helm charts on product teams and then spend a year on CrashLoopBackOff archaeology. Provide a paved path: a service spec with CPU, ports, secrets, and probes, compiled into Kubernetes by a platform team that owns upgrades.
+
+The concrete failure mode is a cluster upgrade that changes ingress, CNI, or kube-proxy behavior and takes a percentage of pins offline because an annotation was load-bearing folklore. Another is namespace-per-team without NetworkPolicy, so a compromised batch job talks to the metadata store. Operational gotcha: stateful workloads that were lifted from VMs without persistent volume policy, then a node drain deletes a cache that was actually a unique index. Steal disruption budgets and explicit state classes. Image supply chain matters more on Kubernetes because rebuilds are frequent; pin digests. Cost: requests vs usage; Pinterest-scale over-requesting is how the cloud bill becomes the migration's only metric. If you have twenty services, a single cluster and a golden Helm chart may be the abstraction. Do not copy a multi-cluster service mesh until you have a multi-cluster problem and a team to run it.
 
 ## What you can borrow
 

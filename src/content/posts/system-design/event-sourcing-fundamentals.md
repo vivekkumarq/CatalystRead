@@ -3,6 +3,7 @@ title: "Event Sourcing Fundamentals: Storing Facts Instead of State"
 slug: "event-sourcing-fundamentals"
 description: "Why storing immutable facts instead of current state changes how you build, replay, and evolve systems, and when it isn't worth the cost."
 publishedAt: "2025-04-09"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -58,3 +59,27 @@ What doesn't work well is versioning by rewriting history — the append-only gu
 Event sourcing earns its keep when you need a true audit trail, when "what happened and in what order" is a business requirement (financial ledgers, inventory, compliance-heavy domains), or when multiple, differently-shaped read models genuinely need to stay in sync with one write path.
 
 It's a poor fit for simple CRUD domains where nobody asks "how did we get here" — you pay real complexity (event versioning, projection lag, eventual consistency between write and read sides) for a history nobody queries. The tell is in the requirements, not the technology: if the business already asks for an audit log or a "replay this account" support tool, event sourcing is answering a question you were going to have to answer anyway.
+
+## A worked example
+
+`AccountOpened`, `MoneyDeposited`, `MoneyWithdrawn` append-only. Current balance is a fold of events, snapshotted every N events. A projection table `account_balance` updates via a subscriber. Audit is the log. You version event schemas (`Deposited.v2`) and upcast.
+
+A test replays a fixed event list and asserts the fold.
+
+## Failure modes
+
+Mutable "events." Huge blobs in events. Projections rebuilt from prod on every boot. No snapshot, 10M events to fold per request. Using ES for CRUD with one `EntityUpdated` event. GDPR delete without a plan. Dual-writing state and events.
+
+Consumers that assume order across aggregate IDs.
+
+## When this is the wrong tool
+
+If you do not need an audit of facts, a current-state table is enough. ES is the wrong tool for a CMS body (use versions). Analytics event streams (product analytics) are not the same as an account ledger ES. When the domain has no invariants worth replaying, skip it. Mixing ES with random SQL updates to the same entities will lie.
+
+## A worked failure mode
+
+Events are mutable "because we need a fix." Snapshots are never taken; replay takes an hour. A projection is treated as source of truth and diverges. The failure is an event log that is not a log. Immutable events, snapshots, and rebuildable projections.
+
+Event sourcing is the wrong tool for CRUD with little audit need. It is not a message bus. Use it when the log of facts is the product.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Event Sourcing Fundamentals: Storing Facts Instead of State", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

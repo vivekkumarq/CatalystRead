@@ -3,6 +3,7 @@ title: "Haystack: Why Facebook Threw Out Filesystems for Photo Storage"
 slug: "meta-haystack-purpose-built-photo-storage"
 description: "How Facebook's Haystack replaced a filesystem-per-photo approach with a purpose-built object store to eliminate the metadata bottleneck of billions of images."
 publishedAt: "2025-09-01"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ Facebook's fix, described in a 2010 engineering paper, was Haystack: instead of 
 ## Built-in redundancy and simple operations
 
 Haystack also folded replication and fault tolerance into the design rather than relying on the filesystem or a separate layer for it: each photo is written to multiple physical machines, and a lightweight Haystack directory service tracks which physical volume holds which photo and routes requests accordingly. Because photos are immutable once written, there's no need for complex locking or update coordination — the system only has to handle appends of new photos and occasional deletes (handled as tombstone markers rather than reclaiming space immediately), which massively simplifies the operational model compared to a general read-write storage system.
+
+## Operational gotchas of blob stores that skip the filesystem
+
+Haystack packed many photos into large files because filesystems choked on billions of inodes and directory entries. Mid-size companies hit a milder version: S3 is fine until listing prefixes, tiny objects, and request rates dominate the bill, or an NFS filer with one file per upload falls over at a million assets. The steal is packing small blobs, a compact index from photo id to offset, and never using directory trees as a database.
+
+The concrete failure mode is a packing file that is hard to compact. Deletes punch holes; the volume stays large; rebuilds take longer than the SLA for a CDN miss. Another gotcha is multi-datacenter replication of immutable blobs versus mutable metadata. Serving a photo from a cache that points at a volume that has not replicated yet produces broken images that look like application bugs. Steal immutability: new upload, new id, old bytes remain until a GC with a reference check from the metadata store. Do not invent Haystack if object storage plus a CDN already meets latency; do invent a metadata path that cannot scan a bucket to find a user's photos. Encryption and access control belong in the URL or token layer, because a packed volume is a shared disk and a single leaked offset map is every photo on the spindle. Measure GET latency on miss, not only cache hit, or you will ship a store that works in the office and fails on first-product-hunt traffic.
 
 ## What you can borrow
 

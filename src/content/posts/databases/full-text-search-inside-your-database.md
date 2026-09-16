@@ -3,6 +3,7 @@ title: "Full-Text Search Inside Your Database (Before You Reach for Elasticsearc
 slug: "full-text-search-inside-your-database"
 description: "How to use your database's built-in full-text search before reaching for a separate search cluster, and where it stops being enough."
 publishedAt: "2025-02-07"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -56,3 +57,27 @@ ORDER BY sim DESC;
 ## A reasonable decision rule
 
 If search is a supporting feature — filtering a support ticket list, searching your own blog posts, letting users find their own documents — Postgres's native full-text search plus `pg_trgm` for typo tolerance covers the large majority of real requirements, avoids a sync pipeline, and keeps search results transactionally consistent with the data that was just written. Reach for a dedicated search engine when search *is* the product: when you need faceted navigation across dozens of filterable attributes, sub-50ms latency at very high query volume independent of database load, or relevance tuning sophisticated enough that a dedicated query DSL earns its operational cost. Most applications never actually cross that line, even though the architecture diagram often assumes they will from day one.
+
+## A worked example
+
+Postgres `tsvector` generated column + GIN index. Queries `websearch_to_tsquery`. Ranking with `ts_rank`. You start here for a product catalog of 200k rows. Synonyms via a dictionary. A fallback ILIKE for SKUs that FTS tokenizes badly.
+
+Explain analyze shows the GIN used.
+
+## Failure modes
+
+No index (sequential parse). Stemming that kills SKUs. Language config mismatch. Updating tsvector in the app inconsistently. Ranking that ignores recency. Trying to search JSON blobs without extracting.
+
+Expecting typo-tolerance like Elasticsearch by default.
+
+## When this is the wrong tool
+
+100M documents, faceted search, per-user scoring: a search engine. Fuzzy log search. Need of near-real-time at huge ingest. Polyglot analyzers. If the "search" is an exact id lookup, use the PK. Do not FTS as a cache of another system of record you already query by id. Elasticsearch is also the wrong first tool for 2k rows.
+
+## A worked failure mode
+
+A product catalog uses `to_tsvector` on a column that concatenates title and HTML. Rank is dominated by boilerplate. Updates rewrite the vector on every keystroke-sized save, blocking writers. Queries use `OR` of many terms without gin and time out. A user searches an SKU; stemming turns it into a stop word. The failure is FTS as a dump of strings without dictionaries, weights, and an update policy. Weighted vectors, unaccent/simple for SKUs, and async update of a search document column would have kept it honest.
+
+In-database FTS is the wrong tool at web-search scale with facets, or when you need relevance research. It is the wrong tool for log analytics. Do not FTS as a substitute for a unique index on SKU. Stay in the DB while the corpus is modest and the queries are language search plus SQL filters; leave when relevance and ops demand a search engine.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Full-Text Search Inside Your Database (Before You Reach for Elasticsearch)" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

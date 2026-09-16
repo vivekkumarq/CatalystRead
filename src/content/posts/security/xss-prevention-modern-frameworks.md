@@ -3,6 +3,7 @@ title: "XSS Prevention in Modern Frameworks"
 slug: "xss-prevention-modern-frameworks"
 description: "React, Vue, and Angular auto-escape by default, but every one of them has an escape hatch that reintroduces XSS — here's where those hatches hide."
 publishedAt: "2024-09-09"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -47,3 +48,14 @@ Content-Security-Policy: script-src 'self'; object-src 'none'; base-uri 'self';
 ```
 
 Start with report-only mode, since a real application will have violations you don't expect — inline event handlers, third-party widgets, analytics snippets — and you want visibility into those before you start blocking traffic. Once the report queue is quiet, flip to enforcing mode. CSP won't catch everything, and it's not a substitute for sanitizing input, but it's the layer that survives the next time someone new to the codebase reaches for the raw-HTML escape hatch without knowing why it's dangerous.
+
+## A worked failure mode
+
+React is used so XSS is "impossible," then `dangerouslySetInnerHTML` renders CMS HTML. Angular `bypassSecurityTrustHtml` copies from a Stack Overflow. A markdown renderer allows raw HTML. The failure is a framework guarantee you opted out of. Sanitize with a maintained policy, or do not render HTML.
+
+## When this is the wrong tool
+
+A sanitizer is the wrong tool if you can use text content. Frameworks are the wrong excuse to skip CSP. Do not write HTML concatenations in 2026. Stay in default encoding; sanitize only with a policy you test.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "XSS Prevention in Modern Frameworks", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

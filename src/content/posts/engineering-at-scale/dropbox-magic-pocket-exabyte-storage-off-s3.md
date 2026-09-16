@@ -3,6 +3,7 @@ title: "Magic Pocket: Moving Exabytes Off S3"
 slug: "dropbox-magic-pocket-exabyte-storage-off-s3"
 description: "How Dropbox built Magic Pocket, its own exabyte-scale storage system, and migrated hundreds of petabytes of user data off S3 without downtime."
 publishedAt: "2025-05-14"
+updatedAt: "2026-09-16"
 category: "Dropbox"
 tags:
   - Engineering at Scale
@@ -34,6 +35,18 @@ The harder problem than building Magic Pocket was moving hundreds of petabytes o
 ## The payoff
 
 Once complete, Magic Pocket gave Dropbox a storage substrate purpose-built for its workload, at a fraction of the cost of continuing to rent equivalent capacity from a cloud provider. It also became the foundation the rest of Dropbox's infrastructure was built on top of — everything from sync to search ultimately reads and writes blocks through Magic Pocket. The project is frequently cited in the industry as one of the largest live storage migrations ever undertaken, and it set the template Dropbox has followed since: build the layer that's core to the business and genuinely differentiated, and keep renting the layers that aren't.
+
+## What broke when they scaled
+
+S3 is an extraordinary default until the bill and the request mix of "exabytes of mostly cold user files" dominate the company. Dropbox's Magic Pocket story is about building a custom storage stack (erasure coding, disk-heavy servers, their own replication) because at that scale they could beat general-purpose object storage on cost while keeping durability. The break of staying on S3 was economic and architectural: every GET/PUT pattern of a desktop sync product is not the same as a typical AWS customer's, and they had enough volume to amortize a storage team.
+
+Migration without downtime means dual-read/dual-write or a pointer-flip per object after copy, with checksums, and a long tail of rarely accessed blobs you still must move. Durability during the copy is a new failure mode: two systems must agree what the source of truth is. Magic Pocket also had to match S3's operational bar — repair, bitrot, disk failure as a daily event — which is S3's eleven-nines lesson applied in-house.
+
+They did not leave AWS entirely; they left the storage layer they could economically own.
+
+## A smaller-team version of the same idea
+
+Stay on S3/GCS until storage is a top cost line *and* you have a team that can run disks. Then consider cheaper classes (Glacier, Archive) and lifecycle rules before you design erasure coding. If you must self-host, start with replication factor 3 and checksums, not a novel code. Object-rename as a pointer is easier than rewriting clients.
 
 ## What you can borrow
 

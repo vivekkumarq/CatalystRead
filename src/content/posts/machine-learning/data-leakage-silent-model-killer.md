@@ -3,6 +3,7 @@ title: "Data Leakage: The Silent Model Killer"
 slug: "data-leakage-silent-model-killer"
 description: "Data leakage produces models that look excellent in validation and fail in production. Here's how it sneaks in and the checks that catch it early."
 publishedAt: "2026-03-31"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -58,3 +59,13 @@ train_idx, test_idx = next(gss.split(X, y, groups=df["customer_id"]))
 That last point is the fastest practical detector: run feature importance after every training run, and treat any single feature dominating importance as worth manually justifying, not celebrating. In a legitimate model, predictive power is usually spread across several features; a single feature explaining almost everything is far more often a leak than a genuine signal.
 
 Leakage doesn't announce itself with an error message — it shows up as a model that quietly underperforms its validation score the moment it meets real, chronologically honest data. Building the leakage checks into your pipeline, rather than trusting a single suspiciously good number, is what keeps that gap from surprising you after launch.
+
+## A worked failure mode
+
+A notebook feature `days_until_churn` correlates beautifully. Production cannot know the future. StandardScaler is fit on all rows. Time-series is random-split. Offline AUC is a fantasy. The failure is information from after the decision time. Compute features as-of, fit transformers on train, and cut time.
+
+## When this is the wrong tool
+
+A leakage witch hunt is the wrong first step if the target is undefined. Do not drop every correlated feature blindly. Use a leakage checklist whenever a number looks too good.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Data Leakage: The Silent Model Killer" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

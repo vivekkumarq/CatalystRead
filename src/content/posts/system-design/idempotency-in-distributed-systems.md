@@ -3,6 +3,7 @@ title: "Idempotency in Distributed Systems: Making Retries Safe"
 slug: "idempotency-in-distributed-systems"
 description: "Idempotency keys, atomic check-and-write, and why PUT being idempotent by spec doesn't make it the right tool for a retried write."
 publishedAt: "2025-06-02"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -53,3 +54,27 @@ A common misconception is that `PUT` is idempotent and `POST` isn't, full stop, 
 - **Downstream calls inside a saga step**: if a step itself calls an external API, that call needs its own idempotency key, independent of the saga's — a saga retry shouldn't fan out into duplicate calls to a third party.
 
 Idempotency isn't a property you add at the edge once and forget — it has to be threaded through every hop that might retry, because the guarantee is only as strong as its weakest link.
+
+## A worked example
+
+Client sends `Idempotency-Key: uuid` with POST `/charges`. Server stores key → response in a table with unique constraint. Retry with the same key returns the stored 200 without a second charge. Different body with the same key is 409. TTL 24h. The handler commits the key and the side effect in one transaction (or outbox).
+
+A test: two parallel POSTs with the same key, one charge row.
+
+## Failure modes
+
+Keys only in memory. Not storing the response, so retries 500 after success. Keying only on user id. GET treated as non-idempotent in docs but POSTs retried by gateways. Unique constraint missing under race. Side effects outside the transaction (email sent twice).
+
+Reusing keys for different operations.
+
+## When this is the wrong tool
+
+Pure GETs should already be idempotent without a key. Do not add keys to every internal call if a natural key exists (`order_id`). At-most-once with acceptable loss may be enough for metrics. Idempotency will not fix a non-deterministic handler that stores "now()" as part of the resource identity. For fully exactly-once with brokers, you still need transactional outbox plus consumer idempotency — a header alone is not a bus.
+
+## A worked failure mode
+
+Retries use a new UUID each time. A server stores idempotency in memory. A client retries a non-idempotent side effect with the same key but a different body; the server ignores the mismatch. The failure is a key that does not bind to the request. Persist keys, hash the body, same response on replay.
+
+Idempotency keys are the wrong tool if the downstream cannot be made idempotent and you have no compensation. Do not skip them on payments. Use them at every retry boundary that can double-apply.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Idempotency in Distributed Systems: Making Retries Safe", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

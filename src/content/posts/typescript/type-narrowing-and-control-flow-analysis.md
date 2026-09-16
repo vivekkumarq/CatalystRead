@@ -3,6 +3,7 @@ title: "Type Narrowing and Control Flow Analysis, Beyond typeof"
 slug: "type-narrowing-and-control-flow-analysis"
 description: "A tour of how TypeScript actually narrows types through your control flow, from typeof guards to custom predicates, and where narrowing quietly breaks."
 publishedAt: "2025-09-07"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - Type Narrowing
@@ -124,3 +125,19 @@ const narrowed = values.filter((v): v is string => v !== null); // string[]
 ```
 
 Small difference, but it's the kind of thing that silently reintroduces a null check three call sites downstream.
+
+## A worked example
+
+`if (typeof x === 'string')` narrows. `if (x != null)` drops `null | undefined`. A custom `isCat(x: Animal): x is Cat` uses a discriminant. After `throw` or `return`, the remainder is narrowed. `switch (event.type)` with `assertNever` in default.
+
+You rewrite `value && value.foo` to `'foo' in value` for objects so TS and runtime agree.
+
+## Failure modes
+
+Narrowing lost after an awaited call if TS cannot prove the variable is unchanged (aliases). `in` operator on primitives. User-defined type guards that lie. `!` non-null assertions. Discriminant not a literal. Mutating a union object so the tag and payload disagree.
+
+Closures capturing a narrowed variable that later assigns (TS may or may not track).
+
+## When this is the wrong tool
+
+Zod parse at the boundary beats a pile of `typeof` in the core. Do not write 12 guards for a JSON blob — parse once. Narrowing cannot fix `any`. If you need runtime exhaustive checks in JS without TS, use a map of handlers. `as` is not narrowing. For DOM, `instanceof HTMLElement` is the right guard, not `tagName` string compares you forget to maintain.

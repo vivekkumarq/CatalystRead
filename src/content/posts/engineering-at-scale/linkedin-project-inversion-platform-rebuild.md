@@ -3,6 +3,7 @@ title: "Project Inversion: Stopping Feature Work to Rebuild the Platform"
 slug: "linkedin-project-inversion-platform-rebuild"
 description: "Why LinkedIn paused most new feature development for months to overhaul its deployment, testing, and infrastructure practices before the site could scale further."
 publishedAt: "2026-05-28"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -34,6 +35,12 @@ after:  faster, safer, more frequent releases; foundation for SOA
 ## The payoff: faster, safer shipping afterward
 
 The return on this investment showed up as a durable change in how quickly and safely LinkedIn could ship afterward — deploys became something engineers could do routinely and with confidence rather than dreading, and the platform work laid during this period became foundational to how LinkedIn built and operated services for years afterward. It's a data point that gets cited often in engineering circles as a case study in taking technical debt seriously enough to interrupt the normal cadence of feature delivery to pay it down deliberately, rather than letting it accumulate indefinitely.
+
+## A concrete failure mode when you pause the product
+
+Project Inversion is remembered as courage: stop shipping features, fix the platform. The failure mode is pausing the product without a written definition of done, then discovering six weeks later that "better deploys" still means each team has a snowflake pipeline. Mid-size companies try a mini-inversion after a painful incident and burn the pause on rewriting tools nobody asked to adopt. LinkedIn's lesson only transfers if the bottleneck is actually shared infrastructure — build, test, deploy, capacity — not if the bottleneck is an unclear product bet.
+
+Operational gotcha: during a freeze, shadow work continues in branches, hotfixes punch holes in the freeze, and the first day back is a merge storm that recreates the instability you stopped to fix. Treat the inversion as a sequenced migration with kill criteria: if a new CI path is not faster for a pilot team by a date, roll back the process, not just the code. Steal the idea of a single deployment contract — artifact, health check, rollback — rather than a grand rewrite of every service. Another trap is using the pause to introduce a new language or orchestrator "while we are here." That doubles the surface area and guarantees the freeze ends with two platforms. Inversion works when the output is boring: tests that gate, deploys that reverse, environments that match production in the ways that previously lied.
 
 ## What you can borrow
 

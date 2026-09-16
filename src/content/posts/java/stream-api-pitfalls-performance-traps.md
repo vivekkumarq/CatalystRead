@@ -3,6 +3,7 @@ title: "Stream API Pitfalls That Quietly Kill Performance"
 slug: "stream-api-pitfalls-performance-traps"
 description: "Streams read beautifully in code review and hide real performance costs in production. Here are the traps that show up most often and how to avoid them."
 publishedAt: "2025-02-18"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -80,3 +81,13 @@ For most application code — request handlers processing collections in the hun
 ## The General Rule
 
 Streams optimize for readability, not throughput. That's a fine trade for the majority of code, but in a loop that runs millions of times, drop back to an indexed `for` loop or a primitive stream and measure. Readability that costs 20% throughput in a background batch job is a good trade; the same cost in your hottest request path usually isn't.
+
+## A worked failure mode
+
+`stream().sorted().filter()` sorts the world then filters. `peek` is used for business logic and skipped on short-circuit. A parallel stream on a tiny list hits the common pool and stalls other work. Boxing in `mapToInt` missed. The failure is streams as a style, not as a pipeline you would write as a loop. Order operations, avoid parallel by default, and do not hide side effects in `peek`.
+
+## When this is the wrong tool
+
+Streams are the wrong tool for a 5-line imperative block with early returns. Parallel streams are the wrong tool on a latency-critical request thread. Use streams for clean, lazy, sequential transforms of in-memory data.
+
+Treat the counterexample as part of the spec. Someone will apply "Stream API Pitfalls That Quietly Kill Performance" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

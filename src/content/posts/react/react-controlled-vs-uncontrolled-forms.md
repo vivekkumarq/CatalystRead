@@ -3,6 +3,7 @@ title: "Controlled vs Uncontrolled Forms: Picking the Right Default"
 slug: "react-controlled-vs-uncontrolled-forms"
 description: "Controlled inputs became the reflexive default in React, but uncontrolled forms are often simpler, faster, and closer to how the platform already works."
 publishedAt: "2026-03-05"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -101,3 +102,13 @@ Typing in the email field doesn't re-render `LoginForm` at all — the library s
 ## The Decision in One Question
 
 Ask whether anything needs to read a field's value before submit. If nothing does, default to uncontrolled — `defaultValue`, a ref, `FormData` on submit — and skip the state entirely. If something does (live validation, derived values, formatting), go controlled for that specific field, not the whole form by reflex. Mixing both within one form is normal and often the most efficient shape: uncontrolled for plain text fields, controlled only where reactivity is actually needed.
+
+## A worked failure mode
+
+A form starts uncontrolled, then a parent passes `value` after fetch; the input ignores typing (switched to controlled without `onChange`). Another controlled field updates on every keystroke through a global store and lags. A file input is made controlled and cannot be set. The failure is mixing modes and over-controlling. Pick one: controlled for derived/validated fields, uncontrolled for simple mounts, never flip after mount without a reset.
+
+## When this is the wrong tool
+
+Fully controlled forms are the wrong tool for a giant survey if you do not need per-keystroke validation. Uncontrolled is the wrong tool when the UI must mirror server state live. Do not control `<input type=file>`. Match the mode to who owns the source of truth.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Controlled vs Uncontrolled Forms: Picking the Right Default" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

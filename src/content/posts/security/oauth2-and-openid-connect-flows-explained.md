@@ -3,6 +3,7 @@ title: "OAuth 2.0 and OpenID Connect: Flows Explained for App Developers"
 slug: "oauth2-and-openid-connect-flows-explained"
 description: "A practical guide to OAuth 2.0 and OpenID Connect flows for application developers, covering authorization code with PKCE and why implicit flow is obsolete."
 publishedAt: "2025-08-20"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -40,3 +41,13 @@ Refresh tokens let an app obtain new access tokens without re-prompting the user
 ## Validating what comes back
 
 An access token's job is authorization to an API; treat it as opaque unless you control the API and know its format. An ID token's job is authentication, and it must be validated properly before trusting anything in it: verify the signature against the provider's published keys, check the issuer and audience claims match your app, and confirm the token hasn't expired. Skipping signature validation — trusting a decoded token's claims without verifying who signed it — is one of the most common and most serious implementation mistakes in OIDC integrations, because it means anyone who can construct a token with the right shape can impersonate any user.
+
+## A worked failure mode
+
+An SPA uses implicit flow in 2026; tokens in the hash leak via referrers. A mobile app uses PKCE incorrectly (static verifier). `state`/`nonce` are omitted; login CSRF and mix-up follow. The failure is an obsolete flow. Authorization code + PKCE, exact redirect URIs, and check state/nonce.
+
+## When this is the wrong tool
+
+OAuth is the wrong tool to authenticate if you only needed a password for a ten-user admin. OIDC is the wrong layer if you needed API keys for machines. Do not invent a flow. Use the profile that matches confidential vs public clients.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "OAuth 2.0 and OpenID Connect: Flows Explained for App Developers" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

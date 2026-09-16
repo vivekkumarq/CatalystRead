@@ -3,6 +3,7 @@ title: "Ringpop: Sharding Uber's Stateful Services Without a Central Coordinator
 slug: "uber-ringpop-gossip-based-sharding"
 description: "How Uber's Ringpop library used consistent hashing and a gossip protocol to shard stateful services without depending on a single coordinator."
 publishedAt: "2025-07-15"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ The tradeoff is that gossip-based membership is eventually consistent rather tha
 ## Built on top of, and alongside, TChannel
 
 Ringpop was designed to work with TChannel, Uber's RPC framework of that era, which handled connection multiplexing and request forwarding — letting a request arrive at any node in the Ringpop cluster and get forwarded transparently to whichever node actually owns the relevant shard, without the caller needing to know the ring's current membership itself. That combination — an RPC layer that can forward requests, plus a membership and hashing layer that decides where they should go — let application teams get sharding and ownership semantics without hand-rolling cluster coordination for every new stateful service.
+
+## A concrete failure mode for gossip membership
+
+Ringpop used gossip and consistent hashing so stateful actors — like a trip's live session — could live on a node without a separate ZooKeeper-shaped control plane. The failure mode is a network partition that splits the ring, two nodes own the same key, and you double-dispatch a driver. Mid-size steal: sticky ownership only with a lease in a true coordinator (etcd, database row), or keep the session stateless.
+
+Operational gotcha: gossip that is slow to declare a dead node, so traffic still hashes to a corpse; or too fast, so a GC pause reshuffles the world. Tune with production-like pauses. Another is hot keys: a city-center geohash or a celebrity route still lands on one member. Ringpop does not abolish hotspots. Rolling deploys that take many nodes out at once move a large fraction of keys; drain. Testing gossip locally with two processes will not find split-brain. Use a chaos partition. Uber open-sourced the idea; many teams are better served by Kafka partition assignment or a dispatcher with Redis locks. Steal the actor-per-key idea for in-memory speed, and steal a fencing token so a returning zombie cannot write. Membership protocols are fun until a partition at an airport on New Year's Eve. If you cannot explain your fencing, do not gossip your shard map.
 
 ## What you can borrow
 

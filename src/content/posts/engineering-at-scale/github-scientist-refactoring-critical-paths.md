@@ -3,6 +3,7 @@ title: "Scientist: How GitHub Refactors Code It Can't Afford to Break"
 slug: "github-scientist-refactoring-critical-paths"
 description: "How GitHub built the Scientist library to run new and old code paths side by side in production before ever trusting the new one."
 publishedAt: "2025-06-03"
+updatedAt: "2026-09-16"
 category: "GitHub"
 tags:
   - Engineering at Scale
@@ -57,6 +58,18 @@ A few things had to be designed carefully for this to be safe:
 - **Ignoring known noise.** Some mismatches are expected and irrelevant (ordering of an unordered collection, floating-point rounding). Scientist supports `ignore` blocks so teams can filter known-noisy differences without losing sensitivity to real ones.
 
 Scientist was open-sourced and ports appeared in Python, Java, .NET, and other languages, a sign that the underlying problem — "I need to replace code I don't fully trust myself to reason about" — is universal to any team operating at scale.
+
+## What broke when they scaled
+
+GitHub's permission and routing code sits on paths where a mismatch is a security or 404 incident. Unit tests cannot enumerate every repo, every team, every ghost user. Scientist (open-sourced by GitHub) runs old and new implementations on production traffic, compares results, and still returns the old answer until the mismatch rate is understood. At scale the break is comparison cost: you cannot double every request's CPU forever. Sampling, async comparison, and ignoring known-benign diffs (ordering, timestamps) become part of the library's real use.
+
+Mismatches that are "correct new behavior" versus bugs need triage. Without an owner drowning in Scientist alerts, people disable the experiment. Timing also bites: the new path that is slower in the candidate run might be fine once it is the only path, or it might not — you still need load tests.
+
+Scientist does not help if the two paths have different side effects (charges, emails). It is for referentially comparable functions.
+
+## A smaller-team version of the same idea
+
+Wrap a pure function, log both outputs on 1% of traffic, keep serving the old one. Raise when hashes differ. Do this before you switch a billing calculator or an ACL check. Do not Scientist a method that sends email. Graduate to the gem/library when you have several such migrations.
 
 ## What you can borrow
 

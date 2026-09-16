@@ -3,6 +3,7 @@ title: "DTO Mapping in Spring Boot: MapStruct vs. Hand-Written Mappers"
 slug: "dto-mapping-mapstruct-vs-manual"
 description: "Comparing MapStruct's generated mappers against hand-written mapping code across boilerplate, performance, and how each handles change over time."
 publishedAt: "2025-09-25"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -77,3 +78,14 @@ public interface CustomerMapper {
 MapStruct earns its setup cost once you have several entities with a dozen-plus fields each, multiple DTO variants per entity (summary view, detail view, admin view), or a team large enough that "someone forgot to map a new field" is a recurring bug class rather than a hypothetical. The generated code is inspectable — it's a real `.java` file you can open in the `target/generated-sources` directory — so it doesn't cost you debuggability the way a reflection-based mapper does.
 
 Manual mapping wins for small services, DTOs with real transformation logic that would fight the annotation-driven model anyway (conditional field inclusion based on user permissions, for instance), or when a team wants zero build-time tooling and total control over every line. Neither is wrong; the mistake is applying MapStruct reflexively to a three-field DTO, or sticking with manual mapping past the point where forgotten fields have shown up in production more than once.
+
+## A worked failure mode
+
+MapStruct maps nested entities including lazy collections; a DTO serialize triggers N+1. A field is renamed in the entity and the mapper silently defaults to null because `unmappedTargetPolicy` is IGNORE. Manual mapping copies password hashes to a public DTO. The failure is mapping without an explicit surface. Fail on unmapped, map from dedicated queries, never expose secrets.
+
+## When this is the wrong tool
+
+MapStruct is the wrong tool for two fields. Manual mapping is the wrong tool for 80 near-identical properties you will drift. JSON views are not a security boundary. Pick a mapper you will test with an unmapped-failure policy.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "DTO Mapping in Spring Boot: MapStruct vs. Hand-Written Mappers" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

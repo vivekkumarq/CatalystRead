@@ -3,6 +3,7 @@ title: "Shipping Spring Boot as a GraalVM Native Image"
 slug: "graalvm-native-images-spring-boot"
 description: "What actually changes when you compile Spring Boot to a GraalVM native image, and the reflection and initialization pitfalls that trip up the build."
 publishedAt: "2025-11-03"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -69,3 +70,14 @@ static NativeImageConfiguration nativeImageConfig() {
 ```
 
 You also lose most runtime bytecode manipulation — some AOP proxying styles, certain dynamic class loading patterns, and libraries that generate classes on the fly at startup either don't work or need a native-image-specific code path. Before committing a service to native image, it's worth auditing its dependency list for anything doing dynamic class generation; that's a more reliable predictor of native image pain than the size of the codebase itself.
+
+## A worked failure mode
+
+A native image misses a reflective repository; it works on JVM tests and fails in prod. Build time is 15 minutes so nobody iterates. A security CVE requires a rebuild of the whole image with a forgotten reachability metadata file. The failure is native as a surprise runtime. Hint files tested in CI, a JVM fallback, and a rebuild pipeline.
+
+## When this is the wrong tool
+
+Native images are the wrong tool if startup is already 1s and you need heavy runtime reflection you will not hint. They complicate some agents. Use them for CLI/functions where startup and RSS matter and you will maintain metadata.
+
+Treat the counterexample as part of the spec. Someone will apply "Shipping Spring Boot as a GraalVM Native Image" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

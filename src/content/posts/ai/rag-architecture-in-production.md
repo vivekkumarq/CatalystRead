@@ -61,3 +61,11 @@ A few failure modes show up almost universally once traffic grows:
 None of these are exotic — they're operational discipline problems. Treat your retrieval index like a service with its own SLOs: freshness lag, recall@k on a golden query set, and p99 latency. Ship changes to chunking, embedding models, or rerankers behind the same regression suite you'd use for a code change, because from the model's perspective a bad chunk is indistinguishable from a bad prompt, and it will confidently answer with whatever garbage you hand it.
 
 The academic lineage is Lewis et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks" (NeurIPS 2020). The paper's useful inheritance is the split: a parametric model plus a non-parametric index you can update without retraining. Production RAG is that split plus all the ingestion and evaluation work the paper could ignore. If you cannot update a fact without a fine-tune, you did not ship RAG — you shipped a prompt with a vector database logo on the slide.
+
+## A worked failure mode
+
+A RAG bot answers HR policy from a wiki export. Chunks are 512 tokens with no overlap; the sentence "contractors are not eligible" sits in the next chunk. Retrieval returns the benefits-overview chunk; the model says contractors get parental leave. Freshness is weekly, so a same-day policy change never appears. Citations point at page titles, not chunk ids, so the on-call cannot see what was actually in context. The failure is retrieval and document ops, not the chat model. Overlap or section-aware chunking, a daily (or event-driven) index, and logging retrieved chunk ids with scores would have made the incident a missed document, not a mysterious hallucination.
+
+## When this is the wrong tool
+
+RAG is the wrong tool when there is no corpus, when the answer must be a single row from a transactional database (query the DB), or when the user needs a guaranteed calculation. It is the wrong first architecture for a 20-page handbook you can put in the prompt. Do not RAG to "ground" a model while stuffing uncited web browse results beside the corpus. If access control matters, retrieval must filter by ACL or you will leak. Fine-tuning will not fix a stale index.

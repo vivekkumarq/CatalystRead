@@ -3,6 +3,7 @@ title: "Two-Phase Commit, Blocking, and Why Consensus Took Over Coordination"
 slug: "two-phase-commit-and-why-consensus-replaced-it"
 description: "How 2PC actually runs, why a crashed coordinator freezes the world, and how Raft/Paxos-backed transaction coordinators changed the picture."
 publishedAt: "2026-07-18"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -54,3 +55,27 @@ If the commit decision itself is stored in Raft or Paxos, any majority of coordi
 This is also why "just use a transaction across two microservices" is expensive. You are buying a consensus group, prepared locks, and a recovery story — or you are buying a saga and accepting that money-shaped operations need idempotency keys and explicit compensation. Both are valid. Pretending HTTP + 2PC without a replicated coordinator is neither.
 
 When you design a checkout that touches payments and inventory, name which of those two worlds you are in before you draw the boxes.
+
+## A worked example
+
+2PC: coordinator asks prepare; resources lock; coordinator commits. If the coordinator dies after prepare, participants stay blocked. XA transactions across MySQL and a JMS broker show this in the wild. Raft: a majority logs the decision; there is no silent blocking on one coordinator disk forever — recovery is the log.
+
+A chaos test: kill the 2PC coordinator vs kill a Raft follower.
+
+## Failure modes
+
+2PC over a WAN. Timeouts that abort on one side and commit on the other. Heuristic decisions that leave branches inconsistent. Using 2PC for user-facing latency SLOs. Consensus with a cluster of 2 (no majority).
+
+Pretending a saga is 2PC.
+
+## When this is the wrong tool
+
+2PC is the wrong default in microservices. A single database transaction is the right tool when it fits. Consensus is the wrong tool for a shopping cart CRDT. If you need cross-region write availability during partition, neither blocking 2PC nor a single Raft group in one region will make CAP disappear. Use idempotent APIs and sagas for business workflows; use Raft inside a store, not across HTTP services.
+
+## A worked failure mode
+
+2PC coordinator is a single VM; it dies in the prepared state and participants hold locks for hours. Timeouts abort one side and commit the other. The failure is blocking consensus with a fragile coordinator. Prefer a single DB, sagas, or a real consensus log with fencing.
+
+2PC is the wrong tool across HTTP microservices. It is the wrong tool if you cannot staff coordinator HA. Avoid it unless a database product implements it well inside one system.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Two-Phase Commit, Blocking, and Why Consensus Took Over Coordination" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

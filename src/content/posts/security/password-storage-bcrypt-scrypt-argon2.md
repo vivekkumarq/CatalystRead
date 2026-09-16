@@ -3,6 +3,7 @@ title: "Password Storage: bcrypt, scrypt, Argon2, and Why Plain Hashing Fails"
 slug: "password-storage-bcrypt-scrypt-argon2"
 description: "Why fast general-purpose hashes like SHA-256 are unsafe for passwords, and how bcrypt, scrypt, and Argon2 defend against modern offline cracking hardware."
 publishedAt: "2025-10-08"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -44,3 +45,13 @@ The right cost parameters depend on your server's available CPU and memory and s
 ## The parts that are easy to get wrong anyway
 
 Never cap password length in a way that truncates before hashing, since some poor bcrypt implementations silently ignore characters past 72 bytes — validate this against your specific library rather than assuming. Never roll a custom hashing scheme by combining a fast hash with a manual salt and a loop counter; the failure modes of naive iterated hashing are well documented and a purpose-built algorithm has already solved them correctly. And keep in mind that password hashing only protects against a stolen database — it does nothing against credential stuffing, weak or reused passwords, or a compromised endpoint, so it belongs alongside rate limiting, breach-password checks, and multi-factor authentication rather than in place of them.
+
+## A worked failure mode
+
+MD5 is "salted" in application code. bcrypt is used with a cost of 4, or on a truncated 72-byte secret that silently drops entropy. Pepper is in the same database. The failure is hashing as folklore. Use a modern KDF with a tuned cost, full password, unique salt, and pepper in a KMS.
+
+## When this is the wrong tool
+
+Password hashing is the wrong tool if you should be using a passkey or SSO. Do not hash API keys the same way you hash passwords if you need fast lookup—use HMAC or a table of hashes designed for that. Store passwords only if you must.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Password Storage: bcrypt, scrypt, Argon2, and Why Plain Hashing Fails", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

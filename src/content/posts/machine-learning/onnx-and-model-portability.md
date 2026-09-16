@@ -3,6 +3,7 @@ title: "ONNX and the Case for Model Portability"
 slug: "onnx-and-model-portability"
 description: "Why exporting models to ONNX solves real deployment problems, plus the conversion pitfalls that catch teams off guard the first time they try it."
 publishedAt: "2026-06-10"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -80,3 +81,13 @@ np.testing.assert_allclose(torch_output, onnx_output, rtol=1e-3, atol=1e-5)
 | Model uses heavy custom ops with no ONNX equivalent | Only after confirming export actually works cleanly |
 
 The honest framing is that ONNX buys you deployment flexibility and often real speed, at the cost of an extra validation step in your release process — you're now shipping two artifacts (the training checkpoint and the exported graph) and need to confirm they agree before either one ships to production.
+
+## A worked failure mode
+
+A PyTorch model is exported to ONNX without freezing opset or testing numeric tolerance. A custom layer falls back silently; scores differ on GPU vs ONNX Runtime on CPU enough to flip a fraud threshold. Dynamic axes are wrong, so batch 1 works and batch 8 crashes in the sidecar. The failure is export as a checkbox. Golden tests on fixtures, pinned runtimes, and a documented delta that will not change the decision.
+
+## When this is the wrong tool
+
+ONNX is the wrong tool if you can serve the native runtime you trained. It will not save a model that uses ops the converter cannot express. Do not export weekly without tests. Use ONNX when you must mix training and serving ecosystems and you will police numerics.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "ONNX and the Case for Model Portability" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

@@ -3,6 +3,7 @@ title: "Raft Consensus, Explained for Engineers Who Have to Operate It"
 slug: "raft-consensus-explained-for-engineers"
 description: "What the Raft paper actually guarantees, how leader election and log replication work, and the operational failure modes etcd and Consul still hit."
 publishedAt: "2026-07-08"
+updatedAt: "2026-09-16"
 category: "System Design"
 tags:
   - System Design
@@ -57,3 +58,13 @@ Snapshots exist so followers do not replay a multi-gigabyte log. If snapshotting
 If you need a mental test for a design review: "If I kill the leader and a follower with a slightly shorter log, can a stale value become committed?" If the answer is not an immediate no with a pointer to the up-to-date election rule, the implementation is not Raft, it is a gossip of logs.
 
 Read the paper's figures for leader election and log matching once. They are clearer than most blog diagrams, and they are the contract your on-call runbook is actually enforcing.
+
+## A worked failure mode
+
+A three-node Raft is deployed across two AZs with two nodes in one AZ; that AZ outage loses quorum. Disk is slow; leader election flaps. Clients talk to followers without linearizable reads and see stale locks. The failure is topology and read semantics. Quorum across failure domains, fast disks, and named read guarantees.
+
+## When this is the wrong tool
+
+Raft is the wrong tool for a cache you can lose. It is heavy for a single-primary Postgres you already have. Do not implement Raft yourself for an app lock. Use a managed consensus store when you truly need it.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Raft Consensus, Explained for Engineers Who Have to Operate It" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

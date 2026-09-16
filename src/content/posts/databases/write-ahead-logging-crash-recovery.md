@@ -3,6 +3,7 @@ title: "Write-Ahead Logging: The Contract Between Crash Recovery and Your Commit
 slug: "write-ahead-logging-crash-recovery"
 description: "Why databases write the log before the page, how REDO and UNDO recover, and the fsync choices that turn a power loss into silent corruption or lost commits."
 publishedAt: "2026-08-30"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -43,3 +44,27 @@ Partial rollbacks (savepoints) and fine-grained locks are why ARIES was a big de
 Physical replication ships the same bytes. Logical replication decodes those bytes into row events. If you do not understand WAL, "replica lag" is a cloud dashboard; if you do, it is "the subscriber has not replayed up to this LSN." Tuning `max_wal_size`, slot retention, and archive_command is capacity planning for the log, not a side quest.
 
 When a postmortem says "we lost 3 seconds of writes," ask whether the log was on the same disk as a full table scan, whether fsync was disabled, and whether the cloud volume's flush actually reached media. WAL is only as honest as the storage underneath it.
+
+## A worked example
+
+Postgres: `COMMIT` returns after WAL is flushed (depending on `synchronous_commit`). Crash: replay WAL from the last checkpoint. A test: insert, commit, `kill -9`, restart, row still there. Uncommitted data gone. You see why a disk full on WAL stops writes.
+
+Replicas stream WAL; a lagging replica is a WAL consumer.
+
+## Failure modes
+
+`synchronous_commit=off` then a crash losing "committed" from the app's view. WAL on the same failing disk without a story. Checkpoints too rare (long recovery) or too often (IO). Truncating WAL too soon. App assuming fsync of a file it wrote without the DB WAL.
+
+Copying data files without WAL backup.
+
+## When this is the wrong tool
+
+WAL is not a product audit log (use a table or event store). Do not implement your own WAL for an app that should use a database. In-memory caches do not have WAL unless you built Redis AOF — that is a different durability knob. If you cannot afford fsync latency, you are choosing a durability tier; say so. Object storage versioning is not a WAL.
+
+## A worked failure mode
+
+An app sets `fsync=off` in Postgres to win a benchmark, then a power loss loses "committed" orders. Another team builds a custom WAL in Redis lists and never checkpoints; recovery replays hours and exceeds the SLA. A third treats the WAL as an audit log and greps it for business events that were never guaranteed stable. The failure is durability as a flag. Know what a commit waits for, test crash recovery, and keep business audit in a table. If you cannot pay fsync, you are choosing a different product promise—write that down.
+
+A WAL is the wrong tool for analytics event history you can rebuild. Do not implement one in the application if a database already offers it. Object-storage versioning is not crash recovery for a running OLTP system. Use the database WAL as intended; use higher-level logs for product-visible history.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Write-Ahead Logging: The Contract Between Crash Recovery and Your Commits" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
