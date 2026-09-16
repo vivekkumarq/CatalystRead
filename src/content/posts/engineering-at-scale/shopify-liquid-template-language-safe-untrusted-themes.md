@@ -3,6 +3,7 @@ title: "Liquid: Designing a Template Language Safe Enough for Untrusted Themes"
 slug: "shopify-liquid-template-language-safe-untrusted-themes"
 description: "How Shopify built the Liquid templating language to safely run code written by outside theme developers on shared production servers."
 publishedAt: "2026-04-30"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -36,6 +37,12 @@ Liquid gives theme authors variables, filters (like `money` or `upcase`), condit
 ## Liquid outgrowing Shopify
 
 Shopify open-sourced Liquid, and its design — safe, embeddable, restricted-by-construction — made it a natural fit anywhere a system needed to let non-trusted authors write templates: it's used well beyond Shopify's own storefronts, including in static site generators and other publishing tools that render user-authored content server-side. That afterlife is a reasonably strong endorsement of the original design constraint: a language built to be safe for one untrusted-input problem generalizes well to other untrusted-input problems that share the same shape.
+
+## What a mid-size team can steal from Liquid
+
+Liquid's lesson is a language whose grammar cannot express the dangerous operations, used for untrusted themes on shared servers. Mid-size platforms — marketplaces, email builders, report designers — still hand users JavaScript or full ERB and then try to sandbox it. Steal a template language or a strict subset, mediate data through drops, and cap loop iterations and render time.
+
+The concrete failure mode is a theme that is "safe" but still expensive: nested loops over all products, recursive snippets, or filters that allocate huge strings, starving neighboring shops. Safety is also noisy-neighbor control. Operational gotcha: adding one "just a little" escape hatch — a filter that fetches HTTP, a way to eval — undoes the grammar bet. Treat the surface as an API with a changelog. Theme upgrades that assume new drop fields will break old themes if you remove data; deprecate slowly. XSS is still possible in a safe language if you mark strings as HTML too eagerly; auto-escape by default. Shopify could staff Liquid as a product. If you cannot, prefer an existing sandboxed templating library rather than a homemade parser that will have one security hole. Audit every new filter like a new public API, because for attackers it is one.
 
 ## What you can borrow
 

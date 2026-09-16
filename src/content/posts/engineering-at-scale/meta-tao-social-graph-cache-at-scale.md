@@ -3,6 +3,7 @@ title: "TAO: Facebook's Graph-Aware Cache for Billions of Reads"
 slug: "meta-tao-social-graph-cache-at-scale"
 description: "Why generic memcache stopped fitting Facebook's social graph, and how TAO's objects-and-associations model became the read path for billions of requests."
 publishedAt: "2025-08-12"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ Facebook's response, described in the 2013 USENIX ATC paper "TAO: Facebook's Dis
 ## Tiered, region-aware architecture
 
 TAO's caching layer is tiered: a leader cache tier sits closest to the persistent MySQL storage and handles writes and cache misses, while follower tiers sit closer to application servers and serve the bulk of read traffic, refreshed from the leader tier. This gives read-after-write consistency within a region — if you post a comment, you'll see it immediately — while allowing asynchronous replication across regions, which means a like count or comment might be briefly stale for a user on the other side of the world. That's a deliberate tradeoff: for most social-graph reads, availability and low latency matter more than perfect global consistency at every instant.
+
+## Operational gotchas of a graph-aware cache
+
+TAO's objects-and-associations model removes a class of application bugs and introduces a class of platform bugs. Association lists that are time-ordered and typed look like infinite feeds; in practice they are bounded, sharded, and eventually repaired from MySQL. A mid-size team that copies "graph cache" into Redis lists without a repair worker will lose edges on eviction and never know. The concrete failure mode is a write that updates the leader cache, fails to persist, and still replicates a phantom association to followers. Users see a like that vanishes on refresh, or worse, an association that never existed in MySQL but keeps getting served from a warm replica.
+
+Hot objects remain even with a domain API. A celebrity post's like-edge list is a supernode; range queries and count fields become the bottleneck, not generic get/set. Steal the split between "user must see their own write" and "the world can lag," and steal leases or locking around refill so a viral miss does not stampede MySQL. Do not steal a global, fully consistent graph. Cross-region TAO is allowed to be briefly wrong on counts. If your product cannot tolerate that, you are not building TAO, you are building a distributed database with a friendlier API. Mid-size steal: one service owns edge reads and writes, invalidation is not scattered, and every association type has a documented cap, index, and privacy check before it ships.
 
 ## What you can borrow
 

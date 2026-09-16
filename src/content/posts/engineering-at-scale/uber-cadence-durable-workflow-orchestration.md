@@ -3,6 +3,7 @@ title: "Cadence: Writing Workflow Code as If Failures Never Happen"
 slug: "uber-cadence-durable-workflow-orchestration"
 description: "How Uber's Cadence engine lets developers write long-running workflow logic as plain code while the platform handles retries and state durably."
 publishedAt: "2026-03-24"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -30,6 +31,12 @@ Cadence wasn't built as a generic showcase — it grew out of concrete needs ins
 ## Open source, and a fork that became its own company
 
 Uber open sourced Cadence, and it saw adoption at other companies facing similar durable-workflow problems. Notably, several of the original engineers behind Cadence later left Uber and founded Temporal, building a system that shares Cadence's core architecture and philosophy but developed independently as its own open source project and company. That split meant the durable-workflow-orchestration idea Cadence pioneered ended up with two actively maintained lineages in the open source ecosystem rather than one, both tracing back to the same original design.
+
+## A concrete failure mode for Cadence/Temporal workflows
+
+Cadence (and Temporal) persist workflow history so a trip's long-running steps can survive process death. The failure mode is a workflow that performs non-deterministic work in the replay path — a random() or a now() — and then bricks on recovery. Mid-size steal: activities for I/O, deterministic workflow code, and versioning when you change history interpretation.
+
+Operational gotcha: huge histories from a loop that never yields, so replay is slow and you miss SLAs. Heartbeat long activities. Another is using workflows as a database of business state you never query except by id; operations cannot answer "which trips are stuck in awaiting_driver." Export status to a queryable store. Uber-scale clusters need to shard workflow load; a hot workflow type can drown a matching task list. Split task queues. Time-skips in tests will hide production clock bugs; also test real timers with short timeouts. Do not start a workflow per GPS tick. Cadence is for minutes-to-days. If your flow is 50ms, a function call is enough. Poison payloads that fail an activity forever need a human path. The steal is durable execution for the few flows that actually outlive a deploy. The anti-steal is wrapping every endpoint in a workflow because the blog made it look clean.
 
 ## What you can borrow
 

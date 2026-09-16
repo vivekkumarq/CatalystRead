@@ -3,6 +3,7 @@ title: "Espresso: The Document Store Behind LinkedIn's Member Data"
 slug: "linkedin-espresso-distributed-document-store"
 description: "Why LinkedIn built its own distributed document database to replace Oracle for online member data, and how it married timeline consistency with Kafka."
 publishedAt: "2025-07-02"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ This mattered enormously for LinkedIn's broader architecture, since it meant new
 ## Powering profile data and social features
 
 Espresso became the online store behind core LinkedIn features including member profiles, InMail-style messaging metadata, and portions of the news feed's serving path, replacing significant swaths of the old Oracle footprint. It was built for the specific combination of requirements LinkedIn's product surface demanded: high write availability across data centers, predictable low latency for read-your-own-writes style interactions, and a schema-flexible document model that didn't require a full migration project every time a product team wanted to add a field.
+
+## Operational gotchas of a document store next to Kafka
+
+Espresso-style document stores tempt teams because they look like "Mongo with timelines." The operational tax is partitioning by member or entity, then living with hot keys when a celebrity, a viral post, or a bad client loop hammers one partition. Timeline consistency with a change log helps secondary indexes stay honest, but only if the apply path is idempotent. A retry that double-applies a partial document merge can wipe fields that a concurrent writer just set.
+
+Mid-size teams should steal the document-plus-changelog idea without building a new database: Postgres JSONB or a managed document service plus a CDC topic is often enough until a single Oracle-shaped bottleneck is real. What you should not steal is a custom consistency story you cannot test. Espresso's pairing with Kafka only works if every writer agrees on the document schema, the clock for timeline versions, and who wins a conflict. A concrete failure mode is schema evolution that adds a required nested field while old writers keep publishing documents without it; readers then fork into two code paths, and a rebuild of derived indexes silently drops records. Gate new fields with defaults and dual-read. Measure p99 on the hot partition, not cluster average. Averages hide the member whose profile shard is on fire.
 
 ## What you can borrow
 

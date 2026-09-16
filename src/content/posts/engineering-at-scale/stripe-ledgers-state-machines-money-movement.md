@@ -3,6 +3,7 @@ title: "Modeling Money Movement: Ledgers, State Machines, and Exactly-Once Effec
 slug: "stripe-ledgers-state-machines-money-movement"
 description: "How Stripe models money movement with immutable ledger entries and explicit state machines to guarantee correctness even when networks and services fail."
 publishedAt: "2026-08-12"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -24,6 +25,12 @@ A payment's lifecycle — created, requires action, processing, succeeded, faile
 ## Idempotency as the connective tissue
 
 None of this works without idempotency at the API layer — Stripe's well-known idempotency key mechanism ensures that a retried request with the same key returns the same result as the original attempt rather than executing again, which is what actually makes it safe for client libraries to retry aggressively on network failures. Combined with an immutable ledger and explicit state machines, idempotency is the layer that connects "the network is unreliable so clients must retry" with "retries must never cause a financial effect to happen more than once" — each piece alone is necessary but not sufficient; together they produce the exactly-once effect a payments system needs despite running on fundamentally at-least-once network semantics underneath.
+
+## What a mid-size team can steal from ledgers
+
+Stripe models money as state machines and ledgers, not as a mutable `balance` column. Mid-size steal: append-only entries, explicit transitions (authorized → captured → refunded), and a nightly recon that compares the ledger to processor reports. Updating a single integer is how you lose a dollar you cannot explain.
+
+The concrete failure mode is a refund path that writes the processor first and the ledger second, then crashes; now the world and your DB disagree. Pick an order and a recovery job. Operational gotcha: currencies, rounding, and partial captures. If you store floats, you will invent money. Use integer minor units. Another is a state machine in code that does not match the states in the table, so a support tool "fixes" a row into a state no transition allows. The tool is now a second ledger. Freeze support tools to the same transitions. Idempotency on each transition is mandatory. Ledgers also need immutability for audits; an UPDATE of history is a different product, called fraud. If you are not Stripe, still keep a double-entry-ish record for customer balance versus cash. The first time finance asks "why doesn't this foot," you will wish you had. Start on day one of the first paid feature, not after the Series B.
 
 ## What you can borrow
 

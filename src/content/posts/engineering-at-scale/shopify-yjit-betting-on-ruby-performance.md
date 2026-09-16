@@ -3,6 +3,7 @@ title: "Betting on Ruby: How Shopify Made Rails Fast Enough for Commerce"
 slug: "shopify-yjit-betting-on-ruby-performance"
 description: "Shopify funded a just-in-time compiler for Ruby instead of rewriting its monolith, turning YJIT into a core piece of commerce infrastructure."
 publishedAt: "2025-06-03"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ ruby --yjit app.rb
 ## Performance as a platform investment, not a one-time project
 
 What makes this story durable is that Shopify treated Ruby performance as ongoing infrastructure, not a one-off optimization sprint. The YJIT team kept iterating for years after the initial release, chasing warmup time, memory overhead, and edge cases discovered in production Rails apps. Shopify also invested in tooling to profile and simulate Black-Friday-scale load against YJIT-compiled code before rollouts, since a JIT's behavior under sustained peak traffic differs meaningfully from a quick benchmark run. The payoff showed up not as a headline number but as sustained capacity headroom: the same fleet handling more checkout traffic without a proportional increase in servers.
+
+## Operational gotchas of betting on a language JIT
+
+YJIT is Shopify's bet that Ruby can stay the language of the monolith and still get closer to systems-language efficiency on hot paths. Mid-size steal: measure YJIT or the equivalent runtime flag on a production-like replay before a fleet-wide turn-on. JITs have warmup, memory, and crash-surface risks that a benchmark from a conference will not show.
+
+The concrete failure mode is enabling the JIT globally, watching average CPU drop, and missing that a minority of shops with unusual gems hit a compiler bug or a memory cliff. Roll out by pod or percentage, with a fast flag off. Operational gotcha: mixing gem native extensions that assume a different Ruby VM shape; the crash is in C, the dashboard blames Ruby. Pin versions. Another is celebrating a JIT win while an N+1 query still dominates the request; the JIT cannot fix a missing index. Pair runtime work with the same profiles that justified it. Shopify can fund CRuby contributors; you can still turn on YJIT on a recent Ruby and contribute reproductions. Do not rewrite the monolith in another language because a p99 is bad until you have a profile that says the interpreter is the limiter. Language bets fail when they are identity. They work when they are a measured increment with a kill switch.
 
 ## What you can borrow
 

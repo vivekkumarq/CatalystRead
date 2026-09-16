@@ -3,6 +3,7 @@ title: "Background Jobs at Shopify Scale: Idempotency, Retries, and Interruptibi
 slug: "shopify-background-jobs-idempotency-retries-scale"
 description: "How Shopify runs enormous volumes of background jobs safely, treating idempotency and graceful interruption as first-class design constraints."
 publishedAt: "2025-09-15"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -40,6 +41,12 @@ This pattern turns what would otherwise be a source of dropped work or corrupted
 ## Retries, backoff, and dead-letter handling
 
 On top of idempotency and interruptibility, Shopify's job infrastructure layers standard resilience patterns: automatic retries with exponential backoff for transient failures, and dead-letter queues for jobs that exhaust their retry budget, so a persistently failing job surfaces for investigation instead of retrying forever or silently vanishing. Combined, these three properties — safe to repeat, safe to interrupt, and safe to fail loudly — let Shopify run background work at enormous volume without each individual job author needing to reason about distributed systems failure modes from scratch.
+
+## Operational gotchas of shop jobs at flash-sale scale
+
+Shopify's background jobs exist because a checkout cannot wait for email, webhooks, search indexing, and fraud checks. At flash-sale scale the queue is the product. The failure mode is a retry policy that duplicates a fulfillment request or a gift-card debit because the worker timed out after the partner API succeeded. Mid-size steal: an idempotency key per job type stored with the shop, and a poison queue that pages the owning team.
+
+Operational gotcha: retry storms after a payment provider blip, which then DDoS the provider and extend the outage. Exponential backoff with jitter and a global concurrency cap per partner are not optional. Another is mixing latency-sensitive jobs (order confirmation) with bulk (reindex 100k products) on one Redis queue. Separate them. Sidekiq-style memory bloat from fat job payloads — stuffing whole product JSON in Redis — will evict or OOM at the worst time. Pass ids, load in the worker. Shopify also has to isolate shops: one merchant's bulk import cannot starve another's checkouts. Tenant-aware queues or weighted fair scheduling is the steal. If you run a marketplace or multi-tenant SaaS, copy that isolation before you copy any particular Ruby job library. Dead letters that contain PII need the same retention policy as the database, not infinite Redis.
 
 ## What you can borrow
 

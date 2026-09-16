@@ -3,6 +3,7 @@ title: "Open Connect: How Netflix Built a CDN That Lives Inside Your ISP"
 slug: "netflix-open-connect-cdn-inside-isps"
 description: "Why Netflix stopped renting third-party CDN capacity and started shipping its own caching appliances directly into internet service providers."
 publishedAt: "2025-06-03"
+updatedAt: "2026-09-16"
 category: "Netflix"
 tags:
   - Engineering at Scale
@@ -37,6 +38,12 @@ That prediction problem is its own engineering discipline: popularity varies by 
 Open Connect also pushed Netflix deep into internet peering — the practice of connecting directly with ISPs and exchange points instead of routing everything through paid transit providers. Netflix engineers work with network operators on where to place appliances, how much local capacity to provision, and how traffic should route during partial outages. That turned what's traditionally a contracts-and-business-development problem into something Netflix engineering teams instrument, measure, and iterate on like any other system, with public dashboards showing ISP-level streaming quality that put real performance data in front of both Netflix and the provider.
 
 The payoff shows up as fewer rebuffers, faster start times, and a delivery architecture that degrades more gracefully than one dependent on a small number of third-party CDN relationships. It also gave Netflix leverage and resilience that pure commercial CDN contracts couldn't: appliances embedded in thousands of networks worldwide meant no single vendor outage could take Open Connect down entirely.
+
+## What a mid-size team can steal without building a CDN
+
+Open Connect exists because video bits are enormous and last-mile transit is expensive. You will not embed appliances in ISPs. You can steal the traffic-engineering mindset: push popular, cacheable bytes as close to the viewer as economics allow, and treat origin as a scarce resource. For a mid-size streaming or download product that means a commercial CDN, long cache TTLs on immutable encodes, and origin shields so a miss storm cannot melt encoders.
+
+The concrete failure mode is versioned assets with cache-busting query strings on every deploy, so the CDN is a very expensive reverse proxy. Another is packing personalized manifests that cannot be cached while the segments could be; put identity in the playlist logic, not in every byte. Operational gotcha: fill traffic when a new episode drops worldwide. Pre-positioning popular titles, or at least pre-warming regional caches, is the Open Connect idea at human scale. TLS and tokenized URLs that expire too aggressively cause playback errors that look like app bugs. Log cache-hit ratio and origin bandwidth as product metrics, not only CDN vendor graphs. If your origin is in one region, a distant ISP outage is your outage. Multi-CDN failover is worth more than a custom POP until you have Open Connect's volume and peering team.
 
 ## What you can borrow
 

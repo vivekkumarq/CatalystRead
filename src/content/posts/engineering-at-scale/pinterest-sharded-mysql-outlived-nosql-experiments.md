@@ -3,6 +3,7 @@ title: "Why Pinterest Bet on Sharded MySQL Over NoSQL"
 slug: "pinterest-sharded-mysql-outlived-nosql-experiments"
 description: "Pinterest hit early scaling walls, tried NoSQL alternatives, then built ID-encoded sharded MySQL instead — and it outlasted the exotic options."
 publishedAt: "2026-04-23"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -30,6 +31,12 @@ Pinterest paired sharded MySQL with an aggressive caching layer in front of it a
 | Team familiarity | High — years of operational experience | Low — new failure modes to learn |
 | Data model fit | Strong for relational Pins/boards/graph | Mismatched for some core access patterns |
 | Operational tooling maturity | Mature | Still developing |
+
+## What a mid-size team can steal from staying on MySQL
+
+Pinterest's arc — try NoSQL, keep sharded MySQL for a surprising amount of truth — is the most transferable lesson in the set. Mid-size teams often leave Postgres too early because a conference talk promised infinite scale. Steal application-level sharding only when a single primary's CPU, IO, or backup window is actually the limiter, and keep SQL for relational integrity you still need.
+
+The concrete failure mode is a shard key that seemed obvious (user_id) until a feature needs a query by email, by board, or by pin hash and you cannot join across shards. Secondary lookup tables appear, and you rebuilt a distributed database in app code. Operational gotcha: schema migrations across hundreds of shards with different lag; a rolling ALTER that locks one hot shard is a partial outage. Steal pt-online-schema-change style tools and a shard inventory. Hot shards from celebrity accounts need extra replicas or key salting. Cross-shard transactions for "copy board" will glitch; design the product to tolerate it or use an outbox. The win of MySQL was operational familiarity: backups, explain plans, hireable skills. If your NoSQL experiment requires a staff engineer to interpret compaction, and your SQL shards do not, Pinterest's conservatism is your roadmap. Measure the cost of the experiment in on-call, not only in benchmark QPS.
 
 ## What you can borrow
 

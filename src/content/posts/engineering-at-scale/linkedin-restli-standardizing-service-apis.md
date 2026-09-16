@@ -3,6 +3,7 @@ title: "Rest.li: Standardizing APIs Across Hundreds of LinkedIn Teams"
 slug: "linkedin-restli-standardizing-service-apis"
 description: "How LinkedIn's move to a service-oriented architecture forced a standardized REST framework, and why schema-driven API contracts paid off at scale."
 publishedAt: "2025-07-20"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ Rest.li wasn't just an API framework — it was paired with D2 (Dynamic Discover
 ## Hundreds of services speaking one dialect
 
 By standardizing on Rest.li, LinkedIn made it possible for any engineer to call into any other team's service with a generated client, predictable semantics, and automatic API documentation, without needing tribal knowledge about that specific service's conventions. LinkedIn open sourced Rest.li, and the framework's emphasis on schema-driven contracts influenced how the company later thought about API design more broadly, including efforts to unify internal and external-facing API surfaces.
+
+## What a mid-size team can steal from Rest.li
+
+Rest.li was a reaction to hundreds of teams inventing slightly different HTTP styles until clients could not be generated and operations could not be automated. Mid-size orgs hit this around the twentieth service, not the two-hundredth. The steal is not "use Rest.li." It is schema-first resources, consistent error envelopes, and a client that cannot be hand-edited without losing the next regen. OpenAPI plus generated clients plus a linter that rejects one-off query params gets most of the benefit.
+
+The failure mode is standardizing the framework while leaving authorization, pagination, and idempotency as folklore. You then have beautiful IDL and production incidents where two services paginate with different cursor meanings. Another gotcha is backwards compatibility theater: teams add fields freely because JSON is flexible, then mobile clients crash on unexpected unions. Rest.li-style discipline means additive changes, explicit versions when you break, and a deprecation calendar. Steal a compatibility test that runs old clients against new servers in CI. Do not steal a requirement that every internal RPC look like a public REST API if you already have a good RPC stack; the point was one contract, not a particular verb set. Measure onboarding time for a new endpoint. If a competent engineer still needs a tribal guide to ship a resource, the standard is incomplete.
 
 ## What you can borrow
 

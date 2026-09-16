@@ -3,6 +3,7 @@ title: "Idempotency Keys: How Stripe Made Payment Retries Safe"
 slug: "stripe-idempotency-keys-and-safe-retries"
 description: "How Stripe's idempotency key design lets clients safely retry payment requests after a timeout without risking a duplicate charge."
 publishedAt: "2025-10-02"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -27,6 +28,12 @@ A key generated once has to mean the same thing on every retry, so Stripe checks
 ## Pairing reliability with API versioning
 
 Stripe has written about pairing this retry-safety discipline with a deliberate API versioning strategy: each merchant integration is effectively pinned to the API version that was active when they built against it, and Stripe maintains internal compatibility and transformation layers so that new API changes can ship continuously without breaking old, unmaintained integrations. Stripe has described operating a large number of API versions concurrently across its customer base as a result. The combination matters — idempotency keys protect against transient network failures during a single request, while version pinning protects against Stripe's own evolution breaking requests that used to work.
+
+## A concrete failure mode for idempotency keys
+
+Idempotency keys make client retries safe for creating charges and customers. The failure mode is a key reused for a different payload, or a key that expires before the client gives up, so the second try creates a second charge. Mid-size steal: keys scoped to API key plus endpoint, stored with a hash of the request, and a conflict error if the body does not match.
+
+Operational gotcha: a load balancer retry on a POST that already committed, without a key, because the client library only set the key on "user clicked twice." Network retries need the same key. Another is storing idempotency records in a cache with eviction; a successful charge record disappearing is how you double-bill. Put them in the database with a TTL measured in days, not minutes. Concurrent requests with the same key need a lock or you will run two side effects and then try to remember both. Stripe's model is: first writer wins, others wait or get the saved response. Do not return a generic 500 on lock wait; the client will retry with a new key. Document which endpoints are idempotent. GETs are not where you hide this. Webhooks and jobs need their own keys too. If your support team cannot find a charge by idempotency key, the feature is unfinished.
 
 ## What you can borrow
 

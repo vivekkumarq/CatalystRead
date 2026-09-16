@@ -3,6 +3,7 @@ title: "Brooklin: Generic Streaming Pipes Between LinkedIn's Systems"
 slug: "linkedin-brooklin-streaming-data-pipes"
 description: "How LinkedIn built Brooklin as a single, generic streaming pipeline service to replace a sprawl of one-off connectors moving data between Kafka, Espresso, and beyond."
 publishedAt: "2026-03-15"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ Because Brooklin was meant to replace many independent pipelines rather than be 
 ## Replacing point-to-point sprawl with one operable system
 
 The payoff mirrored what Kafka itself had delivered a few years earlier: instead of an integration problem that grew with the number of systems, LinkedIn had one piece of infrastructure that a new pipeline could be configured into, with consistent operational characteristics, consistent monitoring, and a single team of experts who understood its failure modes deeply instead of that knowledge being scattered thinly across every team that had ever built a one-off connector.
+
+## What a mid-size team can steal from Brooklin
+
+Brooklin's value was not a new protocol. It was refusing to let every team write another brittle connector from Kafka to Espresso, from a database to a search index, or from one cluster to another region. Mid-size companies hit the same wall earlier than they expect: the first three pipes are a weekend of scripts, the thirtieth is an on-call rotation that nobody staffed. A practical steal is a single mirroring and CDC-style service with a small, versioned connector interface, quotas, and a dashboard that shows lag by pipeline rather than by host.
+
+The concrete failure mode is a connector that "keeps running" while dropping records after a schema change on the source. Operators see healthy process metrics and stale destinations. Brooklin-shaped systems need poison-message isolation, explicit backpressure when the sink is slower than the source, and a rule that schema evolution is a first-class event, not an email. Mirror-maker style copies also hide offset translation bugs: a restart that rewinds too far duplicates writes into a store that is not idempotent. If your sinks cannot take duplicates, the pipe is lying about at-least-once. Steal the operations model first — one team owns pipes, product teams declare sources and sinks — before you steal any particular Java service name.
 
 ## What you can borrow
 

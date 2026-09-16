@@ -3,6 +3,7 @@ title: "Why a Job Site Invented Kafka"
 slug: "linkedin-kafka-origin-story-and-the-log"
 description: "How LinkedIn's tangle of point-to-point data pipelines led to Kafka's commit-log abstraction, and how one internal tool became industry infrastructure."
 publishedAt: "2025-10-20"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -37,6 +38,12 @@ Kreps later articulated the underlying philosophy in a widely cited essay, "The 
 ## From internal tool to industry infrastructure
 
 LinkedIn open sourced Kafka in 2011 and later donated it to the Apache Software Foundation. Kreps, Narkhede, and Rao went on to found Confluent to build commercial infrastructure around it. What started as a fix for LinkedIn's internal pipeline sprawl became one of the most widely deployed pieces of streaming infrastructure in the industry, well beyond anything specific to LinkedIn's original use case.
+
+## Operational gotchas once the log is the backbone
+
+Once a commit log becomes the nervous system, the failure modes stop looking like queue outages and start looking like silent consumer drift. A team that pauses a Hadoop job for a week can come back to find the retention window has already dropped the offsets they needed, so the "replay anytime" promise is really "replay within the cheapest disk budget someone set last quarter." Compacted topics hide a different trap: keys that stop being produced vanish from the log's current view, which is correct for changelog semantics and disastrous if someone treated compaction as backup.
+
+Partition count is another decision that ages badly. LinkedIn-style high-throughput topics tempt operators to over-partition for parallelism, then every consumer group pays for idle tasks, rebalances take longer, and a single poisoned key hashes forever onto one hot partition. Mid-size teams can steal the log abstraction without cloning a 2010 LinkedIn cluster: start with one well-named topic per business event, enforce a schema at produce time, and pick retention that covers the slowest batch job plus a buffer. Do not let every microservice invent a private pipe. The original LinkedIn pain was not missing brokers; it was N-squared integrations. Recreating that with "just a few extra topics" is how Kafka becomes the next tangle.
 
 ## What you can borrow
 

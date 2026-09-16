@@ -3,6 +3,7 @@ title: "Databus: Change Data Capture Before CDC Was a Category"
 slug: "linkedin-databus-change-data-capture"
 description: "How LinkedIn built Databus to stream low-latency, ordered change events out of Oracle and MySQL years before change data capture became a common pattern."
 publishedAt: "2025-09-10"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -36,6 +37,12 @@ Oracle/MySQL txn log --> relay (bounded in-memory window, ordered by commit)
 ## An idea that predated an industry category
 
 Databus's core pattern — read a database's internal change log rather than polling or relying on application-level notification, and give every downstream consumer an ordered, replayable stream — is recognizable today as change data capture, now a well-established category with tools like Debezium built around the same idea. LinkedIn was solving this problem, at production scale, years before the term was in common use, largely because the volume of derived systems consuming member data made anything less than a proper CDC pipeline unworkable.
+
+## A concrete failure mode for change streams
+
+Change data capture looks clean until a primary failover, a long-running transaction, or a schema change lands in the same hour. Databus-era systems had to preserve commit order so search and caches did not apply an update before the insert it depended on. Mid-size teams who bolt a logical decoder onto Postgres or MySQL often skip that ordering contract and then debug "impossible" application states for weeks.
+
+The classic failure is a replica that falls behind during a bulk backfill, then catches up by bursting mutations that overwhelm downstream consumers. The source database looks healthy; the search cluster falls over; operators throttle the wrong layer. Another gotcha is treating the binlog as a public API: application teams start encoding business events only as row changes, then cannot reconstruct why a row changed, only that it did. CDC is a great fan-out mechanism and a poor event model. Steal LinkedIn's split: use the database log for faithful replication of state, and emit explicit domain events when product semantics matter. Watch transaction boundaries — a multi-row checkout that streams as independent row events will briefly look like a paid cart with no line items. If you cannot name the isolation story for those windows, do not put the stream on the member-facing path yet.
 
 ## What you can borrow
 

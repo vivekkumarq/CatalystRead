@@ -3,6 +3,7 @@ title: "Rewriting the Slack Desktop Client for a Multi-Workspace World"
 slug: "slack-desktop-client-rewrite-multi-workspace"
 description: "How Slack rebuilt its Electron desktop app's architecture to support switching between many workspaces without the memory and performance problems piling up."
 publishedAt: "2025-08-08"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -33,6 +34,12 @@ This is a familiar pattern in application architecture more broadly — separati
 ## Measuring what actually mattered to users
 
 Part of the effort involved building better internal tooling and metrics to understand what desktop performance actually looked like for real users with real workspace counts, rather than relying on synthetic benchmarks with one or two workspaces that didn't represent how heavy users actually worked. Startup time, memory footprint as workspace count grew, and the latency of switching between workspaces all needed to be measured against real usage distributions, since the whole point of the rework was improving the experience specifically for the users whose workflows had outgrown the original design's assumptions.
+
+## What a mid-size team can steal from Slack's client rewrite
+
+Slack's desktop rewrite had to make multi-workspace real: one process, many tenants, independent connections, and memory that does not grow like the number of unread channels. Mid-size steal: isolate tenant state in the client as strictly as on the server. A bug that writes workspace A's token into workspace B's store is an incident, not a UI glitch.
+
+The concrete failure mode is a shared Electron or webview cache that mixes localStorage keys by origin only, not by workspace id. Another is performance work that ships a beautiful empty-state and then janks when a customer has 40k channels. Profile on a fixture that looks like your worst enterprise tenant. Operational gotcha: rolling out a rewrite while the old client still emits a different event protocol; the server must dual-speak, and a feature flag that flips too fast strands users on split-brain unread counts. Steal a protocol version and a minimum client. Offline and sleep/wake on laptops produce duplicate connections; the server should treat session replacement as normal. Memory leaks in long-lived desktop apps become "Slack is a hog" on Twitter and then a churn event. Budget an on-call for client performance, not only API. If you are not Slack-sized, still steal workspace-scoped storage and a reconnect backoff that does not thundering-herd your own API.
 
 ## What you can borrow
 

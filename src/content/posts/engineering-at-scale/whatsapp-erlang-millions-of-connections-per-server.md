@@ -3,6 +3,7 @@ title: "How WhatsApp Served Millions of Connections per Server With a Tiny Team"
 slug: "whatsapp-erlang-millions-of-connections-per-server"
 description: "How Erlang's lightweight process model and deep FreeBSD tuning let WhatsApp run hundreds of millions of users' traffic with a remarkably small team."
 publishedAt: "2026-02-11"
+updatedAt: "2026-09-16"
 category: "WhatsApp"
 tags:
   - Engineering at Scale
@@ -26,6 +27,12 @@ Erlang's concurrency model alone wasn't sufficient — WhatsApp engineers, notab
 ## Simplicity as a deliberate scaling strategy
 
 WhatsApp's product philosophy reinforced the technical one. The company avoided building out a large feature surface for years — no ads, a famously minimal feature set — which meant there was simply less system to build, operate, and keep reliable. Combined with Erlang's built-in distribution and supervision, this let WhatsApp run at massive scale without needing a large operations or SRE organization to keep it healthy. Co-founders Jan Koum and Brian Acton were known for emphasizing this ethos of restraint, and it became a widely cited counterexample to the assumption that reaching hundreds of millions of users requires either a large headcount or constantly chasing the latest distributed-systems fashion.
+
+## A concrete failure mode for huge connection density
+
+WhatsApp's Erlang servers became famous for holding millions of TCP connections per box. The failure mode of copying that headline is ignoring that the process model, the OS limits, and the protocol (mostly idle, tiny messages) all had to fit. Mid-size steal: measure bytes per idle connection and set ulimit/somaxconn honestly; do not assume Go or Node will match Erlang's scheduling without work.
+
+The concrete failure mode is a reconnect storm: a POP dies, millions of mobiles retry at once, and the remaining boxes accept until memory dies. Accept backpressure and randomized backoff are the product. Operational gotcha: one hot mailbox — a celebrity broadcast — that is still one VM process if you modeled poorly. Erlang does not magically shard your domain. NICs, file descriptors, and TLS handshakes become the limiter before CPU. Kernel tuning without a load test that holds idle connections for hours will lie; memory leaks and timer wheels show up late. Observability per connection is impossible at that density; sample. If you have 50k connections, a boring HAProxy plus app servers is enough. Steal the discipline of a small team that knew their runtime, not a million-connection goal. The anti-pattern is a chat prototype that opens a websocket per tab with no heartbeat timeout and then blames the language.
 
 ## What you can borrow
 

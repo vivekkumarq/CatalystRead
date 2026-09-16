@@ -3,6 +3,7 @@ title: "Samza: Making Stream Processing a First-Class Citizen Next to Kafka"
 slug: "linkedin-samza-stream-processing-first-class-citizen"
 description: "How LinkedIn built Apache Samza to pair with Kafka, using partitioned logs and local state to make stateful stream processing durable and rebalanceable."
 publishedAt: "2025-06-18"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -42,6 +43,12 @@ This gave Samza at-least-once processing semantics by default, which was suffici
 ## Powering relevance and monitoring pipelines
 
 Samza became the engine behind a wide range of LinkedIn's real-time pipelines: computing derived metrics and relevance signals feeding features like the news feed and notifications, powering call-graph and operational monitoring by processing service log streams in real time, and handling the kind of continuous joins and aggregations that would otherwise have required either brittle in-house code or a slow batch round-trip through Hadoop. LinkedIn open sourced Samza and it became an Apache project, used alongside Kafka at other companies that had adopted the same log-centric architecture.
+
+## Operational gotchas of stateful stream jobs
+
+Samza's bet — local state next to a partitioned log, restored from changelog — fails in production when state size outruns disk, when a rebalance restores checkpoints that are minutes behind a bursty topic, or when a job is not actually idempotent and a restore replays side effects. Mid-size teams copy "stateful streaming" for sessionization or feature generation and then treat RocksDB on the task as free. It is not: compaction, changelog traffic, and host replacement become the job.
+
+A concrete failure mode is a join between a high-rate stream and a slowly changing table where the table changelog was compacted too aggressively; after a bounce, the job cannot rebuild the lookup and starts dropping enrichments. Another is processing-time logic that looks correct until a partition stalls and event-time watermarks freeze. Steal Kafka-plus-local-store only if you can explain restore time after losing a host. Otherwise, push state into a serving store Venice-style and keep the processor thin. Mid-size steal: start with stateless filters and aggregations that can replay from the log, add keyed state only for windows you can bound, and never write to an external database from a task unless that write is idempotent and observable. Rebalances that look like "just shuffling tasks" are user-visible latency cliffs if restore is slow.
 
 ## What you can borrow
 

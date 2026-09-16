@@ -3,6 +3,7 @@ title: "MyRocks: How Facebook Cut MySQL Storage Nearly in Half"
 slug: "meta-myrocks-lsm-engine-replacing-innodb"
 description: "Why Facebook replaced InnoDB with MyRocks, an LSM-tree storage engine built on RocksDB, to shrink storage footprint across its huge MySQL fleet."
 publishedAt: "2026-06-04"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Facebook's answer was MyRocks: a MySQL storage engine built on top of RocksDB, a
 ## The payoff: roughly half the storage footprint
 
 Facebook's engineering write-ups on MyRocks reported storage space savings on the order of half compared to InnoDB for their workloads, primarily driven by better compression ratios achievable on LSM-tree's immutable sorted files plus reduced fragmentation overhead. At fleet scale, that kind of reduction translates directly into fewer machines needed to store the same data, which is a meaningful capital and operational expense saved, not just a storage-efficiency curiosity. The trade-off Facebook accepted was added complexity in tuning compaction (which consumes background I/O and CPU) and some workload-dependent shifts in read and write latency characteristics compared to InnoDB.
+
+## A concrete failure mode when swapping storage engines
+
+MyRocks cut space because LSM compaction writes more sequentially and compresses better than InnoDB's B-tree page layout on Facebook's workload. The failure mode for a mid-size team is copying the engine swap without copying the workload: if you are update-in-place heavy with large rows and need stable range-scan latency, write amplification and compaction stalls can erase the disk savings in tail latency. Steal the measurement plan: space, write amp, compaction IO, and p99 of the queries you actually run, on a replica with production traffic shadow, before a primary cutover.
+
+Operational gotcha: replication between InnoDB and Rocks engines, or mixed versions during rolling migrate. Checksums, row formats, and gap locking behavior differ; a statement that relied on InnoDB next-key locking can phantom-read on another engine. Another trap is tuning compaction as if it were vacuum. A backlog of L0 files looks like "disk is fine" until reads hit too many levels. Facebook could staff MySQL internals; you probably cannot. Prefer managed MySQL or a storage engine your cloud already supports, and take the lesson at a higher level: pick on-disk layout for the write/read mix you have. If space is the crisis, compression and archival of cold tables often beat an engine rewrite. If you do migrate, keep a rollback replica on the old engine until the longest backup-restore drill succeeds.
 
 ## What you can borrow
 

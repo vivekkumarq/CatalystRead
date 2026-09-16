@@ -3,6 +3,7 @@ title: "Storm to Heron: Rebuilding Twitter's Real-Time Stream Processor"
 slug: "twitter-storm-heron-stream-processing"
 description: "Why Twitter replaced Apache Storm with Heron, a re-architected stream processor with per-task process isolation and built-in backpressure."
 publishedAt: "2025-09-22"
+updatedAt: "2026-09-16"
 category: "Twitter"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ Rather than building its own cluster manager the way Storm had, Heron ran as a s
 ## Operational payoff
 
 The practical effect showed up most in incident response. A single runaway task could be resource-capped or killed without threatening the rest of its topology. On-call engineers could attach a profiler to one process and get a clean signal instead of parsing interleaved logs from dozens of tasks. And backpressure removed a whole category of cascading failure where one slow bolt would eventually take an entire topology down. Heron became Twitter's standard real-time processing engine and was later released as open source.
+
+## A concrete failure mode for stream processors
+
+Storm, then Heron, processed the tweet stream with at-least-once or tuples-ack semantics that still surprise teams. The failure mode is a bolt that is not idempotent, an ack that is lost, and a duplicate trending topic or a double notification. Mid-size steal: Kafka Streams or Flink with a written delivery contract, and side effects behind an idempotency store.
+
+Operational gotcha: backpressure that looks like "the topology is slow" when a downstream DB is the limiter; extra parallelism makes it worse. Another is packing too much in one topology so a deploy of a spam feature risks the timeline counters. Split. Heron/Storm-style clusters have a master and workers; losing the scheduler mid-deploy is an incident class you must rehearse. Late data after a partition stall will move windows; decide processing-time vs event-time. Twitter could rewrite Storm into Heron for efficiency. You should not. If you are still on a homegrown Storm, plan an exit to a maintained engine. Metrics per bolt, not only topology-level, or you will not find the slow stage. The steal is treating streaming as an operations product with backpressure, not a directed graph you drew once on a whiteboard. Schema changes in the middle of a topology are a quiet outage: a new field that one bolt serializes and the next still treats as optional will parse until a null hits a counter. Version the tuple contract. Capacity that is "fine" on a quiet Tuesday will not survive an awards-show spike; have a shed path that drops low-value streams first so the paths that page still drain.
 
 ## What you can borrow
 

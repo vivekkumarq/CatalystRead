@@ -3,6 +3,7 @@ title: "Rate Limiters and Load Shedders: How Stripe's API Protects Itself"
 slug: "stripe-rate-limiters-and-load-shedders"
 description: "How Stripe layers per-request rate limiting with system-wide load shedding to keep its payments API available when traffic spikes or dependencies slow down."
 publishedAt: "2025-11-09"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -24,6 +25,12 @@ Rate limiting handles the case where you know which caller is misbehaving. Load 
 ## Prioritizing what matters most
 
 Not all requests are equal even under duress. Stripe's public writing has described favoring writes that affect money movement — creating a charge, capturing a payment — over less urgent reads when the system needs to shed load, on the theory that a merchant failing to charge a customer is a worse outcome than a delayed dashboard query. This kind of prioritization only works if it's decided in advance, encoded into the shedding logic, and tested — deciding priority order in the middle of an incident is too late.
+
+## What a mid-size team can steal from Stripe's shedding
+
+Rate limits protect shared APIs from a buggy integration; load shedders protect the site from overload by dropping the least valuable work. Mid-size steal both, and do not confuse them. A 429 to a noisy client is not the same as dropping search to save checkout. Put the money path in a class that sheds last.
+
+The concrete failure mode is a global RPS cap that lets one tenant consume it, 429ing everyone else. Key limits by API key and by IP, with a burst. Operational gotcha: load tests that never send 429s, so clients have no backoff and a real limit becomes an outage. Publish Retry-After and test it. Another is shedding that returns 200 with empty bodies, which clients cache as truth. Use honest status codes. Stripe-scale fairness is complicated; you can start with token buckets in Redis and a middleware. Coordinated shedding across pods needs a shared signal or you will flap. Prefer local limits plus an edge limit. Document the numbers in the public API, or partners will guess and then blog that you are down. If your shedder has never fired in production, you do not know if it works. Trip it in a game day on a non-critical endpoint first.
 
 ## What you can borrow
 

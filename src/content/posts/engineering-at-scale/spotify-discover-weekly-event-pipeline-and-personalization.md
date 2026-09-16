@@ -3,6 +3,7 @@ title: "The Data Pipeline Behind Spotify's Discover Weekly"
 slug: "spotify-discover-weekly-event-pipeline-and-personalization"
 description: "How Spotify combines collaborative filtering, text analysis, and audio features in a weekly batch pipeline to power Discover Weekly for every user."
 publishedAt: "2025-09-15"
+updatedAt: "2026-09-16"
 category: "Spotify"
 tags:
   - Engineering at Scale
@@ -26,6 +27,12 @@ The underlying infrastructure shifted significantly over Spotify's history. The 
 ## Beyond pure batch
 
 As the personalization stack matured, Spotify engineers described moving parts of the system toward more adaptive approaches — using bandit algorithms to inform decisions like playlist track ordering, an approach they've referred to in engineering talks as treating recommendations as a bandit problem (sometimes described under the name BaRT, bandits as recommendation treatments), layering real-time signal on top of the weekly batch foundation rather than replacing it.
+
+## What a mid-size team can steal from Discover Weekly
+
+Discover Weekly is a productized pipeline: listen events in, a weekly artifact out, with enough freshness to feel magic and enough batchiness to be operable. Mid-size steal: a scheduled, inspectable recommendation job with a fallback playlist, not a microservice that scores every play in path. Users forgive a weekly cadence; they do not forgive a blank home.
+
+The concrete failure mode is training on implicit feedback without accounting for position bias and skips, so the model amplifies whatever was already in the first row. Another is a pipeline delay that ships last week's vector as this week's identity, duplicating the same 30 tracks. Version the output and diff against last run; alert on overlap. Operational gotcha: rights and availability. A track that is recommendable in one market is silent in another; personalization must filter by catalog, or you generate error tiles. Cold start for new users should be editorial or popularity in-region, not zeros. Event pipelines that drop "skip" events because they were considered noise will miss the strongest negative label. Steal a small set of well-defined events. If you cannot explain why a track appeared to a user-support agent, you will turn off the feature after the first controversy. Keep an explanation path even if it is just "similar listeners in your country."
 
 ## What you can borrow
 

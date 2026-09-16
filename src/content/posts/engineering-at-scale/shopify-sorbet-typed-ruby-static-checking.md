@@ -3,6 +3,7 @@ title: "Adding Types to a Runtime: Sorbet and Static Checking in Shopify's Rails
 slug: "shopify-sorbet-typed-ruby-static-checking"
 description: "How Shopify layered gradual, static type checking onto a massive dynamically-typed Rails codebase using Sorbet without freezing feature work."
 publishedAt: "2025-05-20"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -44,6 +45,12 @@ Because Sorbet ships as a language server, engineers got autocomplete, go-to-def
 ## Living with a dynamic language and a type checker
 
 The harder problem was Rails itself: metaprogrammed associations, dynamically defined methods, and ActiveRecord's runtime magic don't map cleanly onto static analysis. Shopify and the broader Sorbet ecosystem invested in tooling that generates type signatures (RBI files) for these dynamic constructs, effectively teaching the checker about patterns it couldn't see by reading the source directly. That tooling had to be maintained continuously as the schema and codebase evolved, making type coverage an ongoing infrastructure commitment rather than a one-time migration project.
+
+## Operational gotchas of gradual typing in a giant Rails app
+
+Sorbet at Shopify is a long ratchet through a Rails monolith: typed signatures where they pay off, untyped leftovers where they do not yet. The failure mode is a mandate of "100% typed" that produces `T.untyped` wallpaper and a slower CI without fewer incidents. Mid-size steal: type the money path, the permissions path, and public module interfaces first, and keep a metric of strict files that only moves up.
+
+Operational gotcha: runtime checks that are too expensive on hot loops, or RBI files for gems that lie, so the checker is green and production raises. Treat gem RBIs as a security/reliability surface. Another is merge conflict hell in huge signature files; generate what you can, and avoid reformatting the world in the same PR as a behavioral change. Rails DSLs — callbacks, magic associations — fight the type system; wrap them at the boundary rather than typing every metaprogram. Teams will bypass with `T.unsafe` to ship; make that a review comment and a dashboard. Shopify could staff a types team. You should staff a weekly hour to shrink untyped call sites on one core package. The point is fewer nil incidents and safer refactors, not a badge. If CI typecheck is flaky or 20 minutes, people will skip it and the whole bet collapses.
 
 ## What you can borrow
 

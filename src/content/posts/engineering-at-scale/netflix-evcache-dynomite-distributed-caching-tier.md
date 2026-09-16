@@ -3,6 +3,7 @@ title: "EVCache and Dynomite: The Caching Tier Behind Every Netflix Play Button"
 slug: "netflix-evcache-dynomite-distributed-caching-tier"
 description: "How Netflix wrapped Memcached in EVCache for wide-area replication and built Dynomite to give Redis a Dynamo-style distributed backbone."
 publishedAt: "2025-07-14"
+updatedAt: "2026-09-16"
 category: "Netflix"
 tags:
   - Engineering at Scale
@@ -37,6 +38,12 @@ Dynomite's approach mirrors the classic Dynamo pattern: consistent hashing to di
 ## Two tools, one philosophy
 
 EVCache and Dynomite solve adjacent but different problems — simple high-throughput caching versus richer data structures with tunable consistency — and Netflix runs both rather than forcing every use case through one. The shared philosophy is what matters: take a well-understood, widely trusted single-node technology, and add the distribution, replication, and failure-tolerance layer as a wrapper rather than a fork or a rewrite. That kept Netflix on stock Memcached and stock Redis internals, benefiting from upstream improvements and community familiarity, while solving the distributed-systems problem as a separate, reusable layer.
+
+## A concrete failure mode for a replicated cache tier
+
+EVCache and Dynomite-style layers wrap memcached/Redis with replication and zone awareness so a cache miss is not a cross-country trip and a node death is not a herd. The failure mode is treating the cache as a network of truth. Once clients write only to the cache, a replication lag becomes a product bug, and a flush becomes data loss. Mid-size steal: replicate the cache for availability, keep the source of truth elsewhere, and make replicas serve stale rather than none.
+
+Operational gotcha: hot keys still exist under consistent hashing. Replication multiplies write traffic for those keys and can saturate NICs. Stampeding a popular title's metadata is still a thing; combine with leases. Another incident is a global invalidation that is implemented as "delete everywhere" at the same instant, recreating a herd toward origin. Invalidate in waves or serve stale-while-revalidate. Dynomite/Redis clusters with large values fragment memory and evict more than you expect; measure evictions per slab or policy, not only used_memory. Client libraries that retry all replicas on timeout can amplify an outage. Steal hedged requests carefully, with a budget. Cross-region cache replication of personalized data also becomes a privacy and residency problem; not every key should fan out to every geography.
 
 ## What you can borrow
 

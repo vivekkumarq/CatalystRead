@@ -3,6 +3,7 @@ title: "Four Linked Devices, No Phone Required: WhatsApp's Multi-Device Redesign
 slug: "whatsapp-multi-device-architecture"
 description: "How WhatsApp re-architected linked devices to connect to its servers independently, without a phone relaying every message, while keeping end-to-end encryption intact."
 publishedAt: "2025-08-14"
+updatedAt: "2026-09-16"
 category: "WhatsApp"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ Sending a message in a multi-device account means encrypting it separately for e
 ## Keeping the device list itself trustworthy
 
 A multi-device system introduces a new attack surface that a single-identity system never had to worry about: what stops a malicious actor from silently adding their own device to someone else's account and receiving a copy of every message? WhatsApp addresses this by having the primary device (the phone) cryptographically sign the list of linked devices, and every other device and every contact's client can verify that signature before trusting the device list is legitimate. Linking a new device requires an explicit, visible action — typically scanning a QR code from an already-authenticated device — and any change to the device list is something contacts' clients can detect, closing the gap where a rogue device could be added invisibly.
+
+## Operational gotchas of multi-device E2E
+
+Multi-device WhatsApp had to sync message history and sessions without putting plaintext on the server. The failure mode is a companion device that is stale, a primary that is off, and a user who believes a message was sent because one device acked. Mid-size steal: a device roster with keys, a defined primary, and fan-out that treats each device as a recipient.
+
+The concrete failure mode is pairing that leaks a QR session or never expires a lost laptop. Device revocation must be fast and must fail decryption on the lost device. Operational gotcha: fan-out cost. N devices times M group members is a load spike; batch and cap devices per user. History sync is a huge encrypted blob; a flaky network will partial-apply and corrupt the local store if you do not use transactional import. Clocks across devices will disorder chats; use server-assisted ordering tokens that do not reveal content. Notifications on a linked device can double-ping; users hate that more than engineers expect. If you are not doing E2E, multi-device is still a consistency problem: unread state fights. Steal a per-device cursor. Test unlink while a message is in flight. That race will happen. The architecture is as much product (which device is "the phone") as it is protocol. Write the sentence users will see when a device is unlinked.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "The HBase Era: When Pinterest Served Boards and Pins from Wide-Column St
 slug: "pinterest-hbase-era-wide-column-storage"
 description: "A look back at the years Pinterest ran core data on HBase, why the wide-column model fit some of its access patterns, and where the friction showed up."
 publishedAt: "2025-10-12"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -34,6 +35,12 @@ Pinterest's engineers found themselves increasingly investing operational effort
 ## A real phase, not a detour
 
 It's worth treating this as a genuine phase of Pinterest's infrastructure history rather than a mistake to wave away — HBase served core traffic for a real stretch of the company's growth, and the operational lessons learned running it directly informed what Pinterest's engineers looked for, and avoided, when they later invested in scaling sharded MySQL instead. Understanding why the wide-column model was chosen, and specifically where its promised benefits didn't fully materialize against Pinterest's real workload, is what made the later architectural decision an informed one rather than a guess.
+
+## Operational gotchas of the HBase years
+
+Pinterest's HBase era was a bet that wide rows and cheap writes would outrun MySQL for graph-shaped and activity-shaped data. The operational tax was ZooKeeper, region servers, and compaction storms that look like "HBase is slow" when the real story is too many tiny files or a hotspot region for a celebrity pin. Mid-size teams still wander here when a vendor pitch says Hadoop ecosystem. Steal wide-column thinking — denormalize the query into a row — without inheriting a 2013 ops stack if a managed Bigtable or even Postgres JSON plus indexes will do.
+
+The concrete failure mode is a row that grows without bound: a user timeline as a single row, then a power user blows the block cache and timeouts cascade. Cap, paginate, or salt. Another gotcha is schema-on-read that never got a schema: every writer invents column families, and a migration cannot find the data. Region splits during peak traffic move hot keys at the worst time. Major compaction I/O steals from serving if you did not throttle. HBase also taught Pinterest what not to keep: some datasets later moved back toward sharded MySQL because operational simplicity beat theoretical scale. Measure on-call hours per terabyte, not only QPS. If your team cannot explain WAL replication and region assignment, you are borrowing a database you cannot land.
 
 ## What you can borrow
 

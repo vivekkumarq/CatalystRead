@@ -3,6 +3,7 @@ title: "How Stripe Keeps a Decade of API Versions Backwards Compatible"
 slug: "stripe-api-versioning-backwards-compatibility-transforms"
 description: "Stripe's approach to API versioning uses per-account pinned versions and request/response transforms instead of forcing every integration onto the latest shape."
 publishedAt: "2025-08-09"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -24,6 +25,12 @@ The key to making this sustainable is that Stripe doesn't maintain separate impl
 ## Why this trade-off makes sense for Stripe
 
 The cost is real: the transform chain grows over time, and every new versioned change adds a link that has to keep working correctly for the life of the API. Stripe accepts that cost because the alternative — periodically forcing thousands of businesses to update integration code on Stripe's timeline — is worse for a payments API specifically, where a broken integration means lost transactions and support burden that customers didn't sign up for. This isn't a universal answer; it makes the most sense when your API sits underneath many independent, often unmaintained integrations where a forced migration is expensive to your users, not just inconvenient.
+
+## A concrete failure mode for API versioning
+
+Stripe pins each account to an API version and transforms responses so old SDKs keep working. The failure mode is a transform that is almost right: a renamed field copied incorrectly for one version, and a silent minority of users mis-parse amounts. Mid-size steal: explicit versions, additive changes by default, and a compatibility suite of recorded responses per version, run in CI.
+
+Operational gotcha: versioning request bodies as well as responses. A new required field that old clients omit must have a default that is safe, not a 400 that breaks checkout. Another is SDKs that pin to a version different from the dashboard's version, so docs and behavior disagree. Show the pin in the dashboard. Transforms accumulate into a museum of edge cases; budget time to sunset with usage metrics, not vibes. Never reuse JSON keys with new meanings. Stripe can afford a compatibility team. You can afford a `changelog.md` that is enforced by tests and a six-month deprecation with emails. If you only have internal clients, still version, because mobile binaries linger. The steal is treating the API as a forever program, with adapters, rather than "we'll bump major and they will all update." They will not. Transforms that touch money fields need golden fixtures with amounts in several currencies and zero/negative edge cases; a one-line mapping bug is a bookkeeping incident, not a docs nit. When you finally sunset a version, ship a read-only compatibility report per account so support can point at usage instead of guessing.
 
 ## What you can borrow
 

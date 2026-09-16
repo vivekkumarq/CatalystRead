@@ -3,6 +3,7 @@ title: "M3: Building a Metrics Platform That Doesn't Fall Over at a Billion Time
 slug: "uber-m3-metrics-platform-at-scale"
 description: "How Uber built M3, its open-sourced metrics platform, when off-the-shelf time-series tooling couldn't handle its monitoring scale."
 publishedAt: "2025-10-28"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -30,6 +31,12 @@ Rather than requiring every team to adopt a new query language or a new instrume
 ## Open sourcing it
 
 Uber open sourced M3 in 2018, framing it explicitly as infrastructure built to solve a scale problem the existing open source ecosystem didn't yet address well: very high cardinality metrics (many unique combinations of labels, which is common when you tag metrics by things like host, service, and endpoint), long retention windows, and multi-tenant usage across an organization with hundreds of independent teams all emitting metrics into the same shared platform. That combination — massive scale plus multi-tenancy plus compatibility with existing tooling — is a fairly specific niche, and M3 became one of the reference options for organizations that outgrew simpler single-node time-series setups.
+
+## Operational gotchas of a high-cardinality metrics stack
+
+M3 existed because Uber's dimensional metrics volume would wreck a naive Graphite. The failure mode at smaller companies is installing M3/Prometheus/Victoria and then tagging metrics with trip_id. Cardinality is the outage. Mid-size steal: recording rules, tag allowlists, and a budget per team in series count.
+
+The concrete failure mode is a deploy that adds a label; ingest falls behind; alerts evaluate on stale data; people disable alerts. Another is mixed retention: you need 15s for 24h and 1m for 90d, and one setting for both either bankrupts you or blinds you. Operational gotcha: aggregators that are themselves a SPOF. Watch the watchers with a second, dumb heartbeat. Uber could dedicate a metrics org. You can run Grafana Cloud or a single Prometheus with Thanos and the same social rules. Exemplars and traces still need a correlation id; M3 does not replace logs. If on-call dashboards are 60 unscoped queries, they will time out during the incident. Precompute the board. The steal is treating metric series as a finite resource, with the same seriousness as disk on the primary database. A metrics platform that cannot be paged for its own lag is incomplete.
 
 ## What you can borrow
 

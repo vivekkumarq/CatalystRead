@@ -3,6 +3,7 @@ title: "Backstage: How Spotify's Internal Sprawl Led to a Developer Portal"
 slug: "spotify-backstage-developer-portal-platform-teams"
 description: "How thousands of undiscoverable microservices inside Spotify led to Backstage, the developer portal it later open sourced through the CNCF."
 publishedAt: "2026-01-17"
+updatedAt: "2026-09-16"
 category: "Spotify"
 tags:
   - Engineering at Scale
@@ -24,6 +25,12 @@ Spotify's answer, Backstage, centered on a software catalog: a structured regist
 ## Open sourcing it, and why platform teams mattered
 
 Spotify open sourced Backstage in 2020 and donated it to the Cloud Native Computing Foundation in 2022, and it's since become one of the more widely adopted developer portal frameworks industry-wide. The broader lesson Spotify drew, echoed in its public engineering talks, is that platform teams earn their keep by removing this kind of cross-cutting friction for everyone else — a catalog and a portal don't ship product features directly, but they reduce the tax every team pays navigating the company's own infrastructure, which compounds across hundreds of squads.
+
+## Operational gotchas of a developer portal
+
+Backstage works when the software catalog is true: owners, on-call, repo, and deploy target for each service. It fails when it is a wiki with YAML that nobody updates, and then the portal becomes the place where information goes to die. Mid-size steal: a catalog that is generated from running systems and CODEOWNERS, with a weekly stale-owner report, before you install a plugin marketplace.
+
+The concrete failure mode is making Backstage a gate for deploys on day one, so product teams invent shadow pipelines. Another is 40 plugins and no paved path; cognitive load exceeds the old wiki. Operational gotcha: authz. A portal that can trigger jobs is production access. Treat it like an IDP. Spotify could staff a platform experience team. You should pick five golden paths — new service, new data pipeline, on-call signup, docs, CI — and finish them. Scorecards that shame teams without fixing CI minutes will be ignored or gamed. Steal the idea of a homepage for engineering, not a second Jira. If your company has 12 services, a well-kept README index plus service.yaml in each repo may be enough until discoverability actually hurts. When you do adopt Backstage, the catalog freshness SLO is the only SLO that matters; everything else is a theme.
 
 ## What you can borrow
 

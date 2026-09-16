@@ -3,6 +3,7 @@ title: "Why WhatsApp Bet on FreeBSD and Tuned the Kernel Directly"
 slug: "whatsapp-freebsd-kernel-tuning-connection-density"
 description: "WhatsApp's small infrastructure team pushed FreeBSD's kernel to hold enormous numbers of concurrent connections per server instead of scaling out horizontally."
 publishedAt: "2025-09-02"
+updatedAt: "2026-09-16"
 category: "WhatsApp"
 tags:
   - Engineering at Scale
@@ -33,6 +34,12 @@ The connection-handling and message-routing logic itself ran on Erlang and the B
 ## Fewer machines, less to operate
 
 The payoff of this approach showed up less in a single benchmark number and more in operational simplicity: with each server able to hold a very large number of concurrent connections, WhatsApp needed a strikingly small fleet relative to its user count, which in turn meant a strikingly small operations team could keep it running. Every layer of the stack — kernel, virtual machine, application — was tuned in service of that one organizational constraint, rather than each layer being optimized independently against its own local metric.
+
+## What a mid-size team can steal from kernel tuning
+
+WhatsApp's FreeBSD work was about making the OS cheap at huge numbers of idle sockets: buffers, TIME_WAIT, accept queues, and not treating default sysctls as physics. Mid-size steal: a written baseline of kernel params in config management, and a test that opens N connections and holds them. Do not paste sysctls from a blog into production on Friday.
+
+The concrete failure mode is raising file descriptors without raising the process limit, or vice versa, so you fail in a new way. Another is disabling SYN cookies or changing TCP timeouts in ways that hurt real mobile networks. Tune against traces from your clients. Operational gotcha: a kernel or NIC driver update that resets tunables. Immutable images with explicit sysctl. Linux vs FreeBSD differences mean you cannot copy WhatsApp's table verbatim; copy the method: know which limiter you hit (RAM, fd, interrupts, ephemeral ports) and change that one. Connection tracking on a NAT in front of you may be the real cap. If you are on Kubernetes, kube-proxy and conntrack will surprise you before FreeBSD folklore helps. Steal a dashboard of fd usage, accept drops, and TCP listen overflows. Those are cheaper than a custom OS. Only run a boutique kernel if you have a boutique density problem and a person who can debug it at 3 a.m.
 
 ## What you can borrow
 

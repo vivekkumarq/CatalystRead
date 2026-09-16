@@ -3,6 +3,7 @@ title: "Manhattan: Twitter's Multi-Tenant Distributed Database"
 slug: "twitter-manhattan-multi-tenant-distributed-database"
 description: "How Twitter replaced a patchwork of Cassandra clusters with Manhattan, a purpose-built, multi-tenant distributed database with pluggable storage engines."
 publishedAt: "2025-07-10"
+updatedAt: "2026-09-16"
 category: "Twitter"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ many teams --> Manhattan (shared cluster, per-tenant quotas & isolation)
 ## Consolidating operational expertise
 
 The payoff of Manhattan's design was concentrating deep operational expertise in one place instead of spreading thin Cassandra knowledge across dozens of team-owned clusters. A dedicated team could specialize in operating Manhattan well — capacity planning, failure recovery, multi-datacenter replication, upgrade rollouts — and every team building a product feature on top of it inherited that operational maturity automatically, rather than needing its own database experts. Manhattan became one of the core storage systems underpinning Twitter's user-facing data over the following years, illustrating a broader pattern in the company's infrastructure evolution: moving from many bespoke, team-owned systems toward fewer, more general, centrally operated ones as the company's scale made the coordination cost of the fragmented approach unsustainable.
+
+## A concrete failure mode for a multi-tenant store
+
+Manhattan-style stores put many workloads on one distributed KV/wide-column platform with isolation knobs. The failure mode is a noisy tenant — a backfill, a new feature writing fat values — that exhausts a shard others share. Mid-size steal: per-workload quotas and separate clusters for batch versus online before you build Manhattan.
+
+Operational gotcha: a "flexible" schema that lets one team store megabyte values and wreck the page cache for everyone. Cap value size. Another is multi-tenant backups that restore too much or too little; tenants need independent restore tests. Consistency knobs that differ by table will be mis-set on a new feature that needed stronger reads. Default to the safer knob for user-visible reads. Twitter could staff a storage team. You should use DynamoDB or Cassandra with tables per domain, or Postgres until it hurts. If you do share a cluster, the catalog of tenants is a production document: owners, QPS, SLO, and who to page. Without it, the store is a junk drawer. Watch key distribution; a celebrity id is a tenant of one. The steal is isolation and a hard value-size limit, not a custom database name. Replication lag between Manhattan's local and remote replicas is another incident class: a timeline write that is visible in one colo and missing in another looks like lost tweets. Publish the consistency class per API, and do not let a new tenant default onto async cross-dc if the product copy promises "posted." Upgrades of a storage engine under a live tenant need a dual-read window; engine bugs show up as silent checksum mismatches, not as a clean 500.
 
 ## What you can borrow
 

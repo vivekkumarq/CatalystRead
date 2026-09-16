@@ -3,6 +3,7 @@ title: "Scuba: Real-Time Analytics for Debugging Production at Facebook"
 slug: "meta-scuba-real-time-in-memory-analytics"
 description: "How Facebook built Scuba, an in-memory analytics engine that trades storage cost and precision for sub-second answers engineers need while debugging live incidents."
 publishedAt: "2026-02-14"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ Because Scuba's primary use case is interactive debugging rather than financial-
 ## Built for exploration, not fixed dashboards
 
 Scuba's query interface was designed around ad hoc, exploratory analysis rather than a fixed set of predefined dashboards: an engineer could pivot a query along a different dimension, add a filter, or drill into a specific subset of events, and get a new answer back in about the same sub-second time, encouraging the kind of rapid, iterative "what if I slice it this way instead" investigation that fixed dashboards don't support well. That interactivity turned out to matter as much as raw query speed — a fast query tool that only answers pre-built questions doesn't help much when you don't yet know which question you need to ask.
+
+## What a mid-size team can steal from Scuba
+
+Scuba traded durability and perfect accuracy for "slice this production event stream now." That is the right tool during an incident and the wrong tool as a warehouse. Mid-size steal: a high-cardinality, in-memory or local-SSD table of recent logs with seconds of delay, aggressive downsampling, and a culture that forbids using it for quarterly metrics. ClickHouse with a short TTL, or even a fat Elasticsearch hot tier, can play the role if you accept lossy retention.
+
+The concrete failure mode is success. Engineers love the speed, start building product dashboards on Scuba, then a restart or a dropped host loses the only copy of a number leadership believed. Another gotcha is cardinality explosion: a group-by on user id in a busy binary fills RAM and the cluster falls over during the incident you were debugging. Steal allowlists for group-by keys and a row budget per query. Sampling that is not region-aware lies about outages that are local. Clock skew across collectors makes "last five minutes" disagree between tables. Put a watermark on ingest. You do not need Facebook's custom engine to get the operational idea: debug on a lossy, fast store; decide on a durable one. Connecting the two with the same event names is the unglamorous work that makes both trustworthy.
 
 ## What you can borrow
 

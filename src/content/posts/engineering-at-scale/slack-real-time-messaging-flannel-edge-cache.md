@@ -3,6 +3,7 @@ title: "Slack's Real-Time Backbone: Flannel and the Websocket Fleet"
 slug: "slack-real-time-messaging-flannel-edge-cache"
 description: "How Slack built the Flannel edge cache and a websocket gateway tier to hydrate huge workspaces instantly without hammering primary databases."
 publishedAt: "2025-12-13"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -26,6 +27,12 @@ Slack has also published postmortems describing incidents where infrastructure h
 ## Scaling the pipeline underneath
 
 Behind the gateway and cache tiers, Slack has described building out job scheduling and queueing infrastructure to absorb bursts — a large workspace sending a message that needs to notify and update a large number of simultaneously connected clients generates a burst of downstream work that has to be smoothed out rather than processed synchronously in the request path, as Slack scaled from thousands to tens of millions of daily active users.
+
+## Operational gotchas of Flannel-style edge caches
+
+Flannel exists so a client does not pull the entire channel history and presence map from the core on every reconnect. The failure mode is an edge cache that is wrong in a way users notice immediately: a message that exists in the channel but not at the edge, or a deleted message that persists in a regional cache. Mid-size steal: versioned snapshots plus an increment log, and a client protocol that can resync from a cursor without downloading the world.
+
+Operational gotcha: thundering reconnects after a blip. Every desktop client asks the edge for a full snapshot, the edge asks the core, and you turn a two-minute network hiccup into a half-hour outage. Coalesce, serve stale with a flag, and shed by workspace. Another is presence. "Active" data is high-churn and tempting to put in the same cache as messages; it will dominate invalidations. Split it. Multi-workspace Slack clients multiply subscriptions; an edge that shards by user rather than workspace can hotspot a power user. Authorization must be evaluated at the edge or you will leak a private channel to a user who was removed while their cache was warm. Treat membership revocation as a hard invalidation with a deadline, not a lazy TTL. If you cannot afford Flannel, start with per-channel cursors and a CDN only for static assets; do not cache chat bodies at a shared edge without an auth story.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "Webhook Delivery at Scale: Retries, Ordering, and At-Least-Once"
 slug: "stripe-webhook-delivery-at-scale"
 description: "How Stripe delivers billions of webhook events to external endpoints reliably, with retries and an at-least-once contract instead of a guarantee of order."
 publishedAt: "2025-07-22"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ This is the contract merchants actually receive, and it's a deliberate choice ra
 ## Signing so endpoints can trust what arrives
 
 Because a webhook endpoint is a public URL, anyone could in principle send it a forged request pretending to be Stripe. Every webhook delivery is signed with a secret unique to the merchant's endpoint, and Stripe's official libraries provide a signature verification step merchants are expected to run before trusting the payload — turning "an HTTP request arrived at my webhook URL" into "an HTTP request that I've cryptographically verified came from Stripe arrived at my webhook URL."
+
+## Operational gotchas of webhook delivery
+
+Stripe-style webhooks fail in the customer's stack more often than in yours, but you still own the retry policy. The concrete failure mode is retries that look like new events, so a partner's handler double-ships merch. Mid-size steal: signed payloads, monotonically useful event ids, at-least-once delivery with documented idempotency, and a dashboard that shows the last response code.
+
+Operational gotcha: a slow endpoint that holds your workers until the whole queue of other customers lags. Isolate per destination with timeouts of a few seconds and concurrency caps. Another is event ordering. A `customer.updated` arriving before `customer.created` on a delayed retry will break naive handlers; include enough snapshot in the payload that order is a hint, not a requirement, or deliver a cursor. Endpoint URL changes without a dual-send window drop events on the floor. Recoverable 410 vs 500 policies should be explicit. Secrets rotate; signatures fail; support volume spikes. Steal a test clock and a workbench that replays a single event. Do not build a global webhook mesh that sends 40 event types on day one. Ship the two events your integration actually needs, with retries that stop, and an export for the rest. If you are the receiver, verify signatures and store the event id before side effects. That is the whole game at both sides of the HTTP call.
 
 ## What you can borrow
 

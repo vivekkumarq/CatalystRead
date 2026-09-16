@@ -3,6 +3,7 @@ title: "From Log Files to Cloud Pub/Sub: Spotify's Event Delivery Evolution"
 slug: "spotify-event-delivery-log-collection-to-pubsub"
 description: "How Spotify's event pipeline evolved from batch log collection off servers to a real-time, cloud-native Pub/Sub system serving hundreds of consuming teams."
 publishedAt: "2026-04-19"
+updatedAt: "2026-09-16"
 category: "Spotify"
 tags:
   - Engineering at Scale
@@ -24,6 +25,12 @@ As more of Spotify's product depended on fresher data — recommendations that r
 ## Standardizing on Cloud Pub/Sub after the GCP move
 
 Spotify's broader migration to Google Cloud gave the event pipeline a natural next step: adopting Google Cloud Pub/Sub as the backbone for event delivery, replacing more bespoke, self-managed pieces of the earlier pipeline with a managed service. This reduced the operational burden of running event transport infrastructure themselves and let Spotify's data platform team focus more on the parts of the pipeline that were genuinely Spotify-specific — schema management, routing conventions, and making event streams easy for hundreds of internal teams to both produce to and consume from safely — rather than on keeping a message transport layer alive.
+
+## Operational gotchas of client event delivery
+
+Moving from ad-hoc log collection to a pub/sub bus is how client beacons become a platform. The failure mode is a client SDK that buffers forever offline and then dumps a week of play events in one connection, ruining "now playing" analytics and bursting ingest. Mid-size steal: bounded buffers, age-based drop, and server timestamps with client timestamps kept as fields, not as truth.
+
+Operational gotcha: schema registry discipline. A mobile release that typoes a field name creates a shadow event forever. Block unknown production events or at least count them. Another is PII in "debug" properties that product added for a funnel. Scan. Pub/sub fan-out to many subscribers with different lag will cause teams to read "latest" from different delays and argue in a meeting. Publish a watermark. At-least-once delivery duplicates listens; idempotency keys on play sessions matter for royalties-like accounting even at small scale. Do not run the bus in the same failure domain as the app DB without a story for ingest when the DB is down; music events should land even if the account service is sad. Steal a dedicated ingest path. If you still grep application logs for product analytics, you do not have event delivery, you have hope and a retention bill.
 
 ## What you can borrow
 

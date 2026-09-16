@@ -3,6 +3,7 @@ title: "H3: How Uber Solved Geospatial Indexing With Hexagons"
 slug: "uber-h3-hexagonal-indexing-for-dispatch"
 description: "Why Uber built a hexagonal hierarchical grid system to power surge pricing, ETAs, and driver-rider matching, and open sourced it as H3."
 publishedAt: "2025-07-08"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -30,6 +31,12 @@ H3 is hierarchical: it defines roughly fifteen resolutions, from huge cells cove
 One geometric wrinkle is unavoidable on a sphere: you cannot tile a sphere entirely with hexagons. H3 handles this by allowing exactly twelve pentagon cells at fixed locations in the grid, positioned deliberately away from populated areas where possible, so the vast majority of real-world queries never touch them.
 
 Uber uses H3 across dynamic pricing, ETA estimation, driver positioning and heatmaps, and as a general spatial feature-engineering tool for machine learning models that need to bucket location data. In 2018, Uber open sourced H3, and it has since been adopted well beyond ride-hailing, in geospatial analytics, logistics, and mapping tools at other companies.
+
+## A concrete failure mode for hex indexing
+
+H3 tiles the earth so dispatch can ring-expand from a rider instead of fighting polar math with geohash edge cases. The failure mode is mixing resolutions in one index, or using a resolution so fine that a city is millions of cells and so coarse that a river-separated neighborhood looks adjacent. Mid-size steal: one resolution per product question, plus a documented parent/child mapping.
+
+Operational gotcha: hexagon neighbors are not a circle; naive k-ring still has shape quirks at city scale. Test on rivers, airports, and grid cities. Another is storing H3 indexes as strings vs ints inconsistently across services, breaking joins. Pin a library version; an algorithm change across versions is a silent dispatch bug. Privacy: precise hexes at high resolution are location. Retention and access follow GPS policy. Dispatch that iterates rings until it finds N drivers can scan the whole city during a drought of supply; cap the ring and fall back. Do not use H3 as a political boundary; hexes will cut a street. Overlay real polygons for no-pick-up zones. If your marketplace is one metro, a simple grid may suffice. Steal H3 when you have many cities and a need to share libraries. Visualize cells on a map in staging; you will catch off-by-one resolution faster than in a SQL review.
 
 ## What you can borrow
 

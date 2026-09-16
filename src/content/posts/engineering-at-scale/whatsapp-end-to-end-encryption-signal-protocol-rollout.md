@@ -3,6 +3,7 @@ title: "Rolling Out End-to-End Encryption to a Billion Users"
 slug: "whatsapp-end-to-end-encryption-signal-protocol-rollout"
 description: "How WhatsApp partnered with Open Whisper Systems to bring Signal Protocol encryption to every chat, without most users noticing the migration."
 publishedAt: "2025-07-30"
+updatedAt: "2026-09-16"
 category: "WhatsApp"
 tags:
   - Engineering at Scale
@@ -28,6 +29,12 @@ Group chats added real complexity on top of the one-to-one case, since a group n
 ## Making the guarantee visible and verifiable
 
 WhatsApp added a security verification feature — comparing a QR code or a numeric safety number between two users' devices — so people who wanted to verify that no one was intercepting their key exchange could do so out of band, addressing the classic weakness of any key-exchange scheme: trusting that the public key you received really belongs to who you think it does. The company also published technical documentation describing the protocol's guarantees, a deliberate choice to make the security model auditable rather than a black box, given how much trust was being asked of over a billion users switching over largely without any visible change to their daily experience.
+
+## What a mid-size team can steal from the Signal rollout
+
+Rolling out Signal-protocol E2E at WhatsApp scale meant old clients, groups, backups, and a long tail of devices that could not be force-upgraded overnight. Mid-size steal: a protocol version field, a long dual-support window, and a server that cannot "helpfully" downgrade security to make delivery work.
+
+The concrete failure mode is a fallback to plaintext for "reliability" that attackers will induce. Fail closed for crypto. Operational gotcha: group send when one member's session is stale; the server should not see plaintext while you repair sessions. Prekeys exhaust; replenish on connect. Backups are the hole: if you offer cloud backup, you have a second key-management problem, and users will not understand why a new phone cannot read history. Document it in product copy, not only in engineering. Multi-device later multiplied sessions; design for more than one session per user even if you ship one first. Do not invent a custom ratchet if you can use a well-reviewed library. Steal the rollout plan: percentage, by OS, with metrics on undecryptable message rate. That metric is your security SLO. A spike is an incident, not a support FAQ. Legal intercept expectations must be honest: E2E means the server cannot comply with content production. Product, legal, and engineering have to say the same sentence.
 
 ## What you can borrow
 

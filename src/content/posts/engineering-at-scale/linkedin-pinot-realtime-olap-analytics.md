@@ -3,6 +3,7 @@ title: "Apache Pinot: Real-Time OLAP for Member-Facing Analytics"
 slug: "linkedin-pinot-realtime-olap-analytics"
 description: "Why LinkedIn built Pinot to answer analytical, slice-and-dice queries directly in member-facing products with sub-second latency at huge scale."
 publishedAt: "2025-11-12"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ Hadoop batch --> offline segments (historical data)
 ## Serving analytics at product scale, not just dashboards
 
 What set Pinot apart from general-purpose OLAP engines was the assumption from day one that queries would come from live product traffic at high volume and tight latency budgets, not from a handful of analysts running ad hoc reports. That assumption shaped everything from the indexing strategy to the broker/server split to the emphasis on predictable tail latency over raw query flexibility. LinkedIn open sourced Pinot and it became an Apache project, subsequently adopted well beyond LinkedIn for exactly this pattern: real-time, user-facing analytics rather than purely internal business intelligence.
+
+## Operational gotchas of member-facing OLAP
+
+Pinot-style serving puts analytical storage on the user request path. That is a different operations game than a warehouse that can be an hour late. Segments must land on time, schemas must match between stream ingestion and historical backfill, and a single bad upsert key can duplicate a creator's dashboard numbers until someone rebuilds the table. Mid-size teams often copy the "real-time analytics" slogan and then park ClickHouse or Druid behind a page that hammers GROUP BY on every refresh.
+
+Steal the product constraint first: pre-aggregate the slices members actually use — last 7 days, by campaign, by geography — and keep ad-hoc drill-down off the critical path. The concrete failure mode is a schema change that adds a dimension without a default, so new stream events and old historical segments disagree; dashboards swing wildly at the segment boundary and trust evaporates. Another gotcha is upsert tables used as mutable fact stores: late events rewrite yesterday, and executives compare two screenshots from different minutes. Define watermark rules and a visible "data as of" timestamp. Capacity planning should assume a viral member, not the median. OLAP engines with beautiful p50 latency still melt when one tenant's filter matches most of the table and cannot use a star-tree or inverted index. Put tenant isolation and query timeouts in before the first customer-facing chart.
 
 ## What you can borrow
 

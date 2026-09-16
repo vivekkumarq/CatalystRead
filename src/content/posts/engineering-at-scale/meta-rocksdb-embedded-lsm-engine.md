@@ -3,6 +3,7 @@ title: "RocksDB: The Embedded Storage Engine That Ended Up Everywhere"
 slug: "meta-rocksdb-embedded-lsm-engine"
 description: "How Facebook forked Google's LevelDB into RocksDB to target fast flash storage, and how an embedded engine built for one problem became infrastructure for many."
 publishedAt: "2026-01-20"
+updatedAt: "2026-09-16"
 category: "Meta"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ The distinction that matters most about RocksDB is that it's a library, not a st
 ## Becoming ambient infrastructure well beyond Facebook
 
 Facebook open sourced RocksDB in 2013, and it went on to be adopted as the embedded storage layer inside a striking number of other widely used systems outside Facebook — including, at various points, storage layers for stream-processing systems, other distributed databases, and blockchain clients — largely because "an efficient, tunable, embeddable LSM-tree store" turned out to be a need shared by a huge range of systems that had nothing else in common. RocksDB's success wasn't in being the flashiest new database; it was in being general and well-engineered enough at the storage-engine layer that a lot of very different systems found it cheaper to embed than to build their own equivalent from scratch.
+
+## Operational gotchas of embedding RocksDB
+
+RocksDB shows up inside Kafka Streams, MyRocks, Cockroach, and a thousand custom caches because it is fast on flash if you tune it. The failure mode is treating it like a folder you can copy. LSM internals — stalls, write amplification, file descriptor counts, and the fact that a checkpoint is not a consistent backup unless you use the backup/checkpoint API — bite teams who "just put a map on disk." Mid-size steal: use the engine through a supported product, or budget someone who can read compaction graphs.
+
+A concrete incident shape: memtable flush storms after a burst, then L0-to-L1 compaction blocks writes, p99 jumps, the process is "up," and the on-call restarts, which makes it worse. Another gotcha is multiple RocksDB instances per host without a shared rate limit, starving each other for IO. Column families look like free schemas and become compaction surprises. Steal bounded prefix extractors and explicit compaction priority when you have a known key shape. Destroying and recreating DBs in tests without cleaning WAL lock files yields flakes that look like product bugs. If the data is derived, design to delete the directory and rebuild from the log. If it is not derived, you now run a database and need WAL shipping, checksums, and a restore drill. Embedded does not mean operationally small.
 
 ## What you can borrow
 

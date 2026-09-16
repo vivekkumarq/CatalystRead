@@ -3,6 +3,7 @@ title: "DeepETA: When a Learned Model Beats Routing Math"
 slug: "uber-deepeta-learned-arrival-times"
 description: "How Uber's DeepETA replaced purely graph-based routing calculations with a deep learning model to correct systematic ETA errors at low latency."
 publishedAt: "2026-02-17"
+updatedAt: "2026-09-16"
 category: "Uber"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ Because DeepETA predicts a correction rather than reconstructing the route calcu
 ## Why accuracy here compounds elsewhere
 
 ETA isn't just a number shown to a rider — it feeds pricing calculations, driver dispatch and matching decisions, and marketplace-level forecasting, so a systematic ETA bias doesn't stay contained to the arrival-time display; it propagates into decisions made elsewhere in the platform that depend on trip duration estimates being right. That's part of why Uber invested in a dedicated learned correction model rather than treating small, persistent ETA bias as an acceptable cost of the routing-engine approach.
+
+## A concrete failure mode for learned ETAs
+
+DeepETA replaced brittle formulas with a model of arrival times. The failure mode is a beautiful average error with a terrible tail: a rider sees 3 minutes forever while the driver is stuck. Mid-size steal: optimize and monitor p90 error, plus a rules fallback when GPS is stale or the model times out.
+
+Operational gotcha: training on completed trips only, which drops cancellations and thus the messy cases. Another is leaking current traffic features that are not available at prediction time in the same form. Online/offline skew shows up as sudden bias after a map-data refresh. City-specific regimes — rain, stadiums — need slices, or a global model will be "fine" and unusable in one metro. A timeout should not zero the ETA; last-good plus a decaying uncertainty is kinder. Driver and rider ETAs that disagree on the same trip create support tickets; compute from one service. Do not put the model on the only path to dispatch. If inference dies, a conservative heuristic should still pair. Log features for every served ETA or you cannot debug a viral complaint. Marketplace trust is the SLO. A 20ms faster model that occasionally promises impossible times is a product incident, not a win.
 
 ## What you can borrow
 

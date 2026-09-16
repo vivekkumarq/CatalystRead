@@ -3,6 +3,7 @@ title: "The Caching Tier That Keeps Pinterest Fast"
 slug: "pinterest-memcache-caching-tier-invalidation"
 description: "Behind Pinterest's sharded MySQL fleet sits a heavy memcache layer, and the real engineering challenge was never caching reads — it was invalidating them correctly."
 publishedAt: "2025-11-03"
+updatedAt: "2026-09-16"
 category: "Pinterest"
 tags:
   - Engineering at Scale
@@ -38,6 +39,12 @@ A cache layer that's mostly effective can still cause serious trouble at the mom
 ## Partitioning and routing at memcache scale
 
 Running memcache at Pinterest's scale also means the cache itself is sharded across many servers, with a routing layer determining which server holds a given key, and that routing layer has to handle server failures and pool changes without causing a wholesale cache-miss stampede of its own. A well-designed caching tier treats the cache cluster's own availability as something to engineer around carefully, not something assumed to always just work.
+
+## A concrete failure mode for pin-shaped caches
+
+Pinterest's memcache tier sits in front of a read-heavy discovery product: boards, pins, and homefeed fragments. Invalidation is the hard part. A pin edit must bust a pin object, board previews, search snippets, and maybe a recommendation feature, or users see the old image forever. Mid-size steal: a list of derived keys per mutation, generated in one library, not ad-hoc deletes in five endpoints.
+
+The failure mode is TTL-only caches on user-edited content. Five minutes of wrong price or wrong alt text is a support queue. Another is over-invalidation: deleting a huge prefix on every save, which is a self-inflicted thundering herd. Version the object in the key when the writer can afford it. Operational gotcha: multi-layer cache (CDN, edge, memcache, local) with different TTLs; a fix appears to work in the app and fails in the image CDN. Document the order of busts. Hot keys for viral pins need replica fan-out or request coalescing. Never cache authorization decisions next to public pin JSON without including the viewer in the key. Pinterest-like products leak private boards that way. Measure stale-view complaints as a reliability metric. If you cannot explain, for a given write, which keys die, you do not have a cache, you have a rumor with RAM.
 
 ## What you can borrow
 

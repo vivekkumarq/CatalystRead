@@ -3,6 +3,7 @@ title: "Caching at Twitter Scale: From Memcached Forks to Owned Infrastructure"
 slug: "twitter-caching-memcached-forks-to-owned-infrastructure"
 description: "How Twitter outgrew stock Memcached, built Twemcache and the Pelikan framework, and turned caching into deliberately owned infrastructure rather than a commodity."
 publishedAt: "2025-07-28"
+updatedAt: "2026-09-16"
 category: "Twitter"
 tags:
   - Engineering at Scale
@@ -29,6 +30,12 @@ workload profile --> Pelikan building blocks --> tuned cache server
 ## Treating cache infrastructure as a product
 
 The throughline across Twitter's caching evolution is treating caching as owned, first-class infrastructure with its own dedicated engineering investment, rather than a commodity dependency you install and leave alone. That meant building deep operational tooling — dashboards, alerting, capacity models specific to cache behavior — and being willing to fork or rebuild lower layers of the stack when off-the-shelf software's design assumptions stopped matching Twitter's actual traffic patterns. At Twitter's request volume, cache hit rate and eviction behavior directly moved user-facing latency and back-end database load, which made this kind of investment pay for itself in ways that wouldn't be justified at smaller scale.
+
+## Operational gotchas of forking the cache
+
+Twitter's path from memcached to owned cache infrastructure came from needing features and operations the upstream did not give them. The failure mode for a mid-size team is forking too early: you now own a C codebase and a cluster, and you still have hot keys. Steal the operational lessons — consistent hashing, connection pooling, leases — from Twemproxy or a managed Redis, and fork only when you have a specific, measured gap.
+
+The concrete failure mode is a custom cache that no longer takes security patches because the fork drifted. Another is client libraries that speak only the fork's protocol, so a rollback to memcached is fiction. Operational gotcha: cache as a source of truth for tweets that should have been in the timeline store; a flush becomes a public incident. Keep TTL and a rebuild. Multi-DC cache replication of unauthenticated tweets is a product leak if private status bits ride along. Separate keys. Twitter-scale justified Pelikan and similar. Your scale justifies not running a unique daemon. Measure hit rate, tail latency, and error amplification on node death. If losing one cache node takes the site to the database, you needed replicas or shedding, not a fork. The steal is treating cache as a product with an on-call, not a leftover apt package.
 
 ## What you can borrow
 

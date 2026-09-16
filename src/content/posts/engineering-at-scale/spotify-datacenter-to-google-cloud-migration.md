@@ -3,6 +3,7 @@ title: "Why Spotify Left Its Own Data Centers for Google Cloud"
 slug: "spotify-datacenter-to-google-cloud-migration"
 description: "How Spotify moved a music streaming service serving hundreds of millions of users off self-managed data centers and onto Google Cloud without a big-bang cutover."
 publishedAt: "2025-10-17"
+updatedAt: "2026-09-16"
 category: "Spotify"
 tags:
   - Engineering at Scale
@@ -20,6 +21,12 @@ Spotify's own account of the decision emphasized elasticity as the deciding fact
 ## Migrating a live service without a big-bang cutover
 
 Moving a service serving hundreds of millions of active users, with strict expectations of always-on playback, ruled out a single flag-day cutover. Spotify's migration ran service by service and team by team over roughly two years, with individual squads owning the move of their own systems rather than a central team executing one giant lift-and-shift. This distributed-ownership approach mirrored Spotify's broader squad-based engineering culture: teams that best understood a service's dependencies and traffic patterns were also the ones responsible for migrating it safely, rather than a platform team attempting the same task with less context. Running both environments concurrently during the transition, and cutting individual services over as they were verified, kept the blast radius of any single migration step small.
+
+## A concrete failure mode for a DC-to-cloud move
+
+Spotify's datacenter-to-GCP migration had to move storage, streaming, and a culture of hardware-tuned services. The failure mode for smaller companies is a lift-and-shift of VMs that recreates the data center with worse latency to the remaining on-prem database. Steal a strangler: start with stateless and batch, move data with a long dual-write, cut reads, then decommission.
+
+Operational gotcha: network costs. Egress from cloud to leftover appliances or to users in unexpected regions can erase the hardware savings. Model it. Another is IAM: a service account copied from a permissive DC firewall becomes a cloud blast radius. Recreate least privilege, do not photocopy. DNS TTLs that were fine in a DC will make cloud failovers feel broken. Kubernetes on GCP does not remove capacity planning; quotas and IP space still page people. Spotify-scale had to keep music playing during the move. Your freeze windows and feature flags should assume a rollback to the previous environment for the highest-revenue path. Do not rewrite every service "while we are in the cloud." That couples two risks. Measure stall rate or checkout rate during each wave. A migration that only tracks VMs decommissioned will ship a quieter failure: the same architecture, now with a bill that surprises finance at month three.
 
 ## What you can borrow
 

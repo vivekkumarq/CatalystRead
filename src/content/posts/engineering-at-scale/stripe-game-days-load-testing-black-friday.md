@@ -3,6 +3,7 @@ title: "Game Days: How Stripe Rehearses Failure Before Black Friday"
 slug: "stripe-game-days-load-testing-black-friday"
 description: "Why Stripe deliberately triggers failures and runs large-scale load tests against production-like systems before its highest-traffic days of the year."
 publishedAt: "2026-01-20"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ A significant part of what a game day tests isn't code at all — it's whether a
 ## Finding problems on a Tuesday, not a Friday in November
 
 The entire point of doing this work well before the actual high-traffic event is that failures found during a game day or load test are cheap — they can be fixed, retested, and verified with time to spare. The same failure discovered live during peak Black Friday traffic is expensive in every sense: lost transactions for merchants, incident response under real pressure, and a fix that has to happen while the system is still under unusual load rather than during a calm rehearsal window.
+
+## Operational gotchas of payments game days
+
+Stripe's game days and peak tests have to include issuers, webhooks, and dashboard as well as the charge API, because merchants experience the union. Mid-size steal: a peak test that runs a real-ish payment method in a sandbox, fires webhooks at customer-like endpoints, and still hits your rate limits on purpose.
+
+The concrete failure mode is a load test against a mocked processor that always returns 200 in 5ms, then production issuer latency of 800ms fills thread pools. Another is testing create-charge without refunds, disputes, or idempotent retries. Operational gotcha: test data that pollutes fraud models or search indexes if it leaks into prod. Isolate. Black Friday for payments is a long tail of long-tail BINs and currencies; include more than your home country. Coordinate with partners on rate limits or you DDoS them and they block you for the real peak. Freeze windows need a named exception for security patches. After the game day, the artifact is a capacity number you will not exceed without a plan: "we can take Nx yesterday's p99 QPS with p99 < Y." If you cannot say that sentence, you had a ceremony, not a test. Repeat it as the product mix changes; a new marketplace feature is a new peak shape.
 
 ## What you can borrow
 

@@ -3,6 +3,7 @@ title: "From Ruby to the JVM: Twitter's Finagle Bet"
 slug: "twitter-ruby-to-jvm-finagle-rpc"
 description: "Why the Fail Whale era pushed Twitter off a Ruby on Rails monolith toward JVM services and Finagle, its shared asynchronous RPC framework."
 publishedAt: "2025-06-24"
+updatedAt: "2026-09-16"
 category: "Twitter"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ client --Future[Response]--> Finagle (load balancing, retries, tracing) --> serv
 ## A migration measured in years, not sprints
 
 The move away from the Rails monolith wasn't a rewrite executed in one push — it played out over several years, service by service, with the monolith and new JVM services coexisting and communicating throughout the transition. That incremental approach let Twitter validate the new stack's reliability and performance on individual high-value paths like search and the timeline before betting the entire product on it, rather than committing to a big-bang cutover with no fallback.
+
+## What a mid-size team can steal from Finagle and the JVM move
+
+Twitter moved hot paths from a Ruby monolith toward JVM services talking Finagle RPC, because the VM and the RPC library gave them timeouts, connection pooling, and load balancing as defaults. Mid-size steal: a single RPC client with deadlines and metrics, even if you stay on one language. Do not rewrite in Scala to get a timeout.
+
+The concrete failure mode is a strangler that never strangles: the Ruby app becomes a slow router to JVM services, adding a hop and a failure mode. Another is Finagle-like retries on non-idempotent posts. Operational gotcha: thread pools. JVM services fail by queueing; Ruby failed by being slow. You will need bounded queues and rejection. Polyglot debugging without trace propagation is a maze. Put a trace id on the first Ruby request and carry it. Hiring and local dev cost of a mixed estate is real; freeze the number of languages. Twitter's Finagle is now a historical teacher for gRPC + a resilience layer. Use the teacher. If the monolith's problem is N+1 queries, the JVM will happily N+1 faster. Profile first. The steal is RPC as a library with opinions, and a measured extraction of a hotspot, not an identity change from Ruby to the JVM.
 
 ## What you can borrow
 

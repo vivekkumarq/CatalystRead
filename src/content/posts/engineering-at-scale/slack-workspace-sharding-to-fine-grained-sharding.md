@@ -3,6 +3,7 @@ title: "Outgrowing the Workspace: Slack's Move to Fine-Grained Sharding"
 slug: "slack-workspace-sharding-to-fine-grained-sharding"
 description: "How Slack's original one-workspace-per-shard data model buckled under Enterprise Grid and giant workspaces, and why finer-grained sharding replaced it."
 publishedAt: "2025-07-22"
+updatedAt: "2026-09-16"
 category: "Slack"
 tags:
   - Engineering at Scale
@@ -33,6 +34,12 @@ This is a genuinely hard migration to execute, precisely because the old shardin
 ## Aligning shard boundaries with actual growth, not org charts
 
 The deeper lesson embedded in this migration is that a sharding key chosen because it maps cleanly onto a product concept (a workspace, an account, a tenant) is not automatically the right key for scaling, and the two can diverge substantially as usage patterns evolve in ways the original design didn't anticipate. Product concepts like "workspace" are stable and meaningful to users, but the load characteristics behind them are not — some workspaces are enormous, some are tiny, and their growth trajectories vary wildly, none of which the original sharding boundary had any way to account for.
+
+## A concrete failure mode when changing shard keys
+
+Slack's move from workspace-shaped shards toward finer grains is a response to mega-workspaces: one customer becomes the shard. Mid-size teams hit this as "our biggest tenant is 40% of CPU." The failure mode of a re-shard is a dual-read bug: some channels moved, some rows did not, and search or unread is split. Steal an explicit migration state per entity, with a token that forces reads to the new home after cutover.
+
+Operational gotcha: jobs and websockets that still target the old shard by workspace id in a cache. You will debug ghosts. Another is transactions that used to be local to a workspace shard and are now cross-shard for a thread and its files. Redesign those flows before the move. Fine-grained sharding also explodes connection counts to MySQL or Vitess; pools need redesign. Hot channels still exist inside a workspace — a company-wide #general — so channel id as key can still hotspot. You may need a further split. Do this only with a tenant that is actually burning you; premature fine-grained sharding is distributed complexity without the pain that pays for it. Measure per-tenant and per-channel QPS first. The steal is the willingness to change the shard key when the product's gravity well moves, plus the dull tooling to move rows without a weekend of read-only Slack.
 
 ## What you can borrow
 

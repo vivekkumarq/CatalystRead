@@ -3,6 +3,7 @@ title: "From REST to GraphQL: Rebuilding Shopify's Platform API"
 slug: "shopify-rest-to-graphql-platform-api-migration"
 description: "Why Shopify moved its Admin and Storefront APIs from REST to GraphQL as the primary way tens of thousands of apps talk to the platform."
 publishedAt: "2025-11-10"
+updatedAt: "2026-09-16"
 category: "Shopify"
 tags:
   - Engineering at Scale
@@ -45,6 +46,12 @@ The schema itself became a form of documentation and a contract: fields are stro
 ## Migrating an ecosystem, not just an endpoint
 
 The hard part wasn't building a GraphQL API — plenty of companies do that. It was migrating an ecosystem of independent, third-party-owned apps that depended on REST staying stable, some of which hadn't been touched by their developers in years. Shopify's approach was gradual: GraphQL was introduced alongside REST, given years to mature and reach feature parity, and only after that parity was reached did Shopify begin formally deprecating REST endpoints on a calendar-based schedule, giving developers a long, clearly communicated runway rather than an abrupt cutover.
+
+## What a mid-size team can steal from Shopify's API migration
+
+Shopify had to move a public ecosystem of apps from REST to GraphQL without stranding partners. That is harder than an internal rewrite. Mid-size steal: overlap periods, partner previews, and a translation layer so old REST shapes keep working while new fields live in GraphQL. Never strand the integration economy that pays your platform.
+
+The concrete failure mode is a sunset date that legal sent and engineering could not enforce because a top app still used a private REST oddity. Inventory those oddities first. Operational gotcha: GraphQL that exposes unbounded product connections; a badly written app pages with a page size of 250 and nested metafields, and your API becomes their database. Cost analysis and rate limits by calculated query cost are the Shopify-shaped fix. Versioning still exists in practice: unstable vs stable APIs, and deprecation headers that clients ignore. Steal telemetry on deprecated field usage by app id, then email the developer, then block. Auth scopes must be remapped or you will widen access accidentally in the new graph. If you have twenty internal clients and no external apps, a simpler REST version bump may be cheaper. The transferable idea is treating partner apps as first-class production, with the same care as checkout.
 
 ## What you can borrow
 

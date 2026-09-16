@@ -3,6 +3,7 @@ title: "Sorbet: Bringing Static Types to Millions of Lines of Stripe's Ruby"
 slug: "stripe-sorbet-gradual-typing-for-ruby"
 description: "Why Stripe built its own type checker, Sorbet, instead of rewriting its large Ruby codebase, and how gradual typing let adoption happen incrementally."
 publishedAt: "2026-05-12"
+updatedAt: "2026-09-16"
 category: "Stripe"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ end
 ## A fast checker built for a huge codebase
 
 Performance mattered as much as the gradual typing model. A type checker that takes minutes to run on every save is one engineers will route around. Sorbet was built for speed specifically because it needed to check millions of lines fast enough to run continuously in editors as engineers typed, not just as a slow CI-time gate run once per pull request. Stripe open sourced Sorbet in 2019, and it's since seen adoption at other companies with large Ruby codebases facing the same underlying tension between dynamic language productivity and static-typing safety.
+
+## What a mid-size team can steal from Stripe's Sorbet
+
+Stripe's Sorbet work is gradual typing in a huge Ruby estate, with a culture that types the boundaries that money crosses. Mid-size steal: a checker in CI, strictness on new money files, and generated signatures for the HTTP layer so params are not `Hash`. Skip a rewrite in a typed language if the staff is Ruby-shaped.
+
+The concrete failure mode is `T.untyped` at the kernel of charging, which makes the rest of the type system theater. Another is runtime type checks on a hot parser that show up as CPU in a peak you thought you had bought with Kubernetes. Measure. Operational gotcha: DSLs and metaprogramming that the solver cannot see; wrap them. Gem updates that ship broken RBIs will red the build; pin and vendor the interface files you rely on. Stripe staffs language tooling. You can adopt Sorbet or RBS on one package and expand. The steal is the same as Facebook's Hack: do not wait for a greenfield. If CI typecheck is optional, it will be ignored. Make it blocking for the paths you care about, and keep it fast. A ten-minute typecheck is a tax that teaches people to bypass. Incremental checking is part of the reliability of the type bet.
 
 ## What you can borrow
 

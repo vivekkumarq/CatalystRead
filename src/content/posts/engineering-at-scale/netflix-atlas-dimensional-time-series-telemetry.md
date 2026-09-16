@@ -3,6 +3,7 @@ title: "Atlas: Why Netflix Built Its Own Metrics System Instead of Buying One"
 slug: "netflix-atlas-dimensional-time-series-telemetry"
 description: "How Netflix's Atlas telemetry platform handles dimensional time-series data at a scale where most off-the-shelf monitoring systems fall over."
 publishedAt: "2025-08-08"
+updatedAt: "2026-09-16"
 category: "Netflix"
 tags:
   - Engineering at Scale
@@ -35,6 +36,12 @@ Netflix built its own query language for Atlas, designed around stack-based expr
 ## Built for Netflix's scale, then open sourced
 
 Netflix evaluated available metrics systems and concluded none handled the combination of cardinality, ingestion rate, and query latency Netflix needed, so it built Atlas as internal infrastructure and later open sourced it. That's a recurring judgment call at Netflix's scale: build versus buy isn't a philosophical preference, it's a case-by-case evaluation of whether existing tools survive contact with actual production volume, and for telemetry at Netflix's scale in that era, the answer was no.
+
+## Operational gotchas of dimensional metrics
+
+Atlas-style dimensional telemetry makes it easy to slice a metric by device, region, and title. That cardinality is the product and the outage. A mid-size team enables tags for user id or raw URL and the TSDB falls over, scrape intervals slip, and you fly blind during the incident the tags were meant to debug. Steal a tag allowlist, aggregation at the edge, and recording rules for the dashboards on-call actually uses.
+
+The concrete failure mode is a deploy that adds a high-cardinality label to a hot counter. Ingest lag grows; alert queries time out; people assume "metrics are slow" instead of "we exploded the index." Another gotcha is mixing high-resolution operational data with long-retention capacity data in one system. You either pay forever or downsample and lose the incident window. Steal two tiers. Alerting on dimensions without recording the same query's cost will create alerts that cannot evaluate at 3 a.m. Atlas's lesson is first-class dimensions with operational discipline, not infinite tags. Client-side metrics libraries that buffer forever during an outage then flush a storm can create a second outage. Bound buffers, drop with a counter. If nobody owns metric volume as a budget, developers will treat the TSDB as a log sink, and it will behave like one: expensive, slow, and incomplete when you need it.
 
 ## What you can borrow
 

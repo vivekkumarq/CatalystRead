@@ -3,6 +3,7 @@ title: "LIquid: The Graph Database Behind 'How You're Connected'"
 slug: "linkedin-liquid-graph-database"
 description: "How LinkedIn built LIquid, an in-memory distributed graph engine, to answer connection-degree and shortest-path queries over its member network in real time."
 publishedAt: "2026-01-20"
+updatedAt: "2026-09-16"
 category: "LinkedIn"
 tags:
   - Engineering at Scale
@@ -32,6 +33,12 @@ member/connection updates --> mutation stream --> in-memory graph shards
                                                          |
                                           multi-hop query --> fan-out across shards --> merge --> result
 ```
+
+## What a mid-size team can steal from an in-memory graph
+
+LIquid existed because degree and shortest-path queries over a professional graph do not fit a generic relational join if they must complete while a page loads. Most companies do not need a custom in-memory graph engine. They do need an honest split between the system of record and the structure that answers "are these two people close?" A mid-size steal is a periodically rebuilt adjacency snapshot in Redis, RocksDB, or even a sharded SQL pair table, with a strict SLA: if the snapshot is stale beyond N minutes, the product degrades to "connect" without path explanations rather than blocking the request.
+
+The failure mode is treating the graph engine as writable truth. Product teams start issuing mutations against the in-memory copy because it is fast, then a restart or rebalance loses an edge that never landed in the system of record. Another gotcha is supernodes: recruiters, celebrities, and company pages with millions of edges blow up BFS unless you cap expansion, sample, or precompute. Random-walk and degree features for recommendations have the same hotspot. Steal the query budget idea — hop limits, timeouts, and a fallback — before you steal distributed shared memory. Graph features also leak privacy if hop-2 results include people who opted out of being found; authorization has to sit inside the traversal, not as a filter after you already fetched the path.
 
 ## What you can borrow
 

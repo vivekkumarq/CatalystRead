@@ -3,6 +3,7 @@ title: "Snowflake: Twitter's Decentralized, Sortable ID Generator"
 slug: "twitter-snowflake-decentralized-sortable-ids"
 description: "How Twitter replaced a single MySQL sequence with a decentralized ID generator that packs time, machine, and sequence into a roughly sortable 64-bit ID."
 publishedAt: "2025-06-05"
+updatedAt: "2026-09-16"
 category: "Twitter"
 tags:
   - Engineering at Scale
@@ -31,6 +32,12 @@ A natural question is why Twitter didn't simply use UUIDs, which solve the uniqu
 ## Clock dependence as the real operational challenge
 
 Snowflake's design does introduce a real operational constraint: because the timestamp component depends on each worker's system clock, correctness depends on clocks not jumping backwards. If a worker's clock is set backwards — through misconfiguration or a bad NTP correction — it needs to either wait or refuse to generate IDs until the clock catches back up, to avoid producing an ID that's numerically smaller than one it already generated. This makes reliable time synchronization and clock-skew handling a first-class operational concern rather than an afterthought, and it's a pattern that recurs in essentially every clock-embedded ID scheme that's followed since.
+
+## Operational gotchas of Snowflake ids
+
+Snowflake ids pack time, worker id, and sequence into a sortable 64-bit int. The failure mode is clock drift: a worker jumps backward and blocks, or jumps forward and mints ids from the future that break range scans and caching. Mid-size steal: NTP discipline, a max-backward-slew policy, and not using the id as a security token because it leaks creation time.
+
+Operational gotcha: running out of worker bits when you autoscale past the original 10-bit assumption, or colliding worker ids in Kubernetes because you used a hostname hash. Assign worker ids from a small lease service, or use a larger id space. Another is JavaScript clients that cannot safely represent ids above 2^53-1; Twitter learned to return ids as strings in JSON. Do that on day one. Mixed systems that generate UUIDs and Snowflakes will sort like garbage in a combined feed. Pick one. Do not parse the timestamp out of ids for legal deletion windows unless you version the format; you will want to change the epoch. If you only need unique ids, ULIDs or database identities may be enough. Steal Snowflake when you need k-sortable ids without a central DB sequence. Test time travel. It will happen on a VM that paused.
 
 ## What you can borrow
 
