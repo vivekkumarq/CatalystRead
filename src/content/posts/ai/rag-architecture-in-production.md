@@ -11,6 +11,12 @@ tags:
   - Vector Search
   - Embeddings
 trending: true
+updatedAt: "2026-09-12"
+sources:
+  - title: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+    author: "Patrick Lewis et al."
+    publisher: "NeurIPS 2020"
+    url: "https://arxiv.org/abs/2005.11401"
 ---
 
 Retrieval-augmented generation looks deceptively simple in a demo: embed the query, fetch the top-k chunks, stuff them into a prompt, let the model answer. In production that pipeline is maybe twenty percent of the system. The rest is ingestion jobs that keep documents fresh, retrieval that degrades gracefully when the index drifts, and a feedback loop that tells you when answers are quietly getting worse before a customer files a ticket about it.
@@ -53,3 +59,5 @@ A few failure modes show up almost universally once traffic grows:
 | Silent quality regression | No offline eval gate on embedding model or prompt changes |
 
 None of these are exotic — they're operational discipline problems. Treat your retrieval index like a service with its own SLOs: freshness lag, recall@k on a golden query set, and p99 latency. Ship changes to chunking, embedding models, or rerankers behind the same regression suite you'd use for a code change, because from the model's perspective a bad chunk is indistinguishable from a bad prompt, and it will confidently answer with whatever garbage you hand it.
+
+The academic lineage is Lewis et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks" (NeurIPS 2020). The paper's useful inheritance is the split: a parametric model plus a non-parametric index you can update without retraining. Production RAG is that split plus all the ingestion and evaluation work the paper could ignore. If you cannot update a fact without a fine-tune, you did not ship RAG — you shipped a prompt with a vector database logo on the slide.

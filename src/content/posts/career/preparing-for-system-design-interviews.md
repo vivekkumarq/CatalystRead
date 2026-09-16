@@ -3,6 +3,7 @@ title: "Preparing for System Design Interviews"
 slug: "preparing-for-system-design-interviews"
 description: "System design interviews reward a structured process more than encyclopedic knowledge of distributed systems — here's a repeatable way to run one."
 publishedAt: "2025-01-06"
+updatedAt: "2026-09-12"
 category: "Career"
 tags:
   - Career
@@ -30,3 +31,15 @@ Every non-trivial decision has a trade-off, and naming it out loud is worth more
 A system design interview is a collaborative conversation, not a solo presentation, and treating it like the latter is a common way to run out of time on the wrong section. Check in periodically about whether to go deeper on a component or move on — "I could go deeper into how the cache invalidation works here, or move on to the notification service, which would you rather I focus on" — which does two things: it uses the interviewer's own priorities to guide your limited time toward what they actually want to evaluate, and it demonstrates a collaborative instinct that matters on real teams, where nobody designs a system in isolation without checking in.
 
 Leave real time for the parts candidates tend to rush — failure modes, monitoring, and what happens when a component you designed goes down. These sections are often where the differentiation actually happens, precisely because most preparation time goes into the happy-path architecture and comparatively little goes into what happens when a piece of it fails.
+
+## A study plan that does not become a second job
+
+You do not need a unique architecture memorized for every famous prompt. You need fluency in a small set of primitives: a load balancer, a stateless app tier, a primary store plus a cache, an async queue, and a story for unique IDs, rate limits, and hot keys. Practice applying those primitives to five prompts that look different — a URL shortener, a news feed, a chat system, a file store, a rate limiter — until the first ten minutes of any interview feel like the same muscle.
+
+Read one real system write-up a week from a company engineering blog, and after you finish, write a one-page reconstruction from memory: requirements, boxes, and the one trade-off you would argue about. That reconstruction is better practice than rereading the blog with the diagram still on the screen.
+
+If you freeze on capacity estimates, pre-compute a handful of conversions you will reuse: 1 request/sec is about 2.6 million requests/month; a 500-byte event at 10k QPS is roughly 5 MB/s; a 64-byte UUID is cheap; a 1 MB JSON blob at that rate is not. Interviewers care that you notice the order of magnitude, not that you multiply perfectly on a whiteboard.
+
+## What "good enough" looks like in forty-five minutes
+
+A passing interview usually has a clear API, a data model with access patterns named out loud, a diagram that could be implemented by a team, and two or three failure cases with a mitigation. A spectacular interview has the same things plus a moment where you change the design because a number you wrote down made the first idea illegal. That correction is not a stumble. It is the signal.
