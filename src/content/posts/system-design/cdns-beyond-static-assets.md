@@ -71,3 +71,11 @@ A CDN that buffers SSE/WebSockets and breaks them.
 ## When this is the wrong tool
 
 Private dashboards with per-user JSON: origin + app cache, or don't. CDNs are the wrong tool to hide a 2s origin if every request is unique. Do not use a CDN as a database. POSTs are not cacheable in the useful sense. If you need strong consistency of stock counts, do not serve them from a 60s edge cache without a disclaimer or a live overlay.
+
+## A worked failure mode
+
+HTML with `Set-Cookie` is cached at the edge; users share sessions. A purge API is unused after a bad deploy. Origin shielding is off and a miss storm kills origin. The failure is caching personalized content and no purge drill. Cache public bytes, vary correctly, and practice purge.
+
+A CDN is the wrong tool for a private API with no cacheability. It will not fix a 2s origin. Use it for cacheable, purgeable content and DDoS absorption.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "CDNs Are More Than Static Asset Caches" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

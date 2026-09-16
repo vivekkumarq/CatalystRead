@@ -37,3 +37,11 @@ Every team calibrates trust based on evidence, and in the first 90 days you have
 On day 90, write a page: what the system actually does, where pages still go, which docs were lies, and one bet you would place for the next quarter. Share a trimmed version with your manager. That artifact does two jobs — it proves you learned the terrain, and it is the outline of your first real roadmap item. If you cannot write the page, you optimized for looking busy rather than for orientation, and the next 90 days will repeat the first.
 
 Keep a running list of "I do not know why this is like this" items. Retire them with answers, not with shrugs. Unresolved mysteries become the landmines in month four.
+
+## A worked failure mode
+
+A new hire spends 90 days "reading the monorepo" and ships nothing. At review they cannot name the on-call path or the customer. Another hire rewrites the build on day four and becomes the person nobody wants to review. The useful 90 days are a sequence: run the app, fix a small production-shaped bug, sit an observed on-call, write one doc that the next hire needs, and ship a thin slice with a named buddy. The failure is confusing activity with integration. Ask for a first issue that touches production telemetry. If the team cannot produce that, the onboarding problem is the team's, and you should escalate that fact kindly and early.
+
+## When this is the wrong tool
+
+A 90-day plan is the wrong tool if you were hired for a secret rewrite nobody told the team about; get alignment first. Do not treat onboarding as a personality makeover. Thirty days of only meetings is not a plan. If the codebase cannot run locally, the first deliverable is making that possible, not a feature. Use a staged plan when the team actually wants you productive; use interviews in reverse if the environment is hostile.

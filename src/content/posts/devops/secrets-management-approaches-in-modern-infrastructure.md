@@ -80,3 +80,11 @@ Two vaults, neither source of truth.
 ## When this is the wrong tool
 
 Encrypting secrets in git with a passphrase in Slack. A secrets manager will not save hardcoded keys in the client app. For public config, use config not secrets. If you have one VM and one operator, a locked-down file may be fine until you grow. Do not put TLS private keys in the same rotation path as a feature flag without thinking about blast radius.
+
+## A worked failure mode
+
+Secrets live in CI variables, copied into Kubernetes Secrets via a pipeline log that prints `env`. Rotation is yearly. A former contractor's token still deploys. The better pattern they skipped: a vault or cloud manager, short-lived credentials, injection at runtime, and audit on read. The failure is secrets as config files with extra anxiety. Treat them as time-bound leases.
+
+A vault is the wrong tool if the app still hardcodes a second password. Do not put secrets in Git even encrypted if the key is checkout-able. Env vars on a shared jumphost are not a strategy. Pick a manager when you can rotate and revoke.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Secrets Management Approaches in Modern Infrastructure" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

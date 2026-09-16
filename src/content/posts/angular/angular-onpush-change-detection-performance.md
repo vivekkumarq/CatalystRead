@@ -3,6 +3,7 @@ title: "OnPush Change Detection: What It Actually Skips"
 slug: "angular-onpush-change-detection-performance"
 description: "OnPush doesn't make a component faster on its own — it changes when Angular bothers to check it at all. Understanding the difference matters."
 publishedAt: "2026-04-07"
+updatedAt: "2026-09-16"
 category: "Angular"
 tags:
   - Angular
@@ -79,3 +80,11 @@ Signals don't eliminate the need for immutable updates on the array itself, but 
 ## The Practical Default for 2026
 
 For new components built with signal inputs (`input()`) and `signal()`/`computed()` for state, `OnPush` is close to free — the mutation trap mostly doesn't apply because the signal APIs push you toward immutable updates by construction. Set it as the default in new code, and treat retrofitting it onto older, mutation-heavy components as a deliberate refactor, not a drive-by optimization.
+
+## A worked failure mode
+
+A list is marked `OnPush`, then a parent mutates an array in place (`items.push`) and wonders why rows stay stale. A developer "fixes" it by injecting `ChangeDetectorRef` and calling `markForCheck` from a nested `setInterval`. CPU returns to Default-like levels. Another child receives a new object identity every cycle from a getter in the template, so OnPush never skips. The failure is OnPush as a flag without immutable inputs and explicit events. Pass new array references, avoid getters that allocate, and let signals or async pipes notify. Profile with Angular DevTools: skipped vs checked components, not a vibe.
+
+## When this is the wrong tool
+
+OnPush is the wrong first move if the template already hammers the DOM with a 10k-row unvirtualized table. It will not fix a sync JSON parse on every click. Do not sprinkle `markForCheck` until you have restored the contract. Default change detection is fine for small admin forms. Zoneless-plus-signals may be the better modern path than a sea of OnPush and manual marks. Use OnPush when inputs are stable references and you can see skipped checks in a profiler.

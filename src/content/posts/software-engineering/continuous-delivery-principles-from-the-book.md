@@ -65,3 +65,13 @@ Long-lived release branches for old major versions (support 2.x while 3.x is tru
 - Main is merge-blocked on the fast suite; a red main stops other merges.
 - Manual prod steps are listed and shrinking.
 - Flags, not branches, hide unfinished product work on trunk.
+
+## A worked failure mode
+
+A pipeline is green because tests are skipped on main. Deploy is automated to a Friday batch. The book is cited while the trunk is unstable. The failure is CD as a tool, not as always-releasable. Fast tests, real prod-like staging, small batches, and stop-the-line on red.
+
+## When this is the wrong tool
+
+CD is the wrong tool if you cannot test. It is a poor fit for hardware you ship in trucks without dual-control. Do not automate deploys you cannot roll back. Use CD when the product can ship small, reversible increments.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Continuous Delivery Principles That Still Apply When the Pipeline Is YAML", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

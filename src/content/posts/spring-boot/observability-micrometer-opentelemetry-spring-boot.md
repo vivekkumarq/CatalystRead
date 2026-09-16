@@ -3,6 +3,7 @@ title: "Observability in Spring Boot with Micrometer and OpenTelemetry"
 slug: "observability-micrometer-opentelemetry-spring-boot"
 description: "How Micrometer and OpenTelemetry fit together in a Spring Boot service, and which metrics and traces are worth instrumenting by hand versus for free."
 publishedAt: "2025-10-14"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -96,3 +97,14 @@ Sampler otelSampler() {
 ## Instrument for Questions You'll Actually Ask
 
 The failure mode with observability tooling isn't usually under-instrumentation, it's instrumenting everything indiscriminately until dashboards are too noisy to read during an incident. Before adding a metric or a custom span, it's worth being able to state the question it answers — "what's our checkout success rate by payment provider" is a question; "let's track every method call duration just in case" is not. Metrics and traces that map to specific operational or business questions stay useful for years; ones added reflexively get ignored until someone finally deletes them.
+
+## A worked failure mode
+
+Every method is timed; cardinality of `uri` includes IDs; the metrics backend melts. Traces are 0.1% sampled and the incident has none. Logs lack `traceId`. The failure is instrumentation without a budget. Low-cardinality tags, exemplars, and propagate ids.
+
+## When this is the wrong tool
+
+A full OTel stack is the wrong tool for a batch job that logs a line. Micrometer cardinality bombs are worse than no metrics. Instrument the SLIs first.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Observability in Spring Boot with Micrometer and OpenTelemetry", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.
+High-cardinality path templates (`/users/123`) will blow Prometheus memory while the SLO you care about stays unmeasured. Tag by route id, not by raw URI, and keep one RED dashboard per user journey. If a trace cannot be found for a failed checkout, sampling is too low or ids are not propagated—fix that before adding more timers.

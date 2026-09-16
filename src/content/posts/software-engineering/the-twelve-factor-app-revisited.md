@@ -61,3 +61,11 @@ A GPU training job with a 40 GB checkpoint on local SSD is not a twelve-factor w
 - The same SHA-tagged artifact is what runs in every environment.
 - Processes are crash-safe; local disk is cache, not the system of record.
 - Deviations (sticky sockets, GPUs) are named, not silent.
+
+## A worked failure mode
+
+Logs go to a local file in a container that dies. Config is compiled in. Dev/prod parity is a slide while prod has a sidecar nobody runs locally. The failure is factors as nostalgia. Stream logs, inject config, and make parity a script, not a poster.
+
+Twelve-factor is the wrong tool for a stateful data store you run yourself. Do not stretch "stateless" to mean "we have no backups." Use the parts that still prevent snowflakes.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The Twelve-Factor App, Revisited for Containers and Managed Data Stores" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

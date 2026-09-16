@@ -3,6 +3,7 @@ title: "Frontend Bundle Size Budgets and Enforcement"
 slug: "frontend-bundle-size-budgets-and-enforcement"
 description: "A bundle size budget that isn't enforced in CI is a suggestion, and suggestions don't survive contact with a deadline — here's how to make it stick."
 publishedAt: "2025-04-19"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -47,3 +48,13 @@ The second common failure is a budget that's accurate the day it's set and stale
 ## Making the trade-offs visible
 
 The times a budget gets broken on purpose are usually legitimate — a new dependency genuinely earns its weight. The value of enforcement isn't preventing every increase, it's forcing the increase to be a visible, reviewed decision instead of an accumulation nobody chose. A pull request that fails a size check and gets merged anyway, with a comment explaining why, is the system working correctly. A pull request that silently adds 80KB because nothing flagged it is the system that quietly stopped working months ago.
+
+## A worked failure mode
+
+A budget is set on uncompressed source; CI allows a 2MB vendor chunk because gzipped size "looks fine" on desktop wifi. A moment.js full locale pack sneaks in. The budget file is not in CI on pull requests from forks. The failure is a budget that does not match user bytes and is not enforced. Measure compressed transfer for landing routes, fail PRs, and vendor-split with intent.
+
+## When this is the wrong tool
+
+Byte budgets are the wrong fight if LCP is a huge image you forgot. Do not block a security patch over 1kb. Budgets matter on public landing JS; a logged-in dense app still needs some, but not the same number.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Frontend Bundle Size Budgets and Enforcement", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

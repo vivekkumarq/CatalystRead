@@ -3,6 +3,7 @@ title: "JWT Security Pitfalls and Hardening"
 slug: "jwt-security-pitfalls-and-hardening"
 description: "JSON Web Tokens are easy to misuse in ways that look correct in a demo and fail catastrophically in production — a walkthrough of the common mistakes."
 publishedAt: "2024-11-15"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -40,3 +41,13 @@ Where the token lives on the client matters as much as how it's signed. Storing 
 The payload itself is worth a second look too. A JWT is signed, not encrypted — anyone who intercepts or is handed the token can decode and read every claim inside it without knowing the secret. Treating it as a safe place to stash a user's email, role, or internal ID is a common but avoidable habit; nothing in the payload should be information you'd be uncomfortable showing in a browser's dev tools, because that's exactly where it's visible.
 
 Finally, verify the issuer and audience claims, not just the signature. A token that's validly signed by your own auth provider but was actually issued for a different application or environment should still be rejected if your service doesn't check `iss` and `aud` — otherwise a token meant for a staging environment can be replayed against production, or a token meant for one internal service can be reused against another that happens to trust the same signing key.
+
+## A worked failure mode
+
+`alg=none` is accepted; or `HS256` with a public RSA key as the HMAC secret (key confusion). Tokens live forever in localStorage. `kid` is taken from the attacker and fetches a jku. The failure is a JWT library with default-insecure verify. Pin algorithms, pin keys, short TTL, rotate, store refresh httpOnly, and never take alg from the token.
+
+## When this is the wrong tool
+
+JWTs are the wrong session for a same-site app that could use a server session. They are the wrong place to stuff PII. Do not use them if you cannot revoke. Prefer opaque tokens when you have a store.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "JWT Security Pitfalls and Hardening" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

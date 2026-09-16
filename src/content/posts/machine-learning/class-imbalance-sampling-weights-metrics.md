@@ -3,6 +3,7 @@ title: "Class Imbalance: Sampling, Weights, and the Right Metrics"
 slug: "class-imbalance-sampling-weights-metrics"
 description: "Practical techniques for imbalanced classification, and why accuracy is the wrong number to optimize when the positive class is 2% of your data."
 publishedAt: "2026-04-17"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -67,3 +68,14 @@ One rule that's easy to violate by accident: resampling must happen only on the 
 ## Don't forget the decision threshold
 
 Even a well-trained model on imbalanced data will underperform if you leave the classification threshold at the default 0.5. That threshold assumes the two classes are equally likely and equally costly to misclassify, which is rarely true for imbalanced problems. Tune the threshold against the precision/recall trade-off that matches the actual business cost of a false positive versus a false negative — for fraud, that's usually a much lower threshold than 0.5, because missing fraud is typically costlier than a false alarm that a human reviews.
+
+## A worked failure mode
+
+SMOTE is applied before the split; synthetic minorities leak into test. Class weights are so extreme that precision collapses and human reviewers drown. Accuracy is still reported as the headline. The failure is resampling as magic. Split first, sample or weight only train, and measure the operating point you will staff.
+
+## When this is the wrong tool
+
+Resampling is the wrong tool if you can collect real minority examples. It will not fix mislabeled rares. Cost-sensitive thresholds often beat synthetic rows. Use imbalance methods when the metric matches the decision.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Class Imbalance: Sampling, Weights, and the Right Metrics" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.
+If the minority class is noisy, resampling amplifies the noise and reviewers drown in false positives. Prefer collecting better labels, then pick a threshold from reviewer capacity, not from a default of 0.5. Report precision at that capacity every week so a weight tweak cannot silently explode the queue.

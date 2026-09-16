@@ -88,3 +88,11 @@ If the values are already different TypeScript types (`number` vs `string`), you
 - Parse/construct at HTTP and queue edges; no `as Brand` on raw JSON.
 - Runtime checks live in the constructor; interior code trusts the type.
 - Brands are reserved for mix-ups that cost money or safety, not every DTO field.
+
+## A worked failure mode
+
+`UserId` and `OrderId` are branded then `as UserId` is used on a string from the URL without parsing. Brands are stripped by a generic `T` that was not preserved. JSON round-trips lose brands (expected) and the code still trusts them. The failure is a brand without a constructor. Parse at the edge; do not assert.
+
+Brands are the wrong tool if you have one id type in the whole app. They do not survive untyped JSON. Use them to stop mixing identifiers you actually mix up.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Branded Types: Nominal Identity in a Structural Type System" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

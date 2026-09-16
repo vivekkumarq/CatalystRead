@@ -3,6 +3,7 @@ title: "Semantic Caching for LLM Cost Reduction"
 slug: "semantic-caching-for-llm-cost-reduction"
 description: "How semantic caching cuts LLM spend by reusing responses to meaningfully similar queries, and the correctness traps that come with it."
 publishedAt: "2026-07-06"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -55,3 +56,11 @@ A cached answer is only valid as long as the underlying facts are. If the refund
 ## Measure hit rate against savings, not in isolation
 
 A high cache hit rate feels like a win, but the number that matters is dollars saved versus the infrastructure cost of running the cache (embedding every query, maintaining the index, the latency cost of the cache lookup itself on a miss). For low-traffic applications, the embedding call on every query can eat a meaningful chunk of the savings semantic caching was supposed to provide. It's most worth building for high-volume, repetitive-query workloads — a support bot fielding thousands of daily variations on a few dozen actual questions is the textbook case; a low-traffic internal tool with highly varied queries usually isn't.
+
+## A worked failure mode
+
+A team caches completions by embedding the user question and returning the nearest prior answer within cosine 0.92. "Cancel my family plan" and "cancel my personal plan" collide; a user gets the other flow's confirmation text. Another day, prices change and the cache keeps serving last week's quote because nobody keyed cache entries on prompt version and retrieval set. Hit rate looks fantastic; refund tickets do not. The failure is treating semantic nearness as equivalence. Cache only on normalized intents that you classify as identical, or on exact prompt+tool+doc-hash keys. Short TTLs on anything that can change money, policy, or identity.
+
+## When this is the wrong tool
+
+If questions are unique (coding, long documents, tool-using agents), semantic cache hit rates will be noise and you will still pay embedding cost. Exact-string cache on a FAQ is simpler and safer. Do not cache tool-using answers that depend on live account state. Do not use a loose similarity threshold to save a few cents on a high-stakes domain. If volume is low, the cache is extra state to invalidate. Turn it on when you have repeated, low-stakes prompts and a versioned key that includes everything that could change the answer.

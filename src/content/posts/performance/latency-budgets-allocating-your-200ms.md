@@ -3,6 +3,7 @@ title: "Latency Budgets: Allocating Your 200ms"
 slug: "latency-budgets-allocating-your-200ms"
 description: "A 200ms response time target means nothing until it's broken down into a budget per component — otherwise every team assumes someone else owns it."
 publishedAt: "2025-06-28"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -46,3 +47,13 @@ The real value of an explicit budget shows up during design conversations, not d
 It also clarifies where optimization effort is worth spending. A component sitting comfortably under its allocated budget isn't a priority even if it could theoretically be made faster — the 60ms database query at its 60ms budget matters more than shaving 5ms off a component already running at 10ms against a 15ms allocation. Budgets redirect performance work toward the places actually constraining the total, instead of toward whichever component is easiest to profile or most recently touched.
 
 Revisit the allocation periodically rather than treating it as fixed forever — as traffic patterns, data volume, and architecture change, yesterday's realistic per-component floor can become unrealistic, and a budget nobody revisits eventually stops reflecting what's actually achievable.
+
+## A worked failure mode
+
+A 200ms budget is assigned as 50ms each to four services that all retry twice with 100ms timeouts; the product p99 is 800ms. DNS and TLS are forgotten. A mobile 3G user was never in the budget. The failure is budgets that ignore retries, tails, and the network you do not own. Budget p99, include fan-out and retries, and keep a reserve for the client.
+
+## When this is the wrong tool
+
+A 200ms slogan is the wrong tool for a report that can be async. Do not cut a correctness check to meet a made-up number. Budgets help when leadership will drop features that do not fit.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Latency Budgets: Allocating Your 200ms" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

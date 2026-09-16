@@ -66,3 +66,11 @@ When you are still ramping and do not yet know which problems are real. When the
 - There is an artifact that works without you in the meeting.
 - Calendar time is bounded; declines point at documents.
 - The manager can repeat the bet in one sentence.
+
+## A worked failure mode
+
+An engineer starts commenting on every RFC to "be visible." Authors route around them. Another silently rewrites a team's service over a weekend; it works, and the team stops trusting unannounced changes. Influence dies both ways: noise without ownership, and ownership without consent. The failure is optimizing for presence instead of being useful on a constraint the org already feels. Pick a painful interface (deploy, on-call, a flaky test suite), make it reliably better, write down the new default, and leave the keys with the team. Influence is earned when people ask you to look, not when you announce a personal brand.
+
+## When this is the wrong tool
+
+Shadow leadership is the wrong strategy if you are being underleveled and need a title for pay bands you cannot otherwise reach; negotiate or leave with a clear-eyed packet. Do not grow influence by collecting approval on work you do not intend to support in production. It is the wrong tool for avoiding management if the only power in the org is a reporting line. Use informal influence to move technical defaults; use the promotion process for compensation.

@@ -67,3 +67,11 @@ Keys will not make a slow list fast; virtualization will. They will not persist 
 - No `Math.random()` keys; no `key={item}` objects.
 - State that must survive remount lives in a parent or store keyed by id.
 - A shuffle test exists for any row with internal state.
+
+## A worked failure mode
+
+Keys are array indexes; a reorder animates the wrong row and inputs keep the wrong text. A random key remounts every render and kills state. Two siblings share a key. The failure is identity as a loop index. Stable ids from data; never Math.random in render.
+
+Keys are the wrong tool to force remount as a default pattern (sometimes you want a `key={id}` on a wizard step, not on every row). Do not use index keys on reorderable lists. Use stable identities.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Reconciliation, Keys, and Why Your List Animates the Wrong Row" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

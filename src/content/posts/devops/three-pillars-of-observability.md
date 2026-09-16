@@ -3,6 +3,7 @@ title: "The Three Pillars of Observability, and Where They Actually Overlap"
 slug: "three-pillars-of-observability"
 description: "Logs, metrics, and traces are usually taught as separate pillars, but the real value comes from how they connect during an actual incident investigation."
 publishedAt: "2025-12-22"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - Observability
@@ -58,3 +59,13 @@ http_request_duration_seconds_bucket{le="5"} 842 # trace_id="a1b2c3"
 ```
 
 Exemplars — trace IDs attached directly to metric samples — are a small feature that makes this correlation nearly automatic instead of requiring the engineer to manually guess a time window and search for a matching trace. If your observability stack has all three pillars deployed but no shared identifiers linking them, you don't yet have observability — you have three separate dashboards that happen to describe the same system.
+
+## A worked failure mode
+
+A platform mandates metrics, logs, and traces for every service. Teams emit 10GB of unindexed logs, no exemplars linking a trace to a metric spike, and traces sampled at 0.01% so the incident never has a trace. The three pillars are three invoices. The failure is collection without questions. Start from "why is checkout slow," pick the signal that answers it, and correlate with ids. High-cardinality labels on metrics will page you into bankruptcy.
+
+## When this is the wrong tool
+
+Pillar completeness is the wrong goal. Traces are the wrong first tool for a cron that runs twice a day; a log line and an exit code suffice. Metrics without SLIs are vanity. Buy or build the smallest setup that debugs your last outage class.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The Three Pillars of Observability, and Where They Actually Overlap" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

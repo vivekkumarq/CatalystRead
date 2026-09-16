@@ -3,6 +3,7 @@ title: "Observability for LLM Applications: Tracing, Tokens, and Feedback Loops"
 slug: "observability-for-llm-applications"
 description: "What to actually instrument in an LLM application beyond latency and error rate, and how to close the loop from production traffic to eval sets."
 publishedAt: "2026-07-22"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -55,3 +56,11 @@ Offline evals catch known failure modes; they can't catch what you haven't thoug
 ## What to actually alert on
 
 Alerting on p99 latency and 5xx rate is necessary but not sufficient. Add alerts for: a sudden drop in average response length (often signals truncated or degraded generation), a spike in retries or fallback-path usage, a spike in negative feedback rate over a rolling window, and — for agents — a spike in tasks hitting the max-tool-call ceiling, which usually means something upstream changed and the agent is thrashing. None of these show up in standard infrastructure monitoring, and all of them are cheap to compute once you're already logging structured traces.
+
+## A worked failure mode
+
+An LLM feature logs the final answer and a thumbs-up. After a model upgrade, refund suggestions start omitting the 14-day window. Average latency is unchanged; thumbs-up even rises because answers are pithier. Nobody can see that `prompt_tokens` jumped, that retrieval returned a stale chunk, or that the tool schema failed and the model guessed. A trace per request with prompt version, retrieval ids, tool I/O, token counts, cost, and an eval label on a sample would have caught it in a day. The failure is observing the chat bubble instead of the pipeline. User feedback is lagged and biased; traces plus targeted evals are how you debug.
+
+## When this is the wrong tool
+
+Full prompt logging is the wrong default if prompts contain PII and you have no redaction or retention policy. A distributed-tracing cathedral is the wrong tool for a weekend prototype with 20 users; a structured log line may be enough. Do not build a custom LLM APM before you have request ids and versioned prompts. Observability will not replace product metrics: if the feature is "draft an email," measure send rate and edit distance, not only BLEU against a judge. Instrument the path that can silently change answers.

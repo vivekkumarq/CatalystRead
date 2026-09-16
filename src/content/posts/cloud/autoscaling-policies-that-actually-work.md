@@ -3,6 +3,7 @@ title: "Autoscaling Policies That Actually Work Under Real Traffic"
 slug: "autoscaling-policies-that-actually-work"
 description: "Why naive CPU-based autoscaling fails under real traffic patterns, and the metric choices and tuning that make autoscaling respond correctly instead of thrashing."
 publishedAt: "2026-01-19"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -82,3 +83,12 @@ spec:
 ```
 
 This isn't a replacement for reactive scaling — it's a floor that ensures baseline capacity is already warm before the predictable spike arrives, with reactive scaling still handling anything beyond what the schedule anticipated. Combining a scheduled floor with a reactive, saturation-based ceiling covers both the predictable and unpredictable parts of real traffic far better than either approach alone.
+
+## A worked failure mode
+
+CPU-based HPA is set to 70%. A Java service sits at 40% CPU while the real bottleneck is a saturated connection pool; latency burns, no scale-out. When CPU finally rises, scale-out adds pods that all stampede the database and make it worse. Cooldown is 30 seconds, so the graph looks like a saw. The failure is scaling on a vanity metric with no max and no queue depth. Scale on saturation that matches the bottleneck (in-flight requests, queue lag, memory), cap replicas at what the data store can take, and load-test the scale-up path.
+
+## When this is the wrong tool
+
+Autoscaling is the wrong tool for a stateful singleton, a license-limited worker, or a batch job that should be a queue consumer count you set. It will not fix O(n^2) queries. Do not autoscale the database on the same naive CPU rule. Scheduled capacity may beat reactive scaling for a known daily peak. Use autoscaling when load is spiky, the bottleneck metric is honest, and downstreams have headroom.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

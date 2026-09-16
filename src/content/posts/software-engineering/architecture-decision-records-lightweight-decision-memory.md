@@ -3,6 +3,7 @@ title: "Architecture Decision Records: Lightweight Decision Memory"
 slug: "architecture-decision-records-lightweight-decision-memory"
 description: "Why undocumented architectural decisions get relitigated endlessly, and how a lightweight ADR practice preserves the reasoning without becoming bureaucratic."
 publishedAt: "2026-03-02"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -56,3 +57,13 @@ Not every decision warrants a record. A useful filter is whether the decision wo
 ## Where they live matters
 
 Store ADRs in the same repository as the code they concern, versioned alongside it, rather than in a separate wiki that drifts out of sync and eventually stops getting updated. A numbered, chronological log in a `docs/adr/` directory, searchable and linkable from code comments and pull requests, keeps the decision history exactly where the people who need it — during a code review, during an incident, during a redesign — are already looking.
+
+## A worked failure mode
+
+ADRs are written after the fact as novels; the rejected options are missing; a later team repeats the debate. Another team ADRs every variable name. The failure is weight. One page: context, decision, consequences. Store next to code. Skip reversible choices.
+
+## When this is the wrong tool
+
+ADRs are the wrong tool for a one-line revertible tweak. They will not replace talking to the people who were in the room if you never record names. Do not ADR to dodge a meeting. Use them when the next team will ask why.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Architecture Decision Records: Lightweight Decision Memory" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

@@ -69,3 +69,13 @@ For tabular models with a few dozen features, dropout is a blunt instrument; sim
 - Rate is swept; 2014 MNIST defaults are not pasted into a 7B training run.
 - Data leak checked before interpreting a generalization gap as “need more dropout.”
 - Ensemble interpretation is the story you tell; “add noise” is not.
+
+## A worked failure mode
+
+Dropout is left active at evaluation; production scores jitter and a downstream threshold flaps. A 0.8 dropout is used to paper over 80 training images. Another team applies dropout to a calibrated medical probability without reporting Brier score. The failure is a regularizer as a ritual and eval-mode mistakes. Turn dropout off at eval, retune when data is tiny (prefer more data or simpler models), and monitor proper scores if you ship probabilities.
+
+## When this is the wrong tool
+
+Dropout is the wrong tool for gradient-boosted trees and for tiny tabular problems. Do not stack dropout, weight decay, and heavy augmentation to hide leakage. Use it in large neural nets with a correct eval path.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Dropout: Regularization by Silence, and Why It Still Shows Up in 2026 Training Runs" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

@@ -67,3 +67,11 @@ If there is no cross-account assume-role, confused-deputy ExternalId is not your
 - `AssumeRole` always sends the stored external ID; trust policies require it.
 - Resource policies pin `aws:SourceArn` / `aws:SourceAccount` for publishers.
 - CloudTrail can answer which tenant, which role, which key.
+
+## A worked failure mode
+
+A CI role can assume into production because a trust policy checks only `sts:AssumeRole` from "some AWS account" and not the source ARN or an external ID. A second team builds a service that takes a customer-supplied role ARN and calls AWS with it; an attacker points at a victim bucket. Resource policies on the bucket allow that service's account, so the deputy copies data. The failure is missing confused-deputy controls: `aws:SourceArn`/`SourceAccount`, external IDs, and not accepting raw role ARNs from users without a binding. Test with a malicious ARN in staging.
+
+A complex resource policy is the wrong tool if the resource should not be shared at all. Do not sprinkle `"AWS": "*"` and rely on a condition you do not understand. Confused-deputy lore is the wrong rabbit hole when access keys are in Git. Use resource policies and source binding when you actually have cross-account invocation.
+
+Treat the counterexample as part of the spec. Someone will apply "The Confused Deputy Problem in Cloud IAM, With Resource Policies That Close It" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

@@ -73,3 +73,11 @@ DNS round-robin as the only LB with no health.
 ## When this is the wrong tool
 
 A single instance does not need an LB. L7 is the wrong tool for non-HTTP protocols unless you understand the parser. Client-side LB (gRPC) can replace a proxy in a mesh — do not stack four LBs. Global anycast vs regional LB is a product/latency choice, not a layer-4 vs 7 quiz. Do not use the LB as an app firewall for authz logic that belongs in the service.
+
+## A worked failure mode
+
+L4 balancing with a long-lived connection pins a user to a dying node. L7 balancing terminates TLS and the cert is forgotten. Health checks hit `/` while `/ready` is false. The failure is layer choice without connection and health semantics. Use L7 when you need HTTP awareness; drain connections; health-check readiness.
+
+L7 is the wrong tool for non-HTTP protocols you should pass through. L4 sticky is the wrong HA. Pick the layer that matches the protocol and drain.
+
+Treat the counterexample as part of the spec. Someone will apply "Load Balancing Strategies: L4 vs. L7" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

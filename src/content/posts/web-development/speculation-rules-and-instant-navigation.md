@@ -79,3 +79,13 @@ If `startBeacons` also boots ads, those slots must wait too. An ad auction in a 
 - Analytics and ads wait for activation; a QA run compares pageview counts with speculation off.
 - Prefetch is the default; prerender is an allowlist with a measured bandwidth budget.
 - Origin rate limits and WAF rules treat speculation QPS as real traffic, because it is.
+
+## A worked failure mode
+
+Prerender is enabled for every link including logout and checkout; analytics double-count and a prerender hits a billed API. A same-origin rule prerenders a page that depends on POST state. The failure is speculation without an allow-list. Restrict to cheap GETs, exclude authenticated mutating paths, and de-dupe analytics.
+
+## When this is the wrong tool
+
+Speculation rules are the wrong tool if the next page is personalized and expensive. Do not prerender the whole site on mobile data. Use them for likely, cheap, idempotent next views.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Speculation Rules: Prefetch and Prerender Without Wrecking Analytics", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

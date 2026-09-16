@@ -83,3 +83,11 @@ Slices that miss a converter and pass in full tests only. `@MockBean` on everyth
 ## When this is the wrong tool
 
 A unit test of a pure function does not need Test slices. E2E is the wrong default for a mapper. If wiring is the product (many auto-configs), a narrower `@SpringBootTest` with a test slice of config may be honest. `@DataJpaTest` will not catch SQL that only fails on MySQL if you use H2 — use Testcontainers. Skip slices when they fight a custom `WebMvcConfigurer` you always need; document a composable `@Import`.
+
+## A worked failure mode
+
+`@SpringBootTest` is used for everything; CI is 40 minutes. `@WebMvcTest` mocks the service so thoroughly the controller’s mapping bugs are the only thing not tested. `@DataJpaTest` uses H2 while prod is Postgres-specific SQL. The failure is slice choice vs fidelity. Slices for speed with contract tests on Testcontainers for the SQL you depend on.
+
+Slices are the wrong tool if you never test the wiring. Full tests are the wrong default for every PR. Mix them.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Test Slices: @WebMvcTest, @DataJpaTest, and Knowing When to Skip Them" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

@@ -71,3 +71,11 @@ Pretending a saga is 2PC.
 ## When this is the wrong tool
 
 2PC is the wrong default in microservices. A single database transaction is the right tool when it fits. Consensus is the wrong tool for a shopping cart CRDT. If you need cross-region write availability during partition, neither blocking 2PC nor a single Raft group in one region will make CAP disappear. Use idempotent APIs and sagas for business workflows; use Raft inside a store, not across HTTP services.
+
+## A worked failure mode
+
+2PC coordinator is a single VM; it dies in the prepared state and participants hold locks for hours. Timeouts abort one side and commit the other. The failure is blocking consensus with a fragile coordinator. Prefer a single DB, sagas, or a real consensus log with fencing.
+
+2PC is the wrong tool across HTTP microservices. It is the wrong tool if you cannot staff coordinator HA. Avoid it unless a database product implements it well inside one system.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Two-Phase Commit, Blocking, and Why Consensus Took Over Coordination" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

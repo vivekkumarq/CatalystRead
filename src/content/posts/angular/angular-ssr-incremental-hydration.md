@@ -72,3 +72,11 @@ Caching SSR HTML that includes a user name for the wrong user.
 ## When this is the wrong tool
 
 A behind-login app with no SEO need may skip SSR. Incremental hydration will not fix a 3 MB client bundle. Do not SSR canvas games. If the page is a single dashboard that is fully interactive immediately, full hydration is simpler. Static generation plus client islands may beat Angular SSR for a docs site. Skip SSR for internal admin tools.
+
+## A worked failure mode
+
+SSR HTML includes a personalized cart. The CDN caches that HTML for everyone; after hydration, users flash another user's name until client fetch completes. Incremental hydration defers a payment widget that contains the submit button; crawlers see it, users on slow devices cannot pay for seconds. A mismatch on a random UUID in the template blows away the node and undoes hydration savings. The failure is caching and defer choices that ignore personalization and interaction. Cache public shells, hydrate critical actions eagerly, and keep SSR output deterministic.
+
+SSR is the wrong tool for an authenticated app that is entirely behind login and has no SEO need, if you are not chasing first paint. Incremental hydration is the wrong tool if the deferred island is the only CTA. Do not SSR a page that immediately redirects. Use SSR for public, cacheable shells and hydrate what users must touch first.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Server-Side Rendering and Incremental Hydration in Angular" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

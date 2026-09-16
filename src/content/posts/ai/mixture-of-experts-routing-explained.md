@@ -67,3 +67,11 @@ Expert parallelism wants a fast interconnect. Ethernet-only clusters often lose 
 - Load-balancing loss (or expert-choice) is on, and expert histograms are inspected.
 - Serving plan includes all-to-all, packing, and p99 expert-shard tail.
 - Reproducibility needs are written down before promising bit-identical evals.
+
+## A worked failure mode
+
+A team picks an MoE checkpoint because the blog said it is "70B quality at 12B active." In production, a code-heavy tenant always hits the same experts; those experts' KV and weights stay hot while others idle, and the batching story looks like a dense model with worse tail latency. Load-balancing losses were trained for a web crawl, not for this tenant mix. A second failure: they shard experts across nodes without pinning, and a single slow expert stalls the whole token. Routing is a scheduling problem. Measure expert utilization per traffic class, cap expert parallelism where the network is the tax, and keep a dense fallback if the router collapses under a new domain.
+
+## When this is the wrong tool
+
+MoE is the wrong tool if you cannot batch enough tokens to amortize routing, or if you need uniform latency on tiny prompts. It is the wrong mental model for "free capacity": you still pay memory for all experts if they are resident. Distill a dense model for a narrow task instead of serving a sparse giant. Do not choose MoE to fix a prompt that is twice as long as it needs to be. If you are calling a hosted API, the routing internals are not your lever; price, context, and evals are.

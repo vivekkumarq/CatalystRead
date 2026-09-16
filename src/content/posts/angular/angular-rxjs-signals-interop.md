@@ -82,3 +82,11 @@ Test: emit on a `Subject`, assert signal value after CD.
 ## When this is the wrong tool
 
 New features can stay signals-only. Do not wrap every signal in `toObservable` "for familiarity." RxJS is still the right tool for complex cancellation graphs; signals are the wrong tool to reimplement `switchMap` by hand. If a library only speaks Observables, interop at the boundary, not in every component. Avoid `toSignal` for one-shot HTTP you could `await` in an `resource` loader.
+
+## A worked failure mode
+
+`toSignal(this.http.get(...))` is called in a constructor without `manualCleanup` or an injection context that dies with the component. The HTTP subscription outlives navigation and writes to a destroyed view. Elsewhere `toObservable(signal)` is used in a template via a getter, creating a new Observable every CD cycle. `toSignal` on a hot multicast stream without an initial value throws. The failure is interop without lifetime. Create interop once per injection context, set `requireSync`/`initialValue` deliberately, and unsubscribe with the component.
+
+Interop is the wrong tool when you can stay in one world: signals for local UI state, RxJS for composing streams you already have. Do not wrap every signal in an observable to use one `combineLatest`. Do not convert a BehaviorSubject to a signal and still next into the subject from five places. Pick a source of truth.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "RxJS-to-Signals Interop: Using toSignal and toObservable Correctly" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

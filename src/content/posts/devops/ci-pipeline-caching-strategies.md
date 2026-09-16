@@ -85,3 +85,11 @@ Write-only caches that never restore.
 ## When this is the wrong tool
 
 A 20s build. Caching is the wrong fix for a 40-minute e2e suite — split tests. Do not cache the entire `$HOME`. Hermetic Bazel remote cache is a different product. If runners are ephemeral and cache backend is slow, local disks on sticky runners may win. Skip caching randomized test data.
+
+## A worked failure mode
+
+CI caches `node_modules` keyed only on branch name. A lockfile bump on main does not invalidate feature-branch caches; tests run against yesterday's deps and pass. Another cache stores Docker layers with secrets from `ARG`. Cache poisoning from a PR pipeline writes to the production cache key because permissions were wide. The failure is cache keys and trust boundaries. Key on lockfiles and toolchain versions, isolate PR caches, and never cache credentials.
+
+CI cache is the wrong tool to hide an unpinned dependency. Do not cache build outputs you cannot reproduce. If the job is 40 seconds, skip the cache complexity. Cache when the key is correct and the savings dwarf the risk of stale artifacts.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "CI Pipeline Caching Strategies That Actually Save Time" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

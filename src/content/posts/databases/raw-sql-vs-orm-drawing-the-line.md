@@ -3,6 +3,7 @@ title: "Raw SQL vs ORM: Where to Draw the Line"
 slug: "raw-sql-vs-orm-drawing-the-line"
 description: "A practical framework for deciding when an ORM query is fine and when it's time to drop down to raw SQL, with real examples of each."
 publishedAt: "2025-03-31"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -66,3 +67,13 @@ result = await prisma.query_raw(
 ## A rule that actually scales
 
 Default to the ORM for anything shaped like fetch-mutate-persist a single entity or a simple filtered list, because readability and safety win there and performance is rarely the bottleneck. Reach for raw SQL the moment a query needs a feature the ORM's builder doesn't model well, or the moment you catch yourself checking `EXPLAIN` on ORM-generated SQL more than once for the same query — at that point, writing it directly is both less code and more honest about what's actually being asked of the database.
+
+## A worked failure mode
+
+A reporting endpoint is built with ORM loops because "we do not write SQL." It times out. Someone pastes a 200-line query into the codebase with no name, no EXPLAIN, and string-concatenated filters. SQL injection returns. The line is: ORM for CRUD with clear relations; SQL for set-based reads you can EXPLAIN, in a repository function with bound parameters and a test. The failure is ideology either way.
+
+## When this is the wrong tool
+
+Raw SQL is the wrong default for inserting a user row. An ORM is the wrong tool for a recursive graph walk you already wrote well in SQL. Do not generate dynamic SQL from user columns without a whitelist. Draw the line per query shape, not per team's identity.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Raw SQL vs ORM: Where to Draw the Line" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

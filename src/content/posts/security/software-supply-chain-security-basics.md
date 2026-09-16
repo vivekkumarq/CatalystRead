@@ -55,3 +55,11 @@ Ignoring 400 low CVEs forever or blocking the company on all of them. Pinning no
 ## When this is the wrong tool
 
 A weekend toy without distribution. Supply-chain tooling will not fix SQL injection in your code. Do not buy a platform instead of pinning Actions. If you vendor all deps and never update, you traded CVEs for rot — still a choice, be honest. Internal-only scripts still need a lockfile if they run in prod.
+
+## A worked failure mode
+
+CI builds from a mutable `latest` tag; a compromised base image ships. Dependency review is a green badge. Signing is done after upload with a key on a laptop. The failure is provenance that is not hermetic. Pin by digest, build in a trusted builder, sign there, verify at deploy.
+
+A supply-chain program is the wrong tool if prod still uses a shared SSH key. Do not generate attestations you never check. Start with pins and a private registry policy.
+
+Treat the counterexample as part of the spec. Someone will apply "Software Supply Chain Security Basics" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

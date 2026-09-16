@@ -3,6 +3,7 @@ title: "The Java Module System in Real Projects"
 slug: "java-module-system-in-real-projects"
 description: "JPMS is easy to dismiss after a rough first encounter, but used selectively it solves real encapsulation problems the classpath never could."
 publishedAt: "2025-06-21"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -69,3 +70,13 @@ module com.example.core.domain {
 ```
 
 Modules on the module path can still be consumed by code on the classpath, so this hybrid setup works without forcing every consumer to modularize in lockstep. Treat JPMS as a targeted tool for enforcing boundaries that already exist conceptually in your architecture, not as an all-or-nothing migration for the whole codebase.
+
+## A worked failure mode
+
+A library splits into 20 JPMS modules and `exports` nothing useful; users fall back to `--add-opens` in every launcher. Spring Boot's loader and JPMS fight; tests need a different module graph than prod. The failure is modularity as paperwork. If you are not enforcing `opens` for reflection-heavy frameworks, a fat jar with a clear package API is enough. Use `module-info` when you can name the surface and test the launchers you ship.
+
+## When this is the wrong tool
+
+JPMS is the wrong tool to fix cyclic spaghetti by renaming folders. It is painful with many reflection frameworks. Do not modularize a weekend app. Adopt modules when you need strong encapsulation and will maintain launch scripts.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The Java Module System in Real Projects" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

@@ -3,6 +3,7 @@ title: "The Layers of Caching in a Web Stack"
 slug: "layers-of-caching-in-a-web-stack"
 description: "Browser, CDN, application, and database caching each solve a different problem and fail differently — knowing which layer to reach for matters."
 publishedAt: "2024-12-02"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -47,3 +48,13 @@ Databases cache aggressively on their own — query plan caches, buffer pools ho
 ## Choosing the right layer
 
 The layers compose, but they're not interchangeable substitutes for each other. If your bottleneck is repeated identical requests from many users, CDN caching solves it with the least operational overhead. If it's a slow query behind personalized data, application-level caching is the right tool, but it comes with the invalidation problem attached. If it's a query that's slow even on a warm database cache, no amount of caching upstream fixes that — the query itself, or the schema underneath it, needs attention. Reaching for Redis before ruling out the cheaper layers is a common way to add operational complexity for a problem a `Cache-Control` header would have solved.
+
+## A worked failure mode
+
+Browser cache, CDN, Redis, and ORM cache all store a price. A correction hits Redis only. Users see four prices depending on path. There is no single invalidation key. The failure is n caches without one source of expiry. Prefer fewer layers, versioned keys, and a purge path you can run at 2am.
+
+## When this is the wrong tool
+
+A cache layer is the wrong tool to hide a 2s query you can index. Do not cache personalized HTML at the CDN. Add a layer when you can name the key, the TTL, and the bust.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "The Layers of Caching in a Web Stack", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

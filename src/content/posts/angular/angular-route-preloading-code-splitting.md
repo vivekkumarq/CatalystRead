@@ -101,3 +101,9 @@ PreloadAll on a 40-route app on mobile data. Circular lazy modules. Sharing a gi
 ## When this is the wrong tool
 
 A five-screen app does not need a custom preloader. Do not split every component into a route to "micro-frontend" a monolith. Prefetch via Speculation Rules on the next URL may beat Angular preloading for content sites. If the bottleneck is an API, splitting JS will not help. Eager-load the above-the-fold route; splitting it is the wrong split.
+
+## A worked failure mode
+
+`PreloadAllModules` is enabled on a large app. On a 3G phone the first page competes with eager downloads of admin charts the user will never open. A custom preload strategy was copied from a blog and preloads based on `route.data.preload` that nobody set, so nothing preloads in staging and everything preloads in prod because of a default true. Users also see a flash of the wrong lazy chunk after a deploy because the index.html is cached and chunks 404. The failure is preloading without a budget and without cache rules for hashed files. Preload the next likely route, measure LCP, and cache-bust chunks.
+
+Preload-all is the wrong tool for huge authenticated apps and for users who pay for bytes. Do not lazy-split a 3kb utility. Do not code-split so finely that you pay for 30 waterfalls. Eager-load the landing path; split the rest. Skip fancy strategies until the network panel shows a real contention problem.

@@ -3,6 +3,7 @@ title: "CSS Container Queries: Designing Components, Not Pages"
 slug: "css-container-queries"
 description: "Media queries respond to the viewport. Container queries respond to the component's own box — which is what most responsive design actually needed."
 publishedAt: "2026-02-13"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -87,3 +88,13 @@ This lets a component theme itself based on an ancestor's custom property withou
 ## Where This Changes How You Build Components
 
 The practical shift is architectural as much as syntactic: a component library built around container queries can genuinely be viewport-agnostic, tested once inside a few container widths rather than tested against every page-level breakpoint it might end up nested inside. That's the property media-query-only responsive design could never quite deliver for a true component system.
+
+## A worked failure mode
+
+A container query is on the viewport-sized parent, so it is a media query in disguise. A component is queried but the container is not `container-type`, so nothing applies. Nested containers surprise a team that thought "card" was the query root. The failure is missing container types and the wrong ancestor. Set `container-type` on the box that actually shrinks.
+
+## When this is the wrong tool
+
+Container queries are the wrong tool if the layout only depends on the viewport. They are extra on a single-column form. Use them for reusable components that sit in sidebars and mains.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "CSS Container Queries: Designing Components, Not Pages" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

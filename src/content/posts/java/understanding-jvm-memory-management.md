@@ -3,6 +3,7 @@ title: "Understanding JVM Memory Management"
 slug: "understanding-jvm-memory-management"
 description: "A deep dive into Java stack memory, heap memory, metaspace, and how garbage collection actually reclaims objects."
 publishedAt: "2026-08-25"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -94,3 +95,13 @@ Before tuning anything, measure. Enable GC logging with `-Xlog:gc*` and look at 
 5. Measure with GC logs before touching a single flag.
 
 Once this model is in place, heap dumps and GC logs stop being intimidating — they become a map of exactly what your application is doing with memory.
+
+## A worked failure mode
+
+Off-heap `DirectByteBuffer` is allocated per request and never released; the heap looks fine, the process is killed by the OS. Metaspace leaks from dynamic proxies. Someone sets `-Xmx` equal to the container without leaving room for stacks and direct memory. The failure is heap-only mental models in containers. Account for native, metaspace, and container limits; use JFR native tracking.
+
+## When this is the wrong tool
+
+Memory-model deep dives are the wrong first response to a slow query. Do not set 100 GC flags. Understand the pools when you run in cgroups and see OOMKills that are not `OutOfMemoryError`.
+
+Treat the counterexample as part of the spec. Someone will apply "Understanding JVM Memory Management" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

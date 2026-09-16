@@ -101,3 +101,11 @@ A test uses `completeExceptionally` to prove the fallback.
 ## When this is the wrong tool
 
 A single blocking JDBC call. Structured concurrency on a new JDK. Reactive streams for a firehose. Do not CompletableFuture a CPU loop that should be sequential. If you need a timeout around a legacy API that ignores interrupts, CF will not save you. Virtual threads + sequential code may be clearer.
+
+## A worked failure mode
+
+`supplyAsync` uses the common ForkJoinPool for blocking HTTP. Under load the pool saturates; unrelated parallel streams freeze. `thenApply` is used instead of `thenCompose` and a nested future is returned as a value. Exceptions die in `whenComplete` without completing the caller. The failure is the wrong pool and the wrong flatten. Use a bounded executor for blocking work, `thenCompose` to flatten, and always complete exceptionally to the caller.
+
+CompletableFuture is the wrong tool for a linear blocking script. Do not mix it with virtual threads randomly. Structured concurrency may be clearer for sibling tasks. Use CF when you already have async APIs and you can name the executor.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "CompletableFuture Composition Patterns That Actually Work" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

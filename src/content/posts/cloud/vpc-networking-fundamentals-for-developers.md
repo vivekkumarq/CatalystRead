@@ -3,6 +3,7 @@ title: "VPC Networking Fundamentals Every Developer Should Actually Know"
 slug: "vpc-networking-fundamentals-for-developers"
 description: "A practical walkthrough of VPC networking concepts, from subnets and route tables to security groups, aimed at developers who deploy but don't design networks."
 publishedAt: "2026-01-05"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -59,3 +60,11 @@ Checking security group rules first is usually the fastest path to an answer, si
 ## VPC peering and transit gateways don't propagate routes automatically
 
 Setting up a VPC peering connection or attaching a VPC to a transit gateway doesn't automatically make routing work — each side's route table still needs an explicit route pointing traffic for the other VPC's CIDR at the peering connection or transit gateway attachment. This is the single most common cause of "I set up peering but it still doesn't connect," and checking both sides' route tables, not just confirming the peering connection is in `active` state, is the fix.
+
+## A worked failure mode
+
+An app times out to a managed database. Security groups allow 5432, so the team blames the DB. The subnet has no route to the endpoint; the database is in a different VPC without peering; or the NACLs allow outbound but not ephemeral return. A public IP was attached "to test" and the instance was scanned within minutes. The failure is debugging the process instead of path, SG, NACL, route, and DNS. Draw the packets. Prefer VPC endpoints over 0.0.0.0/0 NAT for AWS APIs.
+
+## When this is the wrong tool
+
+Designing a custom VPC is the wrong tool for a tutorial app on a PaaS. Do not invent a mesh of peerings if a shared services pattern or PrivateLink would do. Developers should not be the only ones who can change production routes. Learn enough to debug; let a platform team own the scary defaults. Use VPC knowledge when you actually own the network path.

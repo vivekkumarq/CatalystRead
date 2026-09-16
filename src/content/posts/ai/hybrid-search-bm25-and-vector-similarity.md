@@ -3,6 +3,7 @@ title: "Hybrid Search: Combining BM25 and Vector Similarity"
 slug: "hybrid-search-bm25-and-vector-similarity"
 description: "Why pure vector search underperforms on keyword-heavy queries, and how to combine it with BM25 using score fusion that actually works."
 publishedAt: "2026-07-10"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -57,3 +58,11 @@ Straight RRF treats both signals equally, but query intent often tells you which
 ## It's not free — index and maintain both
 
 Hybrid search means running and maintaining two indexes, keeping them in sync on every document update, and adding the fusion step to your query latency budget. For corpora that are almost entirely natural-language prose with no meaningful identifiers, the lift from adding BM25 may not be worth the operational overhead. For anything with technical content, product catalogs, or exact-match-sensitive queries, the recall improvement is usually large enough to justify it — measure it directly on your own golden query set rather than assuming either way.
+
+## A worked failure mode
+
+A docs search replaces BM25 with embeddings only. Queries like `error 0x80070005` and SKU `NX-14b` fall to nearest neighbors of unrelated "permission" prose. Recall looks fine on a paraphrase-heavy eval set and terrible on production query logs. The team then adds hybrid but concatenates scores without calibration: a long BM25 document always wins because raw BM25 and cosine live on different scales. Users see the same three pages. Reciprocal rank fusion, or z-scored weighted sums on a held-out log sample, would have surfaced the error-code hit from lexical search while keeping semantic matches for "how do I fix access denied on install."
+
+## When this is the wrong tool
+
+If every query is an identifier, BM25 or an exact index is enough; vectors add cost and confusion. If queries are only natural-language paraphrases of marketing copy, dense retrieval may dominate and hybrid is extra moving parts. Do not hybrid-search a 2,000-row table you can filter in SQL. Do not tune fusion weights on anecdotes. Hybrid is the wrong first step when chunking is broken: no fusion recovers a policy split across two 512-token windows with the negation in the discarded half. Fix document preparation, then fuse.

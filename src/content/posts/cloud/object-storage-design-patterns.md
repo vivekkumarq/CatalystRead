@@ -97,3 +97,11 @@ Using object storage for a queue.
 ## When this is the wrong tool
 
 POSIX workloads that need append and rename atomicity. Low-latency tiny KV — use Redis/Dynamo. Databases of record that need transactions. If you need SQL over objects, you will build a warehouse. Block storage for databases; object storage for blobs. Do not store the only copy of a legal record without immutability/compliance settings you understand.
+
+## A worked failure mode
+
+Uploads go to a public bucket with guessable keys (`invoices/123.pdf`). A listing is left enabled. Another pattern: the app proxies every byte through the API server, OOMs on a 5GB video, and pays double egress. Multipart uploads are aborted never; storage fills with parts. The failure is skipping presigned URLs, private buckets, unguessable keys, lifecycle rules, and lifecycle for incomplete MPU. Add malware scanning in a step function if the file will be re-downloaded by others.
+
+Object storage patterns are the wrong tool for a lock service or a 100-byte config you change twenty times a second. Do not store the only copy of a database backup in a bucket without versioning and replication if that backup is the company. Use the patterns when the blob is the product's data, not when you needed Redis.
+
+Treat the counterexample as part of the spec. Someone will apply "S3 and Object Storage Design Patterns That Scale" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

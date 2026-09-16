@@ -3,6 +3,7 @@ title: "Quantization Explained: What You Lose and What You Gain"
 slug: "quantization-explained"
 description: "A practical breakdown of LLM quantization techniques, the real quality trade-offs behind them, and how to decide how far to push it."
 publishedAt: "2026-07-18"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -57,3 +58,11 @@ The only reliable way to answer "how far can we quantize" is to run your own eva
 ## The infrastructure trade-off is real too
 
 Lower precision isn't free even on the infrastructure side — not every GPU has efficient kernels for every bit width, and int4 inference sometimes trades memory savings for compute overhead depending on hardware support. Validate the actual latency and throughput gain on your target hardware rather than assuming linear scaling with bit width; the theoretical size reduction doesn't always translate into a proportional speed gain in practice.
+
+## A worked failure mode
+
+A team int8-quantizes a model that writes invoices. BLEU on a chat eval is "close enough," but amounts like `1099` become `1098` in a handful of cases. They ship because mean exact-match on a general benchmark barely moved. A second team 4-bit quantizes embeddings used for legal search; nearest neighbors shuffle enough that a critical statute falls out of the top five. The failure is using a generic quality number for a numeric or retrieval-sensitive task. Keep a task-specific exact-match slice, compare calibration methods, and leave residual layers in higher precision if that is where the errors concentrate. Quantization is a product change, not a compiler flag.
+
+## When this is the wrong tool
+
+If the model already fits with margin and latency is fine, do not quantize for the blog post. If errors on digits, code, or rare names are unacceptable and you lack evals, quantization is the wrong knob. Do not mix quantized embeddings with an index built from full-precision vectors without rebuilding. Training-aware quantization is overkill for a one-off batch job. Prefer a smaller full-precision model you can eval over an aggressive 3-bit experiment on the critical path.

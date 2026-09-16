@@ -78,3 +78,11 @@ Do not flip zoneless on a NgModules-era app whose CD strategy is Default everywh
 - RxJS lands in `toSignal` or `async` pipe; in-place mutation is gone.
 - Specs use `whenStable` / `detectChanges` after writes, not Zone clocks.
 - Profiler CD lines up with signal writes, not with third-party timers.
+
+## A worked failure mode
+
+Zoneless is enabled while a chart library still patches `addEventListener` and expects Zone to notify Angular. The chart updates the canvas but the Angular summary beside it stays stale until a click elsewhere. A setTimeout in a third-party SDK never triggers CD. Developers reintroduce `NgZone.run` everywhere, recreating Zone in disguise. The failure is zoneless without a notification story. Wrap non-signal async in explicit `markForCheck`/signal sets, prefer signal-based inputs from the library, and audit vendors.
+
+Zoneless is the wrong first migration if the app is a thicket of Zone-dependent libraries and you cannot test. It will not magically speed up a huge default-CD tree. Do not mix half-zoneless modules. Stay with Zone until signals (or explicit marks) cover your async boundaries; then switch with a checklist of third-party callbacks.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Zoneless Angular: Signals as the Notification System Change Detection Always Wanted" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

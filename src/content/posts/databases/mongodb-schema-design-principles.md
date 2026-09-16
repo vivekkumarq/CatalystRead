@@ -3,6 +3,7 @@ title: "MongoDB Schema Design Principles That Hold Up in Production"
 slug: "mongodb-schema-design-principles"
 description: "Schema design principles for MongoDB that hold up under real query patterns, not just the ones that look clean in a demo."
 publishedAt: "2025-07-10"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -76,3 +77,13 @@ Compound index field order matters here exactly the way it does in a relational 
 ## The actual principle
 
 Treat the flexibility MongoDB gives you as a tool for matching document shape to read pattern, not as permission to skip modeling. Teams that get burned let the schema emerge accidentally from whatever got inserted first; teams that do well design the document shape as deliberately as a relational schema, just optimizing for a different variable — access pattern instead of normalization.
+
+## A worked failure mode
+
+An orders collection embeds unbounded line-item history. Documents grow past 16MB; updates rewrite the whole blob; a "small" add-item is a hot write. Another design references everything and then N+1s in the app without `$lookup` planning. Shard key is `createdAt`, so all inserts hit one chunk. The failure is embedding vs referencing as a religion instead of as a growth bound. Cap arrays, pick a shard key that matches write spread, and model the queries you actually run.
+
+## When this is the wrong tool
+
+Mongo is the wrong tool for multi-row ACID that spans many documents if you are pretending it is Postgres. Document modeling is the wrong tool if a spreadsheet is the product. Do not denormalize five copies of a user name without an update story. Use Mongo when the document is the access pattern and you can live with the transaction and join limits.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "MongoDB Schema Design Principles That Hold Up in Production" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

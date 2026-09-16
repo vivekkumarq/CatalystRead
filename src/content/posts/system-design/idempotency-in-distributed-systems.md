@@ -70,3 +70,11 @@ Reusing keys for different operations.
 ## When this is the wrong tool
 
 Pure GETs should already be idempotent without a key. Do not add keys to every internal call if a natural key exists (`order_id`). At-most-once with acceptable loss may be enough for metrics. Idempotency will not fix a non-deterministic handler that stores "now()" as part of the resource identity. For fully exactly-once with brokers, you still need transactional outbox plus consumer idempotency — a header alone is not a bus.
+
+## A worked failure mode
+
+Retries use a new UUID each time. A server stores idempotency in memory. A client retries a non-idempotent side effect with the same key but a different body; the server ignores the mismatch. The failure is a key that does not bind to the request. Persist keys, hash the body, same response on replay.
+
+Idempotency keys are the wrong tool if the downstream cannot be made idempotent and you have no compensation. Do not skip them on payments. Use them at every retry boundary that can double-apply.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Idempotency in Distributed Systems: Making Retries Safe", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

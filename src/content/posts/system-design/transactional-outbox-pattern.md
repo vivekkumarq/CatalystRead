@@ -69,3 +69,11 @@ Using the outbox as a query model.
 ## When this is the wrong tool
 
 If there is no message broker, just commit the row. Dual-write to two DBs is not fixed by an outbox in one of them unless the poller writes the second — then you still have a pipeline. CDC from WAL can replace a custom outbox for some stacks. For in-process events, Spring's transactional event listener may suffice. Do not outbox a high-frequency tick; batch or skip.
+
+## A worked failure mode
+
+The app writes the table then publishes without an outbox; a crash loses the message. An outbox poller has no incrementing cursor and re-publishes storms. Consumers are not idempotent. The failure is dual write. Same transaction as the outbox row, and idempotent consumers.
+
+Outbox is the wrong tool if you can avoid dual write by not needing the message. CDC without care has the same consumer issues. Use outbox when the DB commit and the event must not diverge.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "The Transactional Outbox Pattern" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

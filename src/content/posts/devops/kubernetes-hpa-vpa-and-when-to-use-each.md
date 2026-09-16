@@ -70,3 +70,13 @@ Sticky in-memory sessions, single-writer leaders, and licensed pods with a hard 
 - Stabilization windows on scale-down; max replicas tied to a dependency budget.
 - VPA recommendation mode first; do not combine VPA-auto with CPU HPA casually.
 - Cluster node provisioning delay is in the capacity story.
+
+## A worked failure mode
+
+HPA on CPU and VPA on the same pods fight: VPA raises requests, utilization drops, HPA scales in, remaining pods OOM, VPA raises again. PagerDuty oscillates nightly. A custom metric on queue depth was the real need. The failure is two controllers on one knob. Pick HPA for replica count on a saturation metric; use VPA (or a rightsizing job) offline; never both live on the same workload without a documented policy.
+
+## When this is the wrong tool
+
+HPA is the wrong tool for a StatefulSet with one replica. VPA in auto mode is the wrong tool for a latency-critical JVM without a restart budget. Do not autoscale on a metric that does not bound work. Set requests honestly first.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "HPA and VPA: Autoscaling Pods Without Oscillating Through PagerDuty", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

@@ -3,6 +3,7 @@ title: "Closures in Real Codebases, Not Just Interview Questions"
 slug: "closures-in-real-codebases"
 description: "Where closures actually show up in production JavaScript — memoization, private state, React hooks, and the memory leaks they quietly cause."
 publishedAt: "2025-06-29"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Closures
@@ -102,3 +103,13 @@ The fix is either an updater function (`setCount((c) => c + 1)`, which doesn't n
 ## The memory cost
 
 Closures keep their entire enclosing scope alive, not just the variables they reference — if a closure captures one variable from a scope that also holds a large array, that array can't be garbage collected until the closure itself is unreachable. This matters most for long-lived closures: event listeners never removed, timers never cleared, or callbacks stored in module-level caches. It's rarely worth avoiding closures over it, but it's worth knowing when auditing a memory leak that everything a closure could reach counts as reachable.
+
+## A worked failure mode
+
+A loop of async handlers closes over `var i` (or a reused `let` in a poorly transpiled bundle) and every handler sees the last index. A React effect closes over stale props because the dependency array omitted them; the closure is "correct JS" and wrong product. A cache of callbacks retains the entire request object via a closure and leaks memory. The failure is lifetime: what the function sees vs what you think it saw. Capture values you need, bind explicitly, and do not retain large objects in long-lived callbacks.
+
+## When this is the wrong tool
+
+Clever closures are the wrong tool when a named function with parameters would be clearer. Do not hide globals in closures to avoid passing deps. Use closures for small adapters; pass explicit context for long-lived workers.
+
+Treat the counterexample as part of the spec. Someone will apply "Closures in Real Codebases, Not Just Interview Questions" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

@@ -71,3 +71,9 @@ Assuming MTEB English equals your tickets.
 ## When this is the wrong tool
 
 Keyword-only corpora with exact SKUs: lexical search. If documents are 20 tokens of structured IDs, a hash index wins. Do not embed every keystroke for autocomplete of known titles. A single giant LLM as "embeddings" via hidden states without a retrieval eval is guesswork. Skip weekly model shopping if the bottleneck is chunking and metadata filters.
+
+## A worked failure mode
+
+A search team downloads the leaderboard's top embedding, indexes 4M chunks, and ships. Queries in German and queries that are error codes both degrade. The leaderboard was English MTEB-style paraphrase. A domain model 5% lower on the public board would have kept SKUs together. They also mix cosine in the database with dot-product vectors that were never normalized, so scores are not comparable across batches. Rebuild cost is a week of silent bad search. The failure is picking embeddings as a brand instead of a retrieval metric on your query log: recall@k, MRR, and a slice for identifiers. Freeze the model version in the index metadata so you cannot half-upgrade.
+
+A giant multilingual embedding is the wrong tool for an English-only catalog of part numbers. Do not re-embed nightly without a recall regression set. Do not assume OpenAI-vs-open-source rankings transfer to legal or medical text. Choose a model with a measured lift on your labels; stay with a slightly worse model if the index rebuild and dimension cost dominate the quality gain.

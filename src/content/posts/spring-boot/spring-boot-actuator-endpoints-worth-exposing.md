@@ -86,3 +86,13 @@ Readiness including a downstream you cannot fix, causing a death spiral of pod r
 ## When this is the wrong tool
 
 Actuator is not an APM. Do not expose `shutdown` in prod. If you already have a dedicated metrics agent, duplicate prometheus scrape may be noise. Custom JSON "status" pages for executives are not health. Heapdump endpoints are the wrong tool on 32 GB heaps without a download plan. Skip `beans` in prod.
+
+## A worked failure mode
+
+`env` and `heapdump` are exposed without auth on the public port. Health includes a downstream that flaps and K8s kills the pod. The failure is actuator as a default surface. Separate management port, auth, and liveness vs readiness.
+
+Actuator is the wrong tool to replace APM. Do not expose write endpoints. Use a small, authenticated set.
+
+Treat the counterexample as part of the spec. Someone will apply "The Actuator Endpoints Worth Exposing (and How to Lock Them Down)" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The Actuator Endpoints Worth Exposing (and How to Lock Them Down)" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

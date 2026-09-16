@@ -58,3 +58,9 @@ Evaluating generative chat with a masked LM.
 ## When this is the wrong tool
 
 Open-ended chat and agents: decoder LLMs. BERT is the wrong tool for 100k context. If you only need bag-of-words search, BM25 first. Tiny labels: a linear model on TF-IDF may win. Do not BERT-encode images. For RAG, a dedicated embedding model (often BERT-descended) is the tool, not a chat checkpoint.
+
+## A worked failure mode
+
+A team still fine-tunes BERT-base for a support classifier in 2026, using next-sentence prediction era defaults and a 128-token truncate. Tickets that put the real issue in sentence three get the generic label. They then try to "make it generative" by decoding from the CLS vector and are surprised by garbage. The failure is using a masked-language encoder as a generator, and truncating the evidence. Bidirectional pretraining still shines for classification and span tagging when you control the max length and the domain tokenizer. It does not replace a decoder for drafting replies. Measure truncation rate in production; if 30% of tickets clip, you are classifying a prefix, not a document.
+
+BERT-style encoders are the wrong tool for open-ended writing, agents, and long RAG answers. They are the wrong upgrade path when a linear model on strong features already meets the SLA. Do not pretrain from scratch on a tiny corpus "to get a company BERT." Use an encoder when you need cheap, bidirectional representations for labels or retrieval embeddings you are willing to eval; use a decoder when you must generate.

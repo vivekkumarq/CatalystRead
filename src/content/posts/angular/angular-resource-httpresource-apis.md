@@ -91,3 +91,11 @@ Using `resource` for POST/DELETE mutations. Ignoring errors so the UI shows an e
 ## When this is the wrong tool
 
 TanStack Query-style shared caches across many screens may still want a dedicated library. `resource` is the wrong tool for WebSocket streams (use `toSignal`). Do not replace a simple `signal` plus one `http.get` in a tiny widget if you do not need reload-on-key. Server-side mutation belongs in an action, not a resource loader. If you need optimistic lists with rollback, you will write extra code; a mutation library may fit better.
+
+## A worked failure mode
+
+A page uses `httpResource` keyed only on a route param. The user edits a filter signal; the resource does not reload because the request factory closed over the initial filter. A second bug: error state is ignored and the template reads `.value()` as if it were always data, throwing in the overlay. Reloads stack because a computed dependency flips every CD cycle (new object in the params). The failure is treating resource as magic GraphQL. Put every input the request needs in the resource params, handle error/loading branches, and stabilize identities.
+
+`resource()` is the wrong tool for a fire-and-forget POST with no read model, or for websocket streams. Do not replace a well-tested NgRx effect with resources if you need complex orchestration. It is the wrong abstraction for uploads with progress. Use it for request/response data that should stay in sync with signals; keep mutations explicit.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Fetching Async Data with Angular's resource() and httpResource APIs" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

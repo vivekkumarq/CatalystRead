@@ -70,3 +70,13 @@ A platform team that ships once a quarter because of a store review still has in
 - All four plotted together; no individual ranking.
 - Gaming patterns reviewed quarterly (no-ops, flag-hidden launches).
 - Practices (trunk, tests, coupling) are the work items, not “hit elite.”
+
+## A worked failure mode
+
+A team games lead time by opening PRs that are already merged locally and by excluding hotfixes from change-fail rate. Dashboards go elite; customers still wait six weeks for a feature behind a flag that never turns on. Another org pages engineers for failing to ship daily on a hardware product with a certification gate. The failure is treating DORA as a scoreboard instead of a diagnostic. Use the four metrics to find bottlenecks (review queues, flaky tests, scary deploys), not to punish.
+
+## When this is the wrong tool
+
+DORA charts are the wrong tool if leaders will rank teams with them. They are a poor fit for work that is not software deploy (research, legal). Do not optimize deploy count by shipping empty commits. Use DORA when you want to improve flow and have a shared definition of a production change.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "DORA Metrics: What Four Numbers Measure, and What They Hide" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

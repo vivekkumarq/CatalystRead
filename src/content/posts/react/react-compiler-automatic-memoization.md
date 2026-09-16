@@ -64,3 +64,11 @@ The compiler will not fix waterfalls, huge lists, or CSS thrash. Do not adopt it
 - Purity bailouts are treated as bugs in the component, not as “turn the compiler off.”
 - Keys and list identity are unchanged; compiler is not a substitute.
 - DevTools still shows which leaves render after a parent state tick.
+
+## A worked failure mode
+
+The compiler is enabled while a component mutates props and reads a ref during render; memoization skips needed updates or bakes stale values. The team deletes `useMemo` everywhere, including a 200ms compute that the compiler cannot prove safe. The failure is treating the compiler as a license to break purity. Keep render pure; measure; leave manual memo on expensive impure edges you have not yet cleaned.
+
+The compiler is the wrong tool if the app is impure by design. It will not fix a bad list key. Do not expect it to save a 10MB render. Use it on code that already follows the rules.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "React Compiler: Automatic Memoization and the Rules It Still Needs You to Follow" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

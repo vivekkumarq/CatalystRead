@@ -76,3 +76,11 @@ Shipping `"type": "module"` with `.js` files that use `require`.
 ## When this is the wrong tool
 
 A 50-line CLI already in CJS does not need a conversion project. Do not rewrite Next.js internals. Bundled browser apps already flatten modules — the dual-package problem is for Node libraries. Avoid "universal" packages that use `eval` to detect the system. If all consumers are bundlers, ship ESM only.
+
+## A worked failure mode
+
+A package is `"type": "module"` but tests run in CJS Jest without transform; `require` of ESM throws. Dual publishing with a broken `exports` map means bundlers resolve CJS in the browser and Node resolves a different file, splitting the singleton. The failure is the `exports` contract. One graph per environment, test both, and avoid dual packages unless you must.
+
+Dual ESM/CJS is the wrong tool for an app you fully control—pick ESM. Do not keep CJS for fashion if your runtime is ESM-only. Use CJS only at edges you cannot yet leave.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "ESM vs CommonJS in 2026: What Actually Matters Now" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

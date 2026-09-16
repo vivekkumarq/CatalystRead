@@ -95,3 +95,11 @@ Multiple overlays without a stack: a dialog opens a menu that paints behind. Not
 ## When this is the wrong tool
 
 Native `<select>` and `<dialog>` beat CDK for simple cases. Do not use overlays to implement tooltips that should be CSS `title` or a small popover. If you need pixel-identical design-system popovers across React and Angular, a headless spec plus each platform's primitive may be better than forcing CDK in a non-Angular island. CDK is the wrong tool for canvas context menus inside WebGL — use a DOM overlay positioned from pointer coords, still, but not a menu attached to a missing trigger element.
+
+## A worked failure mode
+
+A menu overlay is configured with `flexibleConnectedTo` but no `scrollStrategy`. On a long page the menu detaches visually while clicks still hit an invisible pane, blocking the form underneath. Escape closes the overlay in the CDK but the component leaves `isOpen=true`, so the next click does nothing. Mobile Safari zooms because the overlay used a focusable input without `font-size: 16px`. The failure is overlay as CSS `position: absolute` folklore. Use CDK positioning, scroll and block strategies, keep open state in sync with overlay attach/detach, and test scroll, zoom, and nested overlays.
+
+A CDK overlay is the wrong tool for a simple inline disclosure; `<details>` or a class toggle is enough. Do not overlay every tooltip if a native `title` or a small popover component exists. Overlays are the wrong place to host a full routed app. Use them for floating UI that must survive clipping and scroll, not as a second layout system.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Building Overlays and Menus with the Angular CDK" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

@@ -85,3 +85,13 @@ Loading all pages in the server to "simplify."
 ## When this is the wrong tool
 
 Keyset is awkward for jumping to page 50 in a UI; offset may be OK with a cap. Search engines (OpenSearch) have their own search_after. If the set is tiny, `findAll` is fine. Realtime feeds may want since_id. Do not paginate an export — stream or async file. GraphQL connections have a spec; do not invent a third cursor format in the same app.
+
+## A worked failure mode
+
+`OFFSET 1000000` pages time out. Sort is a user string concatenated into SQL. Total count is computed every request on a huge table. The failure is offset pagination and unvalidated sort. Keyset pagination, whitelist sort columns, and approximate or cached totals.
+
+Offset pages are the wrong tool for infinite scroll on huge tables. Do not return unbounded lists. Use cursor pagination when deep pages are possible.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Pagination and Sorting APIs That Actually Scale" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Pagination and Sorting APIs That Actually Scale", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

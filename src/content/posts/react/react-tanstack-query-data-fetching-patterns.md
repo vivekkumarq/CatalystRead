@@ -116,3 +116,11 @@ Keys that omit tenant id (cache leak). `staleTime: Infinity` plus no invalidatio
 ## When this is the wrong tool
 
 Server Components plus a simple fetch may be enough. Query is the wrong tool for WebSockets (use a store plus invalidation). Do not put a 50 MB dataset in the cache. Local UI state belongs in `useState`. If you have one GET in the app, a `useEffect` is fine. GraphQL clients with their own cache can fight Query — pick one cache.
+
+## A worked failure mode
+
+A query key omits a filter; users see the wrong cached page. `staleTime: Infinity` on a balance. Mutations forget to invalidate. A query in a loop creates N caches. The failure is keys and invalidation. Keys must include every input; mutate then invalidate or setQueryData carefully.
+
+TanStack Query is the wrong tool for local ephemeral UI. Do not use it as a general event bus. It shines for server state with a cache policy you can explain.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Data Fetching and Caching Patterns with TanStack Query" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

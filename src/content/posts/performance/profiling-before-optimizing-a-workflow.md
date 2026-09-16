@@ -3,6 +3,7 @@ title: "Profiling Before Optimizing: A Workflow"
 slug: "profiling-before-optimizing-a-workflow"
 description: "The fastest way to waste a sprint is optimizing code that was never the bottleneck — a repeatable workflow for measuring before you touch anything."
 publishedAt: "2024-09-26"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -36,3 +37,14 @@ For I/O-bound latency, distributed tracing is a better lens than a CPU profiler 
 The instinct after finding a bottleneck is often to fix everything the profile surfaced in one pass. Resist it. Change one thing, remeasure against the same baseline conditions, and confirm the change actually moved the number before making the next change. This catches two failure modes: optimizations that don't help as much as they looked like they would on paper, and optimizations that help in isolation but interact badly with something else you changed in the same pass.
 
 It also protects against the most common trap in profiling work — over-indexing on whatever the flamegraph makes visually obvious. A wide bar in a flamegraph means a function took a lot of cumulative time, not necessarily that reducing it is easy, safe, or worth the engineering cost relative to a narrower bar elsewhere that happens to sit on a much simpler fix. Profiling tells you where the time is. It's still your judgment that decides which of those places is worth spending an afternoon on.
+
+## A worked failure mode
+
+A week is spent micro-optimizing JSON serialization; the profiler would have shown a 400ms sync filesystem call. A profile is captured on an idle laptop. The failure is skipping representative load. Record under production-like traffic, change the dominant frame, re-measure.
+
+## When this is the wrong tool
+
+Profiling is the wrong first step if you have no slow query log and the API is waiting on a lock. Do not profile for 200ms of curiosity on a green dashboard. Profile when users feel it and you can reproduce it.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Profiling Before Optimizing: A Workflow" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

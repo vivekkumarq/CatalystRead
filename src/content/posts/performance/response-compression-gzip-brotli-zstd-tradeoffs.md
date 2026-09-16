@@ -61,3 +61,11 @@ nginx `gzip_types` omitting `application/json`.
 ## When this is the wrong tool
 
 Already-minified tiny files. End-to-end encrypted blobs the CDN cannot compress usefully. CPU-bound origin with huge JSON — consider a smaller payload first. Video uses its own codecs. Do not compress to hide an oversized API; paginate. If clients are IoT with no decoder, send identity encoding.
+
+## A worked failure mode
+
+gzip level 9 on a tiny JSON API burns CPU and adds latency worse than the byte savings on a 400-byte payload. Images are double-compressed. A CDN decompresses and recompresses with a worse algorithm. The failure is compressing everything at max level. Skip tiny and already-compressed bodies; pick brotli/zstd where clients and CPU allow; measure TTFB.
+
+Compression is the wrong tool for encrypted tiny messages you cannot share dictionaries for. Do not gzip JPEGs. Enable it for text at scale with a CPU budget.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Response Compression: gzip, Brotli, and zstd Trade-offs", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

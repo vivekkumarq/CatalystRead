@@ -83,3 +83,11 @@ Spring Security's filter chain is the wrong place to implement business "can thi
 - CSRF matches the session story (on for cookies, off for Bearer-only).
 - JWT is validated in one place (gateway *or* resource server JWK set).
 - Slice tests hit the same matcher and token shape as production.
+
+## A worked failure mode
+
+A custom filter is added after `AuthorizationFilter` and never sees anonymous requests as expected. `permitAll` on `/api/**` is overridden by a later stricter chain that is not hit because the first chain matched. CSRF is off for a cookie session. The failure is filter order folklore. Draw the chain, one matcher per chain, tests with `httpSecurity`.
+
+Security filter lore is the wrong tool if you can use oauth2Login defaults. Do not add filters to hide a misconfigured matcher. Understand order when you customize.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "The Spring Security Filter Chain, From Request to SecurityContext", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

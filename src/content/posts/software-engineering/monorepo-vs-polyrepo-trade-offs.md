@@ -68,3 +68,11 @@ Pretending git submodules are a third way without pain.
 ## When this is the wrong tool
 
 A single service: one repo. Do not monorepo unrelated companies. Do not polyrepo a 4-package app to look distributed. If your VCS host cannot ACL a mono, that is a constraint. Multi-language without a build system will suffer in a mono. Avoid "one repo per microservice" plus a unpublished shared lib that is copied.
+
+## A worked failure mode
+
+A monorepo is created without CI that can test affected packages; every commit builds the world for 40 minutes. A polyrepo split loses atomic API changes; teams pin stale clients. The failure is repo topology without tooling. Monorepo needs selective CI; polyrepo needs versioning discipline.
+
+Neither topology fixes a lack of ownership. Do not monorepo to force friendship. Choose based on change coupling and CI investment.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Monorepo vs. Polyrepo: The Trade-offs That Actually Matter", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

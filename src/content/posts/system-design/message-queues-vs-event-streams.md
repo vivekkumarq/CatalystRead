@@ -61,3 +61,11 @@ Huge payloads in the broker.
 ## When this is the wrong tool
 
 Synchronous HTTP is enough for a user-facing request that must complete now. Do not put a queue in front of a single-threaded worker "for scale" without measuring. Streams are the wrong tool for 10 messages a day. RPC with timeout is simpler for request/response. If you need transactions across DB and message, outbox first, tool second.
+
+## A worked failure mode
+
+A queue is used for audit history; consumed messages vanish when a new consumer is added. A stream is used as a task queue with one consumer group and a poison message blocking the partition. The failure is the wrong primitive. Queues for competing tasks; streams for replayable facts.
+
+A stream is the wrong tool for 10 jobs a day. A queue is the wrong tool for independent replay. Do not use either as a database.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Message Queues vs. Event Streams: Picking the Right Backbone" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

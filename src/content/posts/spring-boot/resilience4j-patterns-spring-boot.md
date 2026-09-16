@@ -3,6 +3,7 @@ title: "Circuit Breakers, Bulkheads, and Retries: Resilience4j in Spring Boot"
 slug: "resilience4j-patterns-spring-boot"
 description: "How to combine Resilience4j's circuit breaker, bulkhead, and retry modules in Spring Boot without letting them fight each other."
 publishedAt: "2025-06-17"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -94,3 +95,14 @@ public StockLevel checkStock(String sku) {
 ## Watch the Metrics, Not Just the Config
 
 None of this is "set once and forget" — a `failure-rate-threshold` and `sliding-window-size` chosen without real traffic data are guesses. Resilience4j publishes detailed metrics (state transitions, call outcomes, wait times) through Micrometer; wire them into your dashboards and revisit the thresholds once you have a few weeks of actual behavior. A circuit breaker that never trips might be correctly configured, or it might be set so loosely it's providing no protection at all — you can't tell the difference without the data.
+
+## A worked failure mode
+
+A circuit breaker wraps a DB call and opens; the fallback returns empty carts as 200. Retries without jitter DDoS a recovering dep. Bulkhead size is 1,000 on a 10-connection pool. The failure is resilience that hides errors and over-retries. Fail loudly on checkout, retry only idempotent GETs, size bulkheads to the pool.
+
+## When this is the wrong tool
+
+Resilience4j is the wrong tool for a single in-process call. Do not circuit-break the database as a first fix for slow queries. Timeouts plus a bounded pool may be enough. Use breakers on remote deps you can fail over.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Circuit Breakers, Bulkheads, and Retries: Resilience4j in Spring Boot" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

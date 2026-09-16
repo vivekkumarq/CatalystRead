@@ -92,3 +92,11 @@ Cancellation will not make a 30s query fast; fix the query. Do not abort a payme
 - Timeouts abort the same signal `fetch` holds; the timer is cleared in `finally`.
 - `AbortError` is swallowed at the UI boundary, not paged as an outage.
 - Listeners use `{ signal }` so abort drops them.
+
+## A worked failure mode
+
+A search box fires fetch per keystroke without aborting the previous; slower older responses overwrite newer UI. The abort is called, but a `then` still writes because it was not checking `signal.aborted`. A shared controller is aborted and every unrelated request on the page dies. The failure is cancel as an afterthought. One controller per in-flight user action, ignore results after abort, and do not reuse a spent controller.
+
+AbortController is the wrong tool if the work is already local and cheap. Do not abort a payment you cannot reverse. Use it for stale reads and navigation; keep writes explicitly acknowledged.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "AbortController: Cancellation That the Rest of the Stack Can See" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

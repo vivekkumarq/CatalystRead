@@ -3,6 +3,7 @@ title: "Time-Series Forecasting: Classical Methods vs. Neural Approaches"
 slug: "time-series-forecasting-classical-vs-neural"
 description: "When ARIMA and exponential smoothing still beat a neural forecaster, and when the added complexity of a deep learning model actually pays off."
 publishedAt: "2026-05-29"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -63,3 +64,13 @@ Before reaching for a neural architecture, it's worth trying gradient boosted tr
 ## The decision that actually drives the outcome
 
 The single biggest lever isn't the model family — it's whether you're forecasting one series in isolation or many related series that can share statistical strength. Get that framing right first, because it determines whether the extra complexity of a neural or boosted global model has anything to actually learn from, or whether you're just adding degrees of freedom to a problem that was already well-served by a much simpler, much cheaper structural model.
+
+## A worked failure mode
+
+A transformer is trained on 18 months of weekly sales with random splits that leak the future. A seasonal naive baseline was never computed and would have won. A neural model then fails on a holiday it never saw; the classical model with exogenous flags would have been boring and better. The failure is skipping baselines and leaking time. Use temporal splits, a naive/seasonal baseline, and add complexity only if it beats them on a business metric.
+
+## When this is the wrong tool
+
+Deep forecasters are the wrong tool for a dozen noisy points. Classical models are the wrong tool if you have rich cross-series data and a team that can serve a net. Do not forecast what you can wait to measure. Start with baselines.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Time-Series Forecasting: Classical Methods vs. Neural Approaches", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

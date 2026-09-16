@@ -3,6 +3,7 @@ title: "LLM Inference Optimization: Batching, KV Cache, and Speculative Decoding
 slug: "llm-inference-optimization"
 description: "The core techniques that make LLM inference fast and affordable at scale: batching, KV cache management, and speculative decoding explained."
 publishedAt: "2026-07-14"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -60,3 +61,11 @@ Speculative decoding uses a small, fast "draft" model to propose several tokens 
 | Speculative decoding | Lower latency on predictable content, extra engineering complexity |
 
 For most teams not building their own inference stack from scratch, the practical takeaway is choosing a serving framework that already implements continuous batching and efficient KV cache management well, rather than trying to hand-roll these optimizations.
+
+## A worked failure mode
+
+A chat service enables continuous batching and a large KV cache on one GPU. Latency p50 looks great until a few users paste novels: their sequences pin cache memory, batch size collapses, and everyone else's p99 explodes. Speculative decoding is turned on with a draft model trained on a different domain; reject rates are high, so you pay draft cost without throughput. Another team quantizes weights to 4-bit and keeps fp16 KV, then OOMs on context they used to fit. The failure is optimizing a single kernel metric in isolation. Bound max sequence length per request, isolate heavy jobs, measure tokens per second at a realistic mix of short and long prompts, and treat KV cache as a first-class capacity budget.
+
+## When this is the wrong tool
+
+If traffic is a few requests per minute, buy a bigger instance or an API; custom batching kernels will not pay back. Speculative decoding is the wrong tool when the draft is inaccurate or the sequence is tiny. Quantization is the wrong tool if evals show task failure on numbers or code and you have no quality gate. Do not chase FlashAttention versions while the prompt still includes a 200k-token dump. Inference optimization is for a hot path with a cost or latency SLO, not a weekend refactor of a prototype that still has no evals.

@@ -75,3 +75,13 @@ Allocation that dies in young-gen and does not show in a CPU or p99 profile. Mic
 - Hot objects stay method-local; no debug `toString` that stores them.
 - Primitives in the tightest loops; autoboxing inspected.
 - No cross-thread object pool without a measurement that beat bump allocation.
+
+## A worked failure mode
+
+A benchmark shows no allocations so a team allocates `Optional` and small objects in a tight loop in production. The objects are stored in a field, escape, and GC returns. Another uses `-XX:+DoEscapeAnalysis` folklore on a JVM where it is already default, changing nothing. The failure is assuming scalar replacement always fires. If the object identity is observed, stored, or passed to uninlinable code, it allocates. Measure with JFR allocation, not hope.
+
+## When this is the wrong tool
+
+Escape analysis is the wrong reason to write unreadable code. It will not save you from a cache that retains everything. Do not turn experimental flags in prod. Write clear code; optimize the allocations the profiler shows.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Escape Analysis: When the JVM Allocates Your Objects on the Stack (or Not at All)" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

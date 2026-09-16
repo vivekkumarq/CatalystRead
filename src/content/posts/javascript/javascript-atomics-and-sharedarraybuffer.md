@@ -72,3 +72,13 @@ UI state, Redux stores, DOM nodes — message passing. Anything where a race is 
 - Only Atomics on shared indexes; layout documented.
 - No main-thread `wait`; prefer SPSC over a homemade mutex.
 - Profiled copies-before-SAB; teardown unparks waiters on worker exit.
+
+## A worked failure mode
+
+A SAB is used as a lock without `Atomics.wait`/`notify`; a spin loop burns a core. Another posts the buffer to a worker after transferring it and still writes from the main thread. COOP/COEP headers are missing; the feature is silently unavailable in browsers. The failure is shared memory without a protocol. Define who writes which index, use Atomics, and set isolation headers.
+
+## When this is the wrong tool
+
+SharedArrayBuffer is the wrong tool for passing JSON to a worker; `postMessage` is enough. Do not invent a mutex if a queue message would do. Use SAB for high-rate numeric pipelines you can prove correct.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "SharedArrayBuffer and Atomics: Shared Memory Without Inventing a Mutex Wrong" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

@@ -3,6 +3,7 @@ title: "Building Type-Safe API Clients From OpenAPI Schemas"
 slug: "type-safe-api-clients-from-openapi-schemas"
 description: "Stop hand-maintaining API interfaces that drift from the backend — generate them from OpenAPI and turn breaking changes into compile errors."
 publishedAt: "2026-02-22"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -68,3 +69,14 @@ const user = await apiGet("/users/{id}", { id: "42" });
 ## Breaking changes become compile errors
 
 The real payoff shows up months later, when the backend team renames a field or removes an endpoint. Regenerate the schema, run `tsc`, and every call site depending on the old shape fails to compile — in the IDE, before a PR, not in production after a customer reports it. That's the entire value proposition: moving an entire category of integration bug from runtime, where it's expensive and embarrassing, to compile time, where it's a five-minute fix with a stack trace pointing exactly at the problem.
+
+## A worked failure mode
+
+A client is generated once and committed; the server adds a required field and the client still compiles because CI does not regen. `any` sneaks in via a poorly typed `additionalProperties`. Runtime still 400s. The failure is types without a pipeline. Generate in CI, fail on spec drift, and treat additionalProperties as unknown.
+
+## When this is the wrong tool
+
+OpenAPI generation is the wrong tool for a one-endpoint internal call. It will not make an untyped backend typed. Do not edit generated files. Use it when the spec is the contract and CI owns the client.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Building Type-Safe API Clients From OpenAPI Schemas" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

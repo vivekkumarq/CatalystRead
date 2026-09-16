@@ -3,6 +3,7 @@ title: "The Testing Library Philosophy: Test What Users Experience"
 slug: "react-testing-library-philosophy"
 description: "Testing Library's core rule — the more your tests resemble how software is used, the more confidence they give you — changes what a good React test looks like."
 publishedAt: "2026-03-19"
+updatedAt: "2026-09-16"
 category: "React"
 tags:
   - React
@@ -61,3 +62,13 @@ The difference matters for any component with logic tied to intermediate states 
 ## What This Philosophy Deliberately Sacrifices
 
 Testing Library tests are, by design, harder to pin down to a single cause of failure than a narrow unit test of one function — a broken `ProductPage` test could mean the button's label changed, the cart logic broke, or a child component threw. That's an accepted trade for the confidence gained: a passing test means the feature actually works end to end from a user's perspective, not that an isolated unit behaves correctly in an assembly nobody verified. For genuinely isolated logic — a pricing calculation, a date formatter — a plain unit test without any rendering is still the right, faster tool; Testing Library's philosophy applies to components, not to every function in the codebase.
+
+## A worked failure mode
+
+Tests query by class name and CSS; a redesign breaks 200 tests that never caught a missing label. `act` warnings are suppressed. A test `await waitFor` for 5s hides a leak. The failure is testing implementation. Query by role and name, assert what the user sees, and keep async waits tight.
+
+## When this is the wrong tool
+
+RTL is the wrong tool to unit-test a pure function—call it. It is heavy for a 3-line util. Do not snapshot the entire DOM as a substitute for behavior. Use RTL for UI contracts users depend on.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "The Testing Library Philosophy: Test What Users Experience" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

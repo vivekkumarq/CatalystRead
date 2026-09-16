@@ -3,6 +3,7 @@ title: "TLS for Backend Developers"
 slug: "tls-for-backend-developers"
 description: "Most backend engineers treat TLS as something a load balancer handles — until a service-to-service call or a certificate expiry proves otherwise."
 publishedAt: "2025-04-02"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -40,3 +41,13 @@ Mutual TLS (mTLS) addresses the version of this problem where you also need to a
 The most common TLS incident isn't a cryptographic failure — it's an expired certificate nobody rotated in time, taking down a service that was cryptographically sound right up until midnight. Automating renewal, through something like ACME-based issuance for public certs or your internal CA's own automation for service certs, removes the failure mode entirely rather than relying on a calendar reminder.
 
 Monitoring expiry independently of the renewal automation is worth the redundancy — automation fails silently often enough that a separate check alerting at thirty and seven days out has saved more outages than any amount of cipher suite tuning. TLS configuration details like minimum protocol version and cipher suite selection matter, but they're rarely what takes a service down; an expired cert or a disabled verification flag is.
+
+## A worked failure mode
+
+TLS is terminated and HTTP goes to the app across a shared VPC; someone adds a debug sidecar that logs plaintext. `verify=false` in a client because of a corporate proxy. Old TLS 1.0 is kept for a vendor. The failure is encryption that stops at the load balancer without a policy. mTLS or a mesh if the network is not trusted; never disable verify in prod; cut old protocols.
+
+## When this is the wrong tool
+
+Custom TLS code is the wrong tool—use the platform. Do not "encrypt in the app" with a homemade cipher. Care about TLS configs when you own clients and ciphers; still never skip verify.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "TLS for Backend Developers" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

@@ -3,6 +3,7 @@ title: "Overfitting and Regularization in Practice"
 slug: "overfitting-and-regularization-in-practice"
 description: "A practical guide to spotting overfitting early and choosing the right regularization technique for the model family you're actually using."
 publishedAt: "2026-04-05"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -63,3 +64,13 @@ Dropout randomly zeroes a fraction of activations during training, which forces 
 ## The trade-off nobody skips for free
 
 Every regularization technique trades some training-set fit for generalization. Too little and you overfit; too much and you underfit, which shows up as both training and validation loss staying high together. The practical approach is to treat regularization strength itself as a hyperparameter, sweep it against a validation set, and expect the right value to depend on how much data you actually have — regularization strength that was correct for last year's dataset size is not automatically correct once you have five times the data.
+
+## A worked failure mode
+
+Train loss is driven to zero on 3,000 rows with a 40M-parameter net. Dropout and weight decay are added after test has been peeked. Early stopping uses the same set as model selection. The story blamed "variance" while 40 rows were mislabeled. The failure is regularizing after leakage and dirty labels. Clean, split, then regularize with a frozen test.
+
+## When this is the wrong tool
+
+Heavy regularization is the wrong tool if you need more representative data. Do not cite bias-variance to pick a tweeted architecture. Skip exotic regularizers until a simple model is honest on a clean split.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Overfitting and Regularization in Practice" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

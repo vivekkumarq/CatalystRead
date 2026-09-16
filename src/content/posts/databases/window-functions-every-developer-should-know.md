@@ -3,6 +3,7 @@ title: "Window Functions Every Developer Should Know"
 slug: "window-functions-every-developer-should-know"
 description: "An introduction to window functions — running totals, rankings, and moving averages — for anyone still reaching for self-joins and subqueries."
 publishedAt: "2025-04-16"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -90,3 +91,13 @@ FROM daily_revenue;
 ## Why this matters beyond convenience
 
 Beyond being less code, window functions genuinely execute better: the engine sorts and partitions the data once and computes the windowed values in that single pass, whereas the equivalent self-join or correlated subquery typically forces repeated scans or joins proportional to the row count. If you're writing a query with `GROUP BY` just to compute a value you then join back to the ungrouped rows, that's almost always a window function that hasn't been recognized as one yet.
+
+## A worked failure mode
+
+`ROW_NUMBER() OVER (PARTITION BY user ORDER BY ts DESC)` is used to pick latest rows, but the query lacks a filter on `rn = 1` in an outer query, so the UI still shows everything and is just slower. Another window omits `PARTITION BY` and ranks globally, assigning rank 1 to a single user. `EXPLAIN` shows a sort of the whole table every request. The failure is windows as decoration. Filter after ranking, partition on the entity, and materialize a "latest" table if this is the hot path.
+
+## When this is the wrong tool
+
+Window functions are the wrong tool for graph traversal. They can be the wrong tool if a `DISTINCT ON` (Postgres) or a grouped `max` plus join is simpler. Do not window a billion-row table on each page view. Use them for analytic shapes (running totals, latest-n, gaps) you can bound.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Window Functions Every Developer Should Know" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

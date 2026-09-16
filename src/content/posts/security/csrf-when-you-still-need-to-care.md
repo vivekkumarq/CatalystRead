@@ -3,6 +3,7 @@ title: "CSRF: When You Still Need to Care"
 slug: "csrf-when-you-still-need-to-care"
 description: "SameSite cookies made CSRF less of a default threat, but the attack is far from dead for APIs using cookie auth, subdomains, or older browsers."
 publishedAt: "2024-10-14"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -38,3 +39,14 @@ APIs that accept both cookie-based and token-based authentication are a subtler 
 ## The pragmatic baseline
 
 For a typical application, the combination worth defaulting to is: `SameSite=Lax` on all auth cookies, a synchronizer token for any endpoint that's exposed to `SameSite=None` contexts or embedded consumption, and a hard rule that no state change ever happens on a GET request. If your app is a pure API consumed only by your own SPA over bearer tokens in an `Authorization` header rather than cookies, CSRF mostly doesn't apply to you — there's no ambient credential for a forged cross-site request to exploit. Know which of these categories your app falls into before deciding the threat doesn't apply; "we use cookies for something" is common enough that it's worth actually checking rather than assuming.
+
+## A worked failure mode
+
+A SPA uses bearer tokens in localStorage and declares CSRF dead. A XSS steals the token. Another app uses cookie sessions, SameSite=Lax, and a GET that changes email. A third sets SameSite=None without Secure. The failure is a slogan. Cookie sessions still need CSRF tokens or SameSite plus no state-changing GET; bearer in JS has XSS risk. Threat-model the credential location.
+
+## When this is the wrong tool
+
+CSRF tokens are the wrong tool if there is no cookie auth. They will not stop XSS. Do not skip CSRF because you have CORS. Care when cookies authenticate browsers.
+
+Treat the counterexample as part of the spec. Someone will apply "CSRF: When You Still Need to Care" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

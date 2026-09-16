@@ -66,3 +66,11 @@ Duplicating the same assertion at three layers.
 ## When this is the wrong tool
 
 The pyramid is the wrong argument for not testing a migration. Hardware/firmware may invert the costs. Visual products need more UI tests. If the units are trivial and the product is wiring, integration-heavy is honest. Do not use the pyramid to ban QA. Snapshot-only "pyramids" are a different failure.
+
+## A worked failure mode
+
+The pyramid is inverted: slow UI tests are the only coverage; they flake and people ignore CI. Unit tests mock the database so thoroughly they test the mocks. The failure is a diagram without a bottleneck. Fast tests for logic, a few contract tests against real deps, sparse UI for journeys.
+
+A pyramid is the wrong religion if a contract test would catch the bug. Do not delete UI tests of checkout to look modern. Shape tests to the risk.
+
+Treat the counterexample as part of the spec. Someone will apply "The Testing Pyramid, Revisited" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

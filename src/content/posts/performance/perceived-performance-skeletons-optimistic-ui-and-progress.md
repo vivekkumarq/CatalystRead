@@ -66,3 +66,11 @@ Cached optimistic state after logout.
 ## When this is the wrong tool
 
 A bank transfer confirmation should wait for the server. Skeletons will not hide a 10s query forever — users need a message. Do not optimistic-delete a record with heavy side effects. Games and video have their own loading. If the issue is JS parse time, split the bundle; skeletons on a white screen of no JS do nothing. Avoid fake progress as a lie for legal operations.
+
+## A worked failure mode
+
+Optimistic UI marks a payment succeeded; the API fails; the UI never reconciles and the user leaves thinking they paid. A skeleton layout shifts when real content has a different size (CLS). A spinner is shown for 50ms operations, making the app feel slower. The failure is lying without a recovery, and chrome that hurts Core Web Vitals. Optimistic only when you can undo; reserve skeletons for known layouts; skip spinners below a threshold.
+
+Perceived-performance tricks are the wrong tool if the request is actually broken. Do not fake success on money. Use them to hide unavoidable waits you still measure honestly.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Perceived Performance: Skeletons, Optimistic UI, and Progress", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

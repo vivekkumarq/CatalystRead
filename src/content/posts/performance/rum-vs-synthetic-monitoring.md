@@ -64,3 +64,11 @@ Synthetics cannot tell you whether the new recommendation carousel is janky on a
 - Sample rate, consent, and bot filters are documented for RUM percentiles.
 - Synthetic journeys use test accounts and a locator that matches the SLO.
 - Divergences get a written sentence (region, device, release), not a chart war.
+
+## A worked failure mode
+
+Synthetics from one region on broadband are green while RUM shows mobile INP pain. A team chases RUM outliers from webviews they do not support. Budget is spent on a synthetic script that never logs in. The failure is one clock. Synthetics catch origin and deploy breaks; RUM catches real devices. Slice RUM by geography and app version, and keep a synthetic of the paid path.
+
+RUM is the wrong tool if you cannot ingest PII-safe beacons. Synthetics are the wrong only signal for UX. Use both with questions each can answer.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "RUM versus Synthetic Monitoring: Two Clocks for the Same User Promise", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

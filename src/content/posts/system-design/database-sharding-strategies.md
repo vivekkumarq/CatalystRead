@@ -64,3 +64,11 @@ ORMs that hide N-shard round trips.
 ## When this is the wrong tool
 
 Vertical scaling and partitioning inside one instance come first. Read replicas may fix read load without sharding. Sharding is the wrong tool for a 50 GB database. If the access pattern is "scan everything," a warehouse or search index is better. Multi-tenant DBs with one tenant per shard only if tenants are large; tiny tenants should share. Do not shard to look like a FAANG interview.
+
+## A worked failure mode
+
+Shard key is `created_at`; today's shard melts. Cross-shard joins are done in the app with huge IN lists. Resharding is "later." The failure is a key that does not spread writes and no rebalance plan. Pick a high-cardinality key that matches access, and practice splits.
+
+Sharding is the wrong tool before indexes and replicas. It is misery for multi-entity transactions. Stay unsharded until a metric says you must.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Database Sharding Strategies That Survive Growth" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

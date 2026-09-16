@@ -81,3 +81,11 @@ Multiple instances of a store that should be `providedIn: 'root'` vs component-s
 ## When this is the wrong tool
 
 NgRx is still reasonable for event-sourced audit-heavy apps with many reducers already paid for. Do not invent a store for a widget with two signals. Signals are the wrong tool to persist a 5 MB editor document on every computed. If the team is not zoneless/OnPush, a store will not by itself fix CD. URL state belongs in the router, not a parallel store.
+
+## A worked failure mode
+
+A "store" is a file of exported `signal`s mutated from anywhere. Two features increment the same cart count; a computed tax never updates because it closed over `.value` once instead of reading the signal. An effect writes back into the same signal and loops until the page janks. There is no single transaction for "add line + recompute coupon." The failure is global mutable signals without an API. Encapsulate writes in functions, keep effects for interop and logging, and group related state so updates are atomic.
+
+A signal store is the wrong tool for server cache with stale-while-revalidate; use a query library. It is the wrong tool for undo/redo of graphs unless you model events. Do not replace the router with signals. Local component signals beat a global store for a tooltip. Use shared signal state when multiple features truly share a live model and you can name the mutations.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "State Management Patterns in Modern Signal-Based Angular" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

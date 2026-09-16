@@ -3,6 +3,7 @@ title: "Hunting Memory Leaks with Heap Dumps"
 slug: "hunting-memory-leaks-with-heap-dumps"
 description: "A Java memory leak is always a reachability bug. Heap dumps let you find exactly which reference is holding on, instead of guessing at flags."
 publishedAt: "2025-07-17"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -70,3 +71,13 @@ public class SessionCache {
 | Inner class holding an outer reference longer than needed | Outer class instances retained via synthetic `this$0` field |
 
 Heap dump analysis has a reputation for being intimidating, but the actual workflow is short: find the dominator with the disproportionate retained size, trace its path to a GC root, and you're looking at the exact line of code responsible. The hard part is remembering to capture the dump before restarting the leaking process — a restart resets the leak, and the evidence, back to zero.
+
+## A worked failure mode
+
+Heap dumps are taken from a 32GB JVM onto the same disk as the database, filling the disk and causing a second outage. The dump is analyzed by looking at `byte[]` without a dominator tree; they delete a cache that was working and miss a listener list that grew with every request. The failure is dump ops and analysis without dominators. Use `jcmd` with care, offload dumps, and follow GC roots for the growing class.
+
+## When this is the wrong tool
+
+A heap dump is the wrong first tool for a CPU problem. It is dangerous on a dying disk. Allocation flame graphs may find churn without a dump. Dump when retained memory grows and you can store the file safely.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Hunting Memory Leaks with Heap Dumps" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

@@ -60,3 +60,11 @@ Hungarian notation in 2026. Names that encode types TypeScript already has. Joke
 ## When this is the wrong tool
 
 A 20-minute spike. Do not bikeshed a throwaway script. Mass renames that break git blame for no semantic gain can wait. If the domain is unsettled, a slightly wrong name plus a comment beats a weekly rename. Generated code names should stay generated. Skip poetry.
+
+## A worked failure mode
+
+`data2` and `ManagerImpl` hide that the method charges a card. A rename PR bikesheds while the invariant is unnamed. The failure is names that do not encode the contract. Name after the domain event and the failure mode; then the code review is shorter.
+
+Renaming is the wrong tool to fix a wrong abstraction. Do not spend a week on synonyms. Name when the wrong word caused a bug.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Naming as Design, Not Decoration", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

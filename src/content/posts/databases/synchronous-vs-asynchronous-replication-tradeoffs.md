@@ -3,6 +3,7 @@ title: "Synchronous vs Asynchronous Replication: The Real Trade-offs"
 slug: "synchronous-vs-asynchronous-replication-tradeoffs"
 description: "What synchronous and asynchronous replication actually guarantee during a failover, and why the choice is really about how much data you can lose."
 publishedAt: "2024-12-18"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -39,3 +40,13 @@ The dangerous edge case with synchronous replication is what happens when the sy
 ## Choosing deliberately
 
 The right question isn't "sync or async" in the abstract, it's: for this specific data, what does losing the last few seconds of writes actually cost if the primary dies right now? For an audit log or financial ledger, that answer is usually "unacceptable," which justifies the latency tax of synchronous replication for at least one nearby replica. For an analytics events table or a cache-adjacent dataset, async is almost always the right default, because the latency savings compound across every write and the data loss window, in practice, rarely gets exercised and rarely matters when it does.
+
+## A worked failure mode
+
+A payment API commits on the primary with async replica. Failover promotes a replica missing the last 2 seconds of charges. Support refunds based on a replica read that never saw the commit (read-your-writes miss). Marketing wanted "HA" without synchronous commit cost. The failure is HA theater. If failover must not lose commits, you pay sync (or quorum) latency. If reads can lag, isolate them and never read payment status from a lagging replica.
+
+## When this is the wrong tool
+
+Synchronous replication is the wrong tool if the replica is in another continent and the SLA is 20ms p99. Async is the wrong tool for the only copy of ledger rows you will promote. Do not mix them without telling the application. Choose based on a written RPO, not a checkbox.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Synchronous vs Asynchronous Replication: The Real Trade-offs" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

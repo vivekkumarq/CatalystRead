@@ -3,6 +3,7 @@ title: "The Cost Model of LLM Features: Estimating and Controlling Spend"
 slug: "the-cost-model-of-llm-features"
 description: "A framework for estimating LLM feature costs before shipping and the concrete levers that control spend once traffic scales beyond a prototype."
 publishedAt: "2026-08-07"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -56,3 +57,11 @@ Prompt caching (reusing the processed representation of a static prefix — syst
 ## Set a budget with an actual enforcement mechanism
 
 The last piece is the one that prevents a bug — an infinite retry loop, a runaway agent, a scraper hitting your endpoint — from turning into a real financial incident. Per-user and per-feature rate limits, a hard `max_tokens` on every call, and a circuit breaker that halts a feature if its hourly spend crosses an anomaly threshold are cheap to build and turn a potential five-figure mistake into a contained, alertable one. Cost control for LLM features isn't a one-time estimate — it's the same operational discipline as any other resource with a per-unit cost that scales with traffic, and it needs the same guardrails.
+
+## A worked failure mode
+
+A product estimates cost as `requests * $0.002` from a blog. Real traffic has 8k-token RAG prompts, 15% retries, a judge model on every call, and image tokens on 20% of requests. The invoice is 12x the spreadsheet. Finance cuts the feature instead of the hidden second model. Another team offers unlimited chat because "tokens are cheap," then one tenant pastes logs. The failure is an incomplete unit economics: prompt vs completion vs cached vs embedding vs moderation vs retries vs evals in production. Put a per-tenant budget, log cost per successful user outcome (not per request), and make retries and judges first-class line items.
+
+## When this is the wrong tool
+
+A full FinOps dashboard is the wrong tool before you have a single successful workflow. Do not optimize model size to save pennies while retrieval fetches megabytes. Do not use list prices without the discount and the cache hit rate you actually see. If the feature is rare and high value (fraud review), spend more on quality than on token shaving. Cost models are for features that will run at volume or that can be abused; they are not a reason to skip evals.

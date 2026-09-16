@@ -3,6 +3,7 @@ title: "How Tokenization Works and Why Engineers Should Care"
 slug: "how-tokenization-works"
 description: "A practical look at subword tokenization internals and the concrete ways tokenizer behavior affects cost, latency, and model quality."
 publishedAt: "2026-06-26"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -56,3 +57,11 @@ Models historically struggled with character-level tasks — counting letters in
 - Always measure token counts with the real tokenizer before shipping cost estimates — don't extrapolate from word counts, especially for non-English or structured content.
 - Be consistent about whitespace when constructing prompts programmatically; don't assume string concatenation is tokenization-neutral.
 - When a model fails at a character-level task, suspect tokenization before assuming a reasoning failure — the fix might be asking it to work with the text differently (e.g., spacing out letters) rather than a better model.
+
+## A worked failure mode
+
+A billing feature charges per "word" while the vendor bills per token. A customer pastes a JSON blob full of braces and UUIDs; the UI shows 400 words and the invoice shows 3,200 tokens. Another team sets `max_tokens=256` thinking that is 256 words and silently truncates legal clauses. A third splits on spaces for a RAG chunker, cutting Korean and German compounds badly, then wonders why retrieval recall is worse than the English eval set. The failure is treating tokens as words. Count with the same tokenizer the model uses, budget prompts in tokens, and test chunking on the languages you actually serve. Log prompt tokens, completion tokens, and cached tokens separately or your cost model will lie.
+
+## When this is the wrong tool
+
+You do not need to lecture the team on BPE to ship a prototype, but you do need the vendor's tokenizer for anything that touches money, truncation, or multilingual chunking. Do not build a custom tokenizer to shave a few tokens unless you are training a model. Character-length limits are the wrong proxy for context windows. If you only call embeddings, still use that model's tokenizer for chunk sizes. Tokenization knowledge is the wrong rabbit hole when the real bug is sending the entire HTML page as context. Measure first; then care about subword splits.

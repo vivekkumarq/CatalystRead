@@ -3,6 +3,7 @@ title: "Tail Latency: Why p99 Matters More Than Average"
 slug: "tail-latency-why-p99-matters-more-than-average"
 description: "Why average response time hides the experience of your worst-served users, and how to measure, diagnose, and reduce tail latency in production systems."
 publishedAt: "2026-04-10"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -45,3 +46,13 @@ REQUEST_LATENCY.observe(time.time() - start)
 Bucket boundaries matter — too coarse and you lose resolution exactly where the tail lives; too fine and cardinality costs pile up.
 
 Reducing tail latency usually means attacking variance, not the average path. Hedged requests — firing a duplicate request to a second backend if the first hasn't responded within some threshold, then taking whichever returns first — trade a small amount of extra load for a meaningfully shorter tail. Setting aggressive, well-tuned timeouts prevents one slow dependency from dragging down everything waiting on it. Right-sizing connection pools and thread pools so healthy load doesn't queue is often the single highest-leverage fix, because queuing delay is one of the most common and most invisible contributors to a long tail. Track p99 and p99.9 as first-class SLOs alongside the average, and treat regressions in them with the same urgency as an error rate spike — a widening tail is often the earliest signal of a capacity problem that hasn't hit the average yet.
+
+## A worked failure mode
+
+Average latency is 40ms; p99 is 2s because of a stop-the-world GC every minute and a retry amplification. SLOs use the average; customers churn. Someone "fixes" p99 by dropping slow requests. The failure is managing the mean. Track p99/p999, hedge or shed load, and fix the multimodal pause.
+
+## When this is the wrong tool
+
+Obsessing over p99 is the wrong tool if you have 20 requests a day (use a histogram of all). Do not hide tails by timeout-as-success. Tails matter when users and fan-out make them common.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Tail Latency: Why p99 Matters More Than Average" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

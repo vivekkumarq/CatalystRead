@@ -74,3 +74,13 @@ Internal throwaway prototypes with no production path. Firmware built in a certi
 - Builder identity is narrower than “any engineer’s GPG key.”
 - SBOM and provenance come from the same build job.
 - A laptop-built image cannot enter the cluster.
+
+## A worked failure mode
+
+A pipeline "has SLSA" because a badge is in the README. Artifacts are still `docker push` from a laptop, provenance is generated after the fact, and `latest` is mutable. An attacker who can push to the registry wins. The failure is paperwork without hermetic builds. Provenance must be produced by the builder that produced the bytes, with unforgeable identity, and deploy must verify it. Mutable tags break the chain.
+
+## When this is the wrong tool
+
+SLSA level chasing is the wrong tool if you still commit secrets and depend on `curl | bash` in Dockerfiles. It is overhead for a throwaway hackathon image. Do not generate attestations you never verify at deploy. Use provenance when deploy policy will actually reject unverified artifacts.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "SLSA and Provenance: Making 'Where Did This Binary Come From?' a Build Property" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

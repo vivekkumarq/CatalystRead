@@ -3,6 +3,7 @@ title: "Blue-Green vs Canary Deployments: Choosing the Right Rollout Strategy"
 slug: "blue-green-vs-canary-deployments"
 description: "A concrete comparison of blue-green and canary deployment strategies, including the infrastructure they each require and where one clearly beats the other."
 publishedAt: "2025-12-08"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - DevOps
@@ -67,3 +68,12 @@ Blue-green suits services where a bad deploy is catastrophic and needs to be rev
 Canary suits high-traffic services where a statistically meaningful signal (error rate, latency percentiles) can be gathered from a small slice of traffic quickly, and where the team has invested in the traffic-splitting and automated-analysis tooling to make the ramp-up actually safer than a straight cutover, not just slower. For a low-traffic internal service, a 10% canary might see so few requests that a genuine regression doesn't show up as statistically significant until it's already at 100% weight — in that case, blue-green's clean binary switch is often the more honest safety mechanism.
 
 Plenty of mature platforms run both: blue-green for a handful of critical, stateful services, canary for the high-volume stateless ones where gradual exposure actually earns its complexity.
+
+## A worked failure mode
+
+Blue-green cutover switches 100% of traffic to a build that still points at a migrated schema the old binary cannot read. Rollback is instant to green, which then writes a second incompatible row version. A canary of 5% would have shown 500s on the new write path. The opposite failure: a canary that is so small and sticky that only internal IPs hit it, then a 100% push at Friday 6pm. The failure is a rollout strategy without a compatibility window and without a real sample of traffic. Expand/contract schema, watch a golden metric, and cap blast radius.
+
+## When this is the wrong tool
+
+Blue-green is the wrong tool if you cannot afford two copies of a stateful set. Canaries are the wrong tool if you have no metrics. Do not canary a one-way data rewrite. A feature flag on a single behavior may beat a fleet strategy. Pick blue-green for binary cutovers you tested; pick canary when you need statistical confidence on heterogeneous traffic.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

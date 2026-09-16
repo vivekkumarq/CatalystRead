@@ -110,3 +110,11 @@ Returning 500 instead of 400 when `MethodArgumentNotValidException` is unhandled
 ## When this is the wrong tool
 
 Bean Validation is not authorization. Do not validate HTML for XSS here — different layer. Complex graphs may want a dedicated validator class or a JSON schema at the edge. Database constraints still required. If the rules need a transaction's worth of data, put them in the domain. Skipping `@Valid` on nested objects silently accepts junk.
+
+## A worked failure mode
+
+`@Valid` is on a DTO but the controller is not annotated to trigger it; invalid money amounts hit the service. Groups are mis-set so create rules run on update. A custom constraint is not thread-safe. The failure is validation that never runs. Test with a validator, wire `@Validated`, and keep constraints stateless.
+
+Bean Validation is the wrong tool for authorization. It will not replace DB constraints. Do not only-validate on the client. Use it at the edge and keep invariants in the domain too.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Bean Validation Beyond @NotNull: Groups, Custom Constraints, and Cross-Field Rules", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

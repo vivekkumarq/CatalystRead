@@ -3,6 +3,7 @@ title: "unknown vs any vs never: Picking the Right Escape Hatch"
 slug: "unknown-vs-any-vs-never-in-typescript"
 description: "any, unknown, and never look like the same category of weird type but do opposite jobs — here's when each one is actually the right choice."
 publishedAt: "2025-10-05"
+updatedAt: "2026-09-16"
 category: "TypeScript"
 tags:
   - TypeScript
@@ -97,3 +98,13 @@ If someone later adds `"success"` to the `Status` union and forgets to handle it
 ## Picking between them
 
 The practical rule: default to `unknown` at any boundary where data enters your program from outside its control — API responses, `JSON.parse`, `catch` blocks, `postMessage` payloads. Reach for `never` deliberately, mostly in exhaustiveness checks and to mark functions that don't return. And treat every `any` you write, or that you find already in the codebase, as a TODO: either narrow it to `unknown` and add the check, or replace it with the real type now that you know what the value actually is.
+
+## A worked failure mode
+
+JSON.parse is typed as `any` and properties are read without guards; runtime is a string. `never` is asserted to silence exhaustiveness. `unknown` is immediately cast to a domain type. The failure is escape hatches as habits. Parse with a validator, use `never` for true exhaustiveness, and narrow `unknown`.
+
+## When this is the wrong tool
+
+`any` is the wrong default. `unknown` is the wrong end state if you never narrow. `never` is the wrong annotation for a function that returns. Use `unknown` at boundaries, `never` for impossible, and keep `any` rare and named.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "unknown vs any vs never: Picking the Right Escape Hatch" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

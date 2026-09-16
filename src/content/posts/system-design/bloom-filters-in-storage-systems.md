@@ -76,3 +76,11 @@ Treating a positive as "key exists" and skipping the real lookup.
 ## When this is the wrong tool
 
 Tiny datasets that fit in RAM do not need blooms. Exact membership wants a hash table or a set. Cryptographic sets and authz lists must not be blooms. If false positives are costly (launching a huge job), pay for a precise index. Counting distinct with blooms is the wrong cousin — use HLL. Do not put a bloom on the hot path of a 10-row config table.
+
+## A worked failure mode
+
+A Bloom filter is treated as a definitive yes; a missing key is skipped on a true-positive-looking hash and data is lost. Size is too small; false positives explode and LSM reads hit disk anyway. The filter is not rebuilt after a restore. The failure is a probabilistic structure used as truth. Bloom answers "maybe" or "no"; size it to the FPR you can pay, persist it with the table.
+
+A Bloom filter is the wrong tool for exact membership you must get right (use a set or index). It does not help tiny tables. Use it to skip IO when FPR is acceptable.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Bloom Filters in Storage Engines: Cheap Negative Lookups" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

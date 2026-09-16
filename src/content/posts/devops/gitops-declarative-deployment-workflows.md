@@ -102,3 +102,11 @@ Using GitOps for database data.
 ## When this is the wrong tool
 
 A toy cluster with one app. Terraform for cloud IAM may stay next to, not inside, k8s GitOps. Emergency break-glass is still required — GitOps is the wrong tool to block a 3am revert if git is down; have a documented override. Do not GitOps laptops. If the team cannot review YAML, the process fails regardless of Argo.
+
+## A worked failure mode
+
+Git is the source of truth except when someone `kubectl edit`s a Deployment at 3am and the controller reverts the hotfix, bringing the outage back. Another repo auto-syncs every PR to prod because the path filter was wrong. Secrets in Git are "encrypted" with a key that lives in the same repo. The failure is GitOps without break-glass rules and without promotion. Use overlays for prod, require reviews, store crypto keys elsewhere, and document how to pause sync during incidents.
+
+GitOps is the wrong tool for a one-node lab. It is the wrong control loop if the team will not stop manual edits. Do not GitOps databases. Use it when many clusters must converge and humans can review diffs.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "GitOps: Declarative Deployment Workflows Done Right" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

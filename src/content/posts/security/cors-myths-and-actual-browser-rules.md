@@ -68,3 +68,13 @@ Blocking a partner’s server-to-server call is firewall or IAM. First-party for
 - OPTIONS reaches the app or is answered correctly at the edge; `Vary: Origin` on varying responses.
 - Credentials mode matches the actual auth (cookies vs Bearer).
 - CSRF is decided separately from CORS for cookie apps.
+
+## A worked failure mode
+
+`Access-Control-Allow-Origin: *` with credentials imagined to work; they do not, so someone reflects the request Origin and allows credentials—now any site can call the API as the user. A server-side `fetch` is expected to be blocked by CORS (it is not). The failure is CORS as an ACL. CORS is a browser rule. Authenticate and authorize on the server; reflect origins from an allow-list only.
+
+## When this is the wrong tool
+
+CORS config is the wrong tool to protect a secret API from curl. Do not use CORS to hide an admin endpoint. Same-site cookies and authz are the real controls. Tune CORS when you have a legitimate browser cross-origin client.
+
+Treat the counterexample as part of the spec. Someone will apply "CORS, Without the Folklore: What the Browser Actually Checks" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

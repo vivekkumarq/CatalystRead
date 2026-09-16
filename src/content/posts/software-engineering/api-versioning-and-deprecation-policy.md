@@ -3,6 +3,7 @@ title: "API Versioning and Deprecation Policy"
 slug: "api-versioning-and-deprecation-policy"
 description: "A practical framework for versioning APIs and deprecating old versions without breaking clients you don't control or can't even see."
 publishedAt: "2025-12-28"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -40,3 +41,13 @@ Track actual usage of deprecated versions before removing them, not just the cal
 ## Designing for less painful changes later
 
 A surprising amount of future versioning pain can be avoided at design time: including a version identifier in the response payload itself, using envelope structures that tolerate new fields gracefully, and avoiding brittle positional formats. None of this eliminates the need for a versioning policy, but it substantially widens the range of changes that don't require one.
+
+## A worked failure mode
+
+`v2` is launched by breaking `v1` in the same week. Clients cannot pin. A header version is undocumented; mobile binaries in the wild die. Deprecation is a Slack message. The failure is versioning without overlap. Overlap versions, sunset dates, metrics on old versions, and a compatibility test harness.
+
+## When this is the wrong tool
+
+URL versions are the wrong tool for a private UI-only API you ship together. Do not version by mood. Additive change may beat a v2. Use a policy when third parties cannot ship in lockstep.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "API Versioning and Deprecation Policy", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

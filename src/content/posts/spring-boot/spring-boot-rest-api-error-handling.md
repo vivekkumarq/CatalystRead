@@ -125,3 +125,13 @@ Swallowing exceptions. Different shapes per controller. 200 with an error flag. 
 ## When this is the wrong tool
 
 gRPC and GraphQL have their own error models. HTML apps may want a view, not JSON. Do not use REST advice for Kafka consumers. Validation libraries that already render RFC 7807 — use that instead of a custom parallel schema if you can. If the client is internal and you have a typed SDK, still keep a stable code enum.
+
+## A worked failure mode
+
+A global handler returns 500 with stack traces. Validation errors are 200. Different controllers return different JSON shapes. The failure is no error contract. Map exceptions to stable codes, never leak stacks, test the advice.
+
+A huge exception hierarchy is the wrong tool for a 3-endpoint service. Do not 200 your errors. Use a small problem+json style contract.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Consistent Error Handling in Spring Boot REST APIs" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Consistent Error Handling in Spring Boot REST APIs" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

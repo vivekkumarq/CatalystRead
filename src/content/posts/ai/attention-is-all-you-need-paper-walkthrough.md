@@ -62,3 +62,9 @@ Copying 2017 dropout rates into a 2024 LLM recipe.
 ## When this is the wrong tool
 
 Tabular data with 20 features: gradient boosting. Tiny sequences where an LSTM is enough. The paper's architecture is the wrong tool if you need strictly linear time at 1M tokens without approximations. CNNs still win some vision backbones (even if ViTs exist). Do not cite the paper to skip evaluation. RNNs remain fine for tiny on-device models with no GPU.
+
+## A worked failure mode
+
+A team reads the 2017 paper, implements multi-head attention in a product ranker, and then trains on 40k rows with no positional scheme beyond "we added an MLP." Offline AUC is fine because the features are mostly bag-of-words already. In production, swapping two clauses in a query ("refund then cancel" vs "cancel then refund") does not change the score. They conclude "attention does not work" and pile on LSTM folklore. The failure is cargo-culting the architecture without the problem it was built for: long-range dependency in sequences where order matters, with enough data and positions. Positional encodings, depth, and compute are not optional decorations. If your task is tabular, a transformer is an expensive kernel; if your task is sequence order, skipping positions is the bug, not the paper.
+
+Attention is the wrong tool when the input is a handful of unordered flags. It is the wrong first model for a 500-row spreadsheet. Do not cite the paper to justify a 12-layer net on a mobile CPU. Use it when you have sequences, positions, and a training budget that can actually move the residual stream.

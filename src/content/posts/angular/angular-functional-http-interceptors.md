@@ -85,3 +85,11 @@ Per-endpoint base URLs, GraphQL operation names, and “this SKU hits warehouse 
 - POSTs retry only with an explicit context token and idempotency header.
 - Refresh traffic uses a client without the auth interceptor.
 - One unit test per interceptor with a fake `next`; one `HttpTestingController` test for the chain.
+
+## A worked failure mode
+
+A team stacks five functional interceptors: auth header, retry, correlation id, error toast, and a cache. The retry interceptor resubscribes on 401, the auth interceptor attaches a stale token, and the cache returns a previous 401 body as if it were a user profile. Meanwhile a unit test that only mocks `HttpClient` never instantiates the interceptors the app actually uses. The failure is an unordered pipeline with side effects. Make interceptors small, document order, never cache auth failures, and test with `HttpClientTestingModule` (or the functional equivalent) so the chain runs. Retries must not retry 4xx except a controlled refresh path.
+
+## When this is the wrong tool
+
+If you only need a header on one service, set it there; a global interceptor will surprise the next caller. Interceptors are the wrong place for business-rule toasts on every HTTP error. Do not use them to rewrite request URLs as a routing layer. They are the wrong tool for WebSocket auth. Prefer an explicit API client when the app has two backends with different auth. Use interceptors for cross-cutting HTTP concerns you can test as a chain, not as a junk drawer for product logic.

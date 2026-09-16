@@ -70,3 +70,9 @@ Mixing cosine/dot/L2 across writers.
 ## When this is the wrong tool
 
 <100k vectors: numpy / FAISS local / even SQL. Exact KNN may be fine. If lexical search suffices, skip vectors. A vector DB will not replace Redis for sessions. Do not buy a cluster for a demo. When updates are the product (stock), a transactional store plus embeddings as derived data is the architecture — the ANN index is not the ledger.
+
+## A worked failure mode
+
+A startup puts 80k embeddings in a dedicated vector database because the architecture diagram had one. They then need metadata filters (tenant, ACL, created_at) and discover the filter runs after ANN, returning 2 results that pass ACL while the true neighbors were dropped. They add overfetch, latency triples, and they still leak a cross-tenant neighbor on a misconfigured namespace. Postgres with pgvector would have been boring and correct at this scale. The failure is buying ANN operations before you have a filtering and tenancy story. Measure recall with the same filters production uses, not a naked top-k on a research dump.
+
+A specialized vector database is the wrong tool under a few million vectors with strong SQL filters, or when the bottleneck is bad chunking. It is the wrong tool if you cannot operate backups and rebuilds. Do not pick a vendor for a demo of 3D plots. Stay in the operational database until recall-at-filter, SLA, and ops cost say you have outgrown it.

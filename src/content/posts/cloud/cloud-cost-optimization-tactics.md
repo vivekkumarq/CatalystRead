@@ -101,3 +101,11 @@ FinOps dashboards nobody owns.
 ## When this is the wrong tool
 
 Cost cuts during an incident. Do not optimize a $20 sandbox. Premature Graviton rewrites without a perf test. If the product is unused, turn it off — that beats kube tuning. Negotiating enterprise discounts is not an engineer-only tactic. Avoid "move to serverless" as a cost story without measuring.
+
+## A worked failure mode
+
+Finance mandates a 30% cut. Someone turns off NAT, halves RDS, and deletes "unused" EBS that was the only copy of a queue. The bill drops; so does checkout. A better failure to remember: rightsizing from a week of CPU average while the app is memory-bound, or buying a reserved instance for a service you will kill next quarter. Cost work needs the same change management as reliability: identify waste (idle, wrong size, forgotten snapshots), simulate, then change with a rollback. Attribution tags come first or you will cut the wrong team.
+
+Cost cutting is the wrong tool when the product is still finding PMF and the bill is a rounding error versus engineering time. Do not optimize a sidecar before you delete the unused environment. Spot instances are the wrong default for a stateful primary. Optimize once you have tags, an owner, and a reliability floor.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Cloud Cost Optimization Tactics That Don't Sacrifice Reliability" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

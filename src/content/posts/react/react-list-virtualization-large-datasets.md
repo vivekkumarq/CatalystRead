@@ -89,3 +89,11 @@ Measuring during render in a loop that forces sync layout.
 ## When this is the wrong tool
 
 Pagination or a smaller query is better than virtualizing a million rows in the browser. Virtualization is the wrong tool for print layout and for SEO lists that must be in HTML (SSR the first page). If rows have wildly different interactive widgets, a windowing library may fight you. Prefer server-side filtering first. Do not virtualize a flex wrap of cards without a proven library for 2D grids.
+
+## A worked failure mode
+
+A list of 50 items is virtualized; keyboard users cannot tab to offscreen rows that should be in DOM for a11y. Row height is wrong; items overlap. A windowed list still mounts heavy children. The failure is virtualizing too early and skipping layout/a11y. Virtualize at thousands, measure heights, and provide a non-virtual path for small lists and assistive tech strategies.
+
+Virtualization is the wrong tool for small lists and for print. It complicates testing. Use it when DOM count is the profiler-proven cost.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "List Virtualization for Large Data Sets in React" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

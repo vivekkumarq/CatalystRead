@@ -59,3 +59,11 @@ Nightly-only tests so the queue is theater.
 ## When this is the wrong tool
 
 Regulated release trains that need a branch — still integrate to main often. Open source with infrequent maintainers may use GitHub flow with longer PRs. A solo hobby repo does not need a merge queue. TBD is the wrong fight while CI is 90 minutes and flaky — fix CI first. Do not trunk-based a binary you cannot flag if you have no other hiding technique.
+
+## A worked failure mode
+
+Trunk-based is declared; branches live 3 weeks. A merge queue serializes 40-minute CI so the queue is a day long. People bypass. The failure is a process that does not match CI speed. Short branches, faster tests, and a queue that is a few minutes.
+
+Trunk-based is the wrong tool if you cannot test. Merge queues are overkill for two developers. Do not hide broken main with skip CI. Use them when integration is frequent and CI is honest.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Trunk-Based Development and Merge Queues" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

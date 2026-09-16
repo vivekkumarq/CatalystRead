@@ -3,6 +3,7 @@ title: "Habits That Distinguish Senior Engineers"
 slug: "habits-that-distinguish-senior-engineers"
 description: "Seniority shows up less in what someone knows and more in a handful of repeatable habits around scope, communication, and how they handle being wrong."
 publishedAt: "2024-08-22"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -32,3 +33,11 @@ Everyone is wrong sometimes — about an estimate, a technical approach, a produ
 This shows up sharply during incidents. An engineer whose first instinct is to figure out what's still broken and who else is affected is more useful in the room than one whose first instinct, even subconsciously, is to establish that the mistake isn't really their fault. Both instincts are human. Only one of them is a habit worth deliberately building, and it's the kind of thing that's much easier to practice in low-stakes moments — owning a wrong estimate in a planning meeting — than to suddenly produce for the first time during a real outage.
 
 None of these habits require years of tenure to start practicing. They require noticing the moment they'd normally kick in — the vague ticket, the quiet risk, the wrong call — and doing the slightly harder thing instead of the easier default.
+
+## A worked failure mode
+
+A senior-titled engineer is always in flow on features and never writes the runbook. When they go on PTO, a Sev-1 lasts six hours because the dashboards lived in their head. Another "senior habit" cargo-cult: they attend every meeting to look senior and ship nothing. The distinguishing habit is not typing speed; it is reducing the bus factor and making the next incident cheaper. Calendar a weekly "make this operable" slice: tests that fail loudly, docs that match the code, and a decision log. If your habits only optimize personal output, the title is a lagging indicator of a future outage.
+
+## When this is the wrong tool
+
+Habit lists are the wrong tool for a team with no time to think because of chronic understaffing; that is a staffing and scope problem. Do not mimic a staff engineer at a FAANG if you are the only backend on a five-person startup—the useful habits are different (breadth, vendor choices, saying no). Self-help seniority is the wrong substitute for feedback from people who see your diffs. Steal habits that match your actual constraints.

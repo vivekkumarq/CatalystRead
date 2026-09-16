@@ -69,3 +69,11 @@ Citing CAP to skip transactions on a single-node Postgres. Claiming CA as a thir
 ## When this is the wrong tool
 
 CAP is the wrong slide for "should we use Kafka." It is not a capacity planning tool. Single-region RDBMS with synchronous replica in the same AZ is a different discussion (latency, not partition of the WAN). PACELC is a better follow-up when you care about latency vs consistency *without* a partition. Do not design from the acronym; design the conflict rule, then name it.
+
+## A worked failure mode
+
+A slide says "we picked AP" while the app uses a single-primary SQL database. During a partition, operators split-brain two primaries because they believed AP meant two writers. The failure is CAP as a brand. Name your actual failure mode: failover RPO, or multi-writer conflicts. CAP is about linearizability vs availability during partition, not a menu.
+
+CAP slogans are the wrong tool to pick Postgres vs Cassandra. Do not use CAP to skip disaster tests. Design for the partition you will actually see.
+
+Treat the counterexample as part of the spec. Someone will apply "The CAP Theorem: What It Actually Says, and What Teams Pretend It Says" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

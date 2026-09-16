@@ -3,6 +3,7 @@ title: "How B-Tree Indexes Actually Work"
 slug: "how-btree-indexes-actually-work"
 description: "A practical walkthrough of B-tree index internals, why they dominate relational databases, and how their structure shapes real query performance."
 publishedAt: "2024-09-05"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -51,3 +52,13 @@ B-trees excel at equality and range queries on ordered scalar data, but they're 
 ## Practical implications
 
 Two things follow directly from the structure. First, maintenance cost is real: every insert or update that touches an indexed column can trigger a page split, which is why bulk-loading data is often faster with indexes dropped and rebuilt afterward rather than maintained incrementally. Second, bloat is a leaf-node problem — deleted or updated rows leave gaps that autovacuum (or an equivalent process) has to reclaim, and a heavily updated table with five indexes pays that cost on every one of them, not just the primary key. Treating the index as a tree you're actively maintaining, rather than a magic lookup table, turns both of those behaviors from mysterious slowdowns into predictable, plannable costs.
+
+## A worked failure mode
+
+A query filters `WHERE lower(email) = $1` while the index is on `email`. Seq scan. Someone adds 12 indexes "to be safe," every write updates all of them, and autovacuum never catches up. A leading-wildcard `LIKE '%foo'` still cannot use the btree. The failure is indexing the expression you do not write, and treating indexes as free. Index the predicate you run, include columns for index-only scans when it pays, and drop unused indexes from `pg_stat_user_indexes`.
+
+## When this is the wrong tool
+
+A btree is the wrong tool for full-text search, for high-cardinality JSON soup you always scan, and for columns you never filter. Do not index boolean flags that are 95% false without a partial index. Hash indexes are a niche. Understand btrees when you have range and equality lookups; pick other access methods when the query is not that.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "How B-Tree Indexes Actually Work" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

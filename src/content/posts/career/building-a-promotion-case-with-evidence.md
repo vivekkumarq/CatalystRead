@@ -3,6 +3,7 @@ title: "Building a Promotion Case with Evidence"
 slug: "building-a-promotion-case-with-evidence"
 description: "How to build a promotion packet that survives a committee's scrutiny, using concrete evidence instead of self-assessment and vague claims of impact."
 publishedAt: "2026-03-20"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -30,3 +31,11 @@ A committee weighs a peer's unprompted praise far more heavily than your own des
 ## Calibrate scope against the actual bar
 
 Before writing anything, get an honest read on what the target level actually requires at your company — the written rubric is a starting point, but the real bar is often set by recent examples of people who were and weren't promoted. Ask your manager directly what's missing, not just what's present. A packet stuffed with evidence for the level you're already at, no matter how well-written, doesn't make a case for the next one; it just proves you're solid where you are. The strongest cases show a small number of examples that clearly demonstrate next-level scope, judgment, or impact, rather than a long list that mostly demonstrates competence at the current level with more items.
+
+## A worked failure mode
+
+An engineer writes a promotion doc that lists every ticket and a vague "I improved reliability." The committee asks what broke, what changed, and who else could claim the same incidents. The packet has no before/after graphs, no named partners, and no unsuccessful bets. A peer who shipped a smaller, measured migration with quotes from partner teams gets the yes. The failure is a narrative without artifacts. Keep a running log: metrics, design docs, incident roles, mentee outcomes, and decisions you owned. Tie each claim to a link. Ask your manager quarterly whether the evidence matches the next level's rubric, not the week before the packet is due.
+
+## When this is the wrong tool
+
+A promotion packet is the wrong tool to fix a broken leveling system or a manager who will not sponsor you; that is a different conversation (and sometimes a different job). Do not spend a quarter polishing slides instead of doing the work the rubric asks for. Evidence files are the wrong place for grievances. If the org promotes on tenure and relationships only, a perfect packet still may not move the needle—decide with eyes open. Use evidence when the process claims to be evidence-based and you can map work to the published bar.

@@ -74,3 +74,13 @@ Rare 2-second stalls at 3am want tracing with timestamps, not a 30-second averag
 - Capture length and workload match the incident.
 - On-CPU vs off-CPU vs allocation is an explicit choice.
 - One change, then recapture; unstable graphs mean an unstable experiment.
+
+## A worked failure mode
+
+A CPU flame graph is inverted in the reader's head; they optimize a wide plateau that is GC, not their code. Allocation graphs are ignored while young-gen churn is the latency. A 2-second sample during a GC pause is treated as the steady state. The failure is misreading width vs depth and sampling bias. Confirm with longer profiles and allocation views.
+
+## When this is the wrong tool
+
+Flame graphs are the wrong tool for a distributed wait; you need traces. Do not optimize a 0.3% frame. Use them when on-CPU or allocating hot methods are the hypothesis.
+
+Treat the counterexample as part of the spec. Someone will apply "Reading Flame Graphs: From a Wide Plateau to a Line of Code" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

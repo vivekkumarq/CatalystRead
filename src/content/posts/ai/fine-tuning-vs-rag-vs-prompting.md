@@ -3,6 +3,7 @@ title: "Fine-Tuning vs RAG vs Prompting: A Decision Framework"
 slug: "fine-tuning-vs-rag-vs-prompting"
 description: "A practical framework for deciding whether your LLM problem needs prompting, retrieval, fine-tuning, or some combination of the three."
 publishedAt: "2026-06-14"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -39,3 +40,11 @@ A surprising fraction of "we need to fine-tune" conversations resolve with a bet
 ## Combining them is normal, not a compromise
 
 Production systems commonly use all three together: RAG supplies current facts, prompting defines the task contract and output format, and a fine-tune (when justified) locks in a narrow behavior at high volume and low latency — for example, a fine-tuned small model that classifies intent before routing to a larger model with RAG-supplied context. Treat fine-tuning as the most expensive, least reversible option in the toolbox, reached for only after prompting and retrieval have been genuinely exhausted and the remaining gap is specifically a skill or style gap that repeats often enough to justify the investment.
+
+## A worked failure mode
+
+A company fine-tunes a 7B model on last year's support tickets to "learn the product." After a pricing change, the model still quotes old SKUs because that knowledge is weights, not a document store. Prompting a larger model with the new price sheet would have been enough; instead, a six-week fine-tune is now a liability. A parallel team dumps the entire wiki into the prompt and hits context limits, dropping the refund policy that was at the bottom of the pack. RAG would have retrieved the policy if chunking had kept it intact. The failure is picking a lever by fashion: fine-tune for facts that change, prompt for a corpus that does not fit, retrieve without measuring recall.
+
+## When this is the wrong tool
+
+Fine-tuning is the wrong tool for knowledge that must update without a training job. RAG is the wrong tool when there is no corpus, only style or format (then a few-shot prompt or a small SFT set wins). Prompting is the wrong tool when you need guaranteed structure or when the model must not invent citations. Do not fine-tune to hide a broken retrieval pipeline. Do not RAG a 40-page PDF as one chunk and call it architecture. Start with prompting plus tools, add retrieval when answers must cite living documents, and fine-tune when you have a stable task distribution and evals that prove a smaller model is cheaper at the same quality.

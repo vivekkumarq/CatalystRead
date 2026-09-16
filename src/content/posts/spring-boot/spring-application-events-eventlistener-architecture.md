@@ -100,3 +100,11 @@ Using events to replace a method call in the same class.
 ## When this is the wrong tool
 
 A method call is clearer for one consumer in the same module. For integration across services, a broker plus outbox, not in-process events. Do not use Spring events as an audit log (they vanish on crash). `@EventListener` is the wrong tool for high-volume domain storms — consider a queue. Transactional outbox if the listener is "publish to Kafka."
+
+## A worked failure mode
+
+A transactional listener runs after commit and calls a remote API without a retry table; the event is lost on crash. A listener is synchronous and rolls back the transaction on a mail failure. Events are used as a local method call with extra mystery. The failure is delivery semantics. Outbox for after-commit work; do not fail money on email.
+
+Application events are the wrong tool for cross-service integration. They are not a bus. Use them for in-process decoupling with explicit transaction phase.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Decoupling with Spring Application Events and @EventListener", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

@@ -3,6 +3,7 @@ title: "IAM Least Privilege in Practice, Not Just in Theory"
 slug: "iam-least-privilege-in-practice"
 description: "Least privilege is easy to state as a principle and hard to implement well. Here's how to actually scope IAM policies without breaking every deploy."
 publishedAt: "2025-10-06"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - IAM
@@ -86,3 +87,12 @@ resource "aws_iam_role_policy" "image_processor" {
 ```
 
 A dedicated reviewer for IAM diffs, even informally, catches the "just add `*` to unblock myself" commits that would otherwise merge without scrutiny.
+
+## A worked failure mode
+
+A service role is granted `s3:*` on `*` because a developer was blocked on Friday. Six months later a dependency with SSRF lists buckets and copies a backup. Nobody notices: CloudTrail is on but nobody diffs IAM. A tighter design would have been one bucket ARN, prefix, and verbs, plus a permission boundary so even "admin" developers cannot widen production roles. The failure is treating IAM as an unlock button. Start from the API calls in logs, write the policy, and break that path in staging on purpose.
+
+## When this is the wrong tool
+
+Spending a month on perfect IAM is the wrong tool if the app still uses a shared root key in a repo. Least privilege will not stop a stolen credential that has the privileges it needs; pair it with short-lived creds and detection. Do not copy AWS managed Admin policies into production custom roles. Use least privilege when you can name the resource and the verbs; use a temporary break-glass role with logging for the exceptions.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

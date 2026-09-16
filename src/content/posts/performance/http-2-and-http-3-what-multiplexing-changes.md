@@ -3,6 +3,7 @@ title: "HTTP/2 and HTTP/3: What Multiplexing Actually Changes for Real Apps"
 slug: "http-2-and-http-3-what-multiplexing-changes"
 description: "A practical look at how HTTP/2 and HTTP/3 multiplexing affect application design, when it helps, and where old HTTP/1.1 habits still hurt you."
 publishedAt: "2025-09-22"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -37,3 +38,14 @@ The other underrated win is connection migration. QUIC connections are identifie
 ## Practical implications
 
 Serve resources over a single origin where possible, stop sharding domains, and let HTTP/2 or HTTP/3 multiplexing do the parallelization. Still bundle where it reduces redundant boilerplate, but favor multiple reasonably sized chunks over one monolith so caching stays granular. Prioritize enabling HTTP/3 for mobile-heavy or geographically distributed audiences, where packet loss and network switching are common — the gains are much smaller for stable, low-latency wired connections. And measure with real client data, not synthetic lab tests, since multiplexing benefits are highly dependent on network conditions you can't fully replicate on a fast office connection.
+
+## A worked failure mode
+
+A team concatenates JS because "HTTP/1.1" folklore, then ships HTTP/2 and still has a 4MB bundle. Another opens 100 connections thinking it helps HTTP/3; the handshake cost dominates. Head-of-line is blamed on HTTP/2 when the issue is one huge TCP-lossy link and a single fat stream. The failure is protocol as a silver bullet. Multiplexing helps many small files; it does not shrink work. Measure, then shard or reduce bytes.
+
+## When this is the wrong tool
+
+HTTP/3 chasing is the wrong tool if you are CPU-bound on TTFB at origin. Do not domain-shard on HTTP/2 the way you did in 2014. Upgrade protocols after the payload is sane.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "HTTP/2 and HTTP/3: What Multiplexing Actually Changes for Real Apps" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

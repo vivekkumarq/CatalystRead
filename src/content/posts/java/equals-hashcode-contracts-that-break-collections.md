@@ -3,6 +3,7 @@ title: "equals, hashCode, and the Contracts That Break Collections"
 slug: "equals-hashcode-contracts-that-break-collections"
 description: "A broken equals or hashCode doesn't crash your program — it quietly corrupts HashMaps and HashSets in ways that only show up much later."
 publishedAt: "2025-04-21"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -78,3 +79,13 @@ The object is still in the set — iterating will find it — but `contains` and
 | Don't use mutable fields in equals/hashCode for map/set keys | Object becomes unfindable after mutation |
 
 If you're overriding one of `equals` or `hashCode` by hand and not the other, stop — that's very likely a bug waiting to be discovered in production, not in code review. Prefer records or your IDE's generator, both of which keep the two in lockstep automatically.
+
+## A worked failure mode
+
+An entity uses mutable `id` in `hashCode`. It is put in a `HashSet` before persist (`id=null`), then id is assigned; the set cannot find it. A Lombok `@Data` on a JPA entity includes a lazy collection in equality and triggers lazy loads in `HashSet`. The failure is equality that changes while hashed, or that touches the database. Use business keys that are stable, or identity for entities, and never include lazy relations.
+
+## When this is the wrong tool
+
+Custom equality is the wrong tool when identity is enough. Do not implement `equals` for entities "because the IDE warned." Value objects should be equal by value; entities usually by id once assigned. Keep collections honest.
+
+Treat the counterexample as part of the spec. Someone will apply "equals, hashCode, and the Contracts That Break Collections" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

@@ -71,3 +71,11 @@ Testing only the default path.
 ## When this is the wrong tool
 
 A one-time migration that can be a deploy. Flags are not permissions (use authz). Do not flag every CSS color. If you cannot operate a flag service, env vars for a weekend may be enough. Experiments need statistics, not just flags. Trunk-based development without flags is possible with branch-by-abstraction for some changes.
+
+## A worked failure mode
+
+Flags accumulate; a boolean soup means no one can reason about prod. A flag is reused for a different meaning. The default in code is true and the flag service is down, flipping everyone on. The failure is flags without lifecycle. Name, owner, expiry, default-safe, and delete.
+
+Flags are the wrong tool for configuration that is not temporary. They are the wrong way to hide incomplete security. Do not wrap every line. Use flags for staged rollout and kill switches you will remove.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Feature Flags Architecture: Beyond the Boolean Toggle" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

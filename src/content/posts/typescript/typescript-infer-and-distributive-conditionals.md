@@ -83,3 +83,11 @@ If the runtime value is right there, `typeof` and a named interface beat a 15-li
 - `infer` names are only used on the true branch; failure path is `never` or a documented default.
 - Public helpers have names; 12-line nested conditionals stay private.
 - Debug with a concrete `type Debug = ...` before blaming the compiler.
+
+## A worked failure mode
+
+A distributive conditional accidentally distributes over a union and produces `Foo | Bar` APIs that are too wide. `infer` in a recursive type hits depth limits. The failure is a type-level program nobody can debug. Add brackets to disable distribute when you mean a whole union; keep types shallow.
+
+Conditional type puzzles are the wrong tool if an interface would do. Do not infer what you can pass as a generic parameter. Use them at library boundaries, sparingly.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "infer and Distributive Conditional Types, Without the Folklore" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

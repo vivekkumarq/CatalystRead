@@ -3,6 +3,7 @@ title: "Evaluating LLM Applications: Offline Evals and Regression Suites"
 slug: "evaluating-llm-applications"
 description: "How to build an eval suite that catches LLM application regressions before deploy, from labeled datasets to LLM-as-judge pitfalls."
 publishedAt: "2026-06-20"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -55,3 +56,11 @@ An eval suite that runs manually before a release gets skipped under deadline pr
 | Latency/cost per eval run | Silent performance regressions alongside quality ones |
 
 Offline evals won't catch everything — production traffic always finds cases your dataset didn't anticipate — so pair the suite with ongoing production monitoring and a habit of feeding real failures back into the eval set. The suite should grow every time something breaks in the wild; that's what keeps it relevant instead of static.
+
+## A worked failure mode
+
+A team ships a summarizer with a 50-example golden set scored by an LLM-as-judge. Offline scores stay flat while production tickets spike: the judge and the product model share the same verbosity bias, so long, confident summaries score well even when they drop a negation. A week later a prompt tweak that shortens answers tanks the judge score and gets reverted, even though human raters preferred it. The failure is an eval suite that cannot see the actual error class. The fix is a small, labeled slice for that class (negation, citation hallucination, PII leak), a cheap deterministic check where possible (schema, regex, grounded-span overlap), and a frozen judge prompt versioned like any other dependency. Human review on a rotating sample is the calibration, not a one-time launch ritual.
+
+## When this is the wrong tool
+
+If the task is classification with a closed label set, train or prompt a classifier and measure precision/recall; a chat eval harness is overhead. If you cannot name the failure you care about, more eval prompts will not help. Do not use an LLM judge as the only gate for safety or billing-critical output. Offline suites will not catch traffic-shape bugs (timeouts, truncated context, tool schema drift). When the product is a thin wrapper over a model API with no retrieval or tools, a handful of regression prompts may be enough. Build a heavy eval platform only when changes ship weekly and the cost of a silent quality drop exceeds the cost of labeling.

@@ -3,6 +3,7 @@ title: "Giving Code Review Feedback That Lands"
 slug: "giving-code-review-feedback-that-lands"
 description: "How to write code review comments that engineers actually act on, without triggering defensiveness or turning review into a status contest."
 publishedAt: "2025-08-05"
+updatedAt: "2026-09-16"
 category: "Career"
 tags:
   - Career
@@ -34,3 +35,11 @@ Ask genuine questions rather than encoding a preference as a question. "Why not 
 A review with forty comments delivered six hours after submission reads very differently from the same forty comments split across two rounds with the biggest structural issues raised first. Front-load architectural concerns — the ones that might mean re-doing the approach — before nitpicking variable names, so the author isn't polishing code that's about to be rewritten. And when a review is going to carry a lot of feedback, a short synchronous conversation often resolves in ten minutes what would take three days of comment threads, without either side losing the thread of what actually needs to change.
 
 The through-line across all of this is that code review feedback is a form of writing, and writing that's read by someone under time pressure and mild ego investment needs more care than an email to a peer. Getting the technical content right is necessary. It's the phrasing, sequencing, and evident respect for the author that determine whether the feedback actually changes the code.
+
+## A worked failure mode
+
+A reviewer leaves 40 nits on naming and one buried comment that the approach is unsafe in production. The author spends a day renaming, merges, and the race ships. Another reviewer writes "this is wrong" on a design the author cannot change because of a deadline they were not told. The author stops sending them review. The failure is mixing blocking issues with taste, and skipping the summary. Lead with the one or two merge blockers, separate optional nits, explain the failure mode with a scenario, and offer to pair on the hard part. Praise a specific good test so the signal is not only negative.
+
+## When this is the wrong tool
+
+A giant review is the wrong tool after you skipped the design review; you are now bikeshedding a decided architecture. Chat comments are the wrong place for career feedback. Do not rubber-stamp to be nice on a security path. If you lack context, say so and ask for a walkthrough instead of inventing requirements. Review is for changing the change set in front of you; long-term style belongs in linters and docs.

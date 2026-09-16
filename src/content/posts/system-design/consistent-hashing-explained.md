@@ -81,3 +81,13 @@ The property that matters in each case is the same: node count changes affect *O
 Karger et al. introduced consistent hashing in 1997 for web caches: the ring was a way to keep a cache hit rate from collapsing when servers appeared and disappeared. Amazon's Dynamo paper later made virtual nodes (they called them "tokens") the default production story — not because the math changed, but because real clusters are small enough that a handful of physical positions on the ring leave hot shards. Cassandra, Riak, and a generation of client-side memcached libraries inherited that same picture.
 
 Jump hashing and rendezvous hashing (HRW) solve the same "minimal remapping" problem with different data structures. They are worth knowing when you cannot cheaply store a large virtual-node map, or when you need weighted nodes without painting hundreds of extra points on a ring. The interview-friendly ring diagram is still the right mental model; production systems often pick a later variant once the metadata cost shows up.
+
+## A worked failure mode
+
+Virtual nodes are too few; one physical node owns a third of keys after a scale event. A hash ring is used for sticky sessions and a node death dumps users without a replica. Lookups use a different hash than writes. The failure is a ring without vnodes, replication, and one function. Use many vnodes, replica N, and test add/remove.
+
+## When this is the wrong tool
+
+Consistent hashing is the wrong tool for a 2-node pair (mod 2 is fine). It will not replace a database. Do not hash user ids if you needed range queries. Use it when you must rebalance a cache or shard set with minimal movement.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Consistent Hashing, Explained From First Principles", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

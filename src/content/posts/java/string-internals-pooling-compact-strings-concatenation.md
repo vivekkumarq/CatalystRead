@@ -3,6 +3,7 @@ title: "String Internals: Pooling, Compact Strings, and Concatenation"
 slug: "string-internals-pooling-compact-strings-concatenation"
 description: "Strings look like the simplest type in Java, but the string pool, compact string encoding, and concatenation strategy all affect memory and speed directly."
 publishedAt: "2025-07-30"
+updatedAt: "2026-09-16"
 category: "Java"
 tags:
   - Java
@@ -76,3 +77,13 @@ for (String id : ids) {
 | High-duplication runtime strings at scale | Consider `intern()`, after measuring |
 
 None of this requires micro-managing every string in ordinary code — the compiler and runtime handle the common cases well. It matters specifically in hot paths: request parsing, log formatting under high throughput, and any loop that builds strings proportional to input size.
+
+## A worked failure mode
+
+`intern()` is called on every request header to "save RAM." The intern table grows without bound and pauses. Concatenation in a loop uses `+` and allocates a pile of intermediates (or, in a later JDK, still surprises in a debug build). The failure is intern as a cache and folklore about `+`. Use a bounded cache if you must intern, and `StringBuilder` in loops, and measure with JFR.
+
+## When this is the wrong tool
+
+`intern()` is the wrong cache. Do not micro-optimize string concat in logging you will not keep. Compact strings are not a reason to store binary in `String`. Write clear code; intern only for truly shared, bounded vocabularies.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "String Internals: Pooling, Compact Strings, and Concatenation" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

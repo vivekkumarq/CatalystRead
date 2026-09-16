@@ -3,6 +3,7 @@ title: "Detecting and Handling Model Drift in Production"
 slug: "detecting-and-handling-model-drift"
 description: "Why models degrade quietly after deployment, how to detect drift with statistical tests before it shows up in business metrics, and what to do about it."
 publishedAt: "2026-03-13"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -56,3 +57,13 @@ The immediate signals are your early warning system; the label-based signal is g
 Don't auto-retrigger a full retrain the moment PSI crosses a threshold — that's how you end up retraining on a one-day anomaly (a marketing campaign, a holiday) and baking noise into production. Instead: alert a human, hold the affected feature or segment for review, and only retrain once you've confirmed the shift is structural rather than transient. For concept drift specifically, retraining on the same labeling logic that's now stale won't help — you often need to revisit label definitions before touching the model at all.
 
 Drift monitoring isn't a nice-to-have you add after an incident. It's the mechanism that turns "the model is degrading somewhere" into "feature X on segment Y drifted starting three days ago," which is the difference between a two-hour fix and a two-week investigation.
+
+## A worked failure mode
+
+PSI on inputs pages every Monday because a weekly batch shift is expected. Nobody watches score distributions or delayed labels. A retrain on drifted heuristic labels cements the new (worse) world. The failure is a noisy monitor without an action. Monitor features and predictions, confirm with labels, then retrain or fall back to a known model.
+
+## When this is the wrong tool
+
+Drift dashboards are the wrong tool if you cannot retrain or roll back. Do not retrain daily on 200 rows. Detect drift when you have a response; otherwise you have a graph.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Detecting and Handling Model Drift in Production" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

@@ -3,6 +3,7 @@ title: "WebClient in Production: Timeouts, Retries, and Connection Pools"
 slug: "webclient-patterns-timeouts-retries-connection-pools"
 description: "The WebClient configuration that RestTemplate never forced you to think about, and why the defaults are wrong for most production traffic."
 publishedAt: "2025-05-30"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -71,3 +72,14 @@ Size `maxConnections` from actual numbers: expected concurrent calls to this spe
 ## One Client Per Downstream, Not One Client for Everything
 
 A single shared `WebClient` for every outbound call means one slow, unreliable downstream can exhaust the connection pool that a completely unrelated, healthy downstream also depends on. Give each significant downstream dependency its own `WebClient` bean with its own pool, timeouts, and retry policy tuned to that service's actual behavior. It's more configuration up front, but it turns "one dependency is having a bad day" into an isolated, contained problem instead of a cascading one.
+
+## A worked failure mode
+
+WebClient is created per request, leaking resources. Timeouts are infinite; retries hit POST. The event loop is blocked with `.block()` in a parallel flood. Connection pool is 500 against a 50-conn backend. The failure is a client without a lifecycle. Share the client, timeout, retry only safe methods, never block the event loop in volume.
+
+## When this is the wrong tool
+
+WebClient is the wrong tool if RestClient/blocking on virtual threads is simpler for your stack. Do not mix blocking and reactive randomly. Use WebClient when you are already on Reactor and will set timeouts.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "WebClient in Production: Timeouts, Retries, and Connection Pools", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

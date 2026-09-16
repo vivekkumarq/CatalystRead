@@ -72,3 +72,13 @@ Secondary indexes, multi-key transactions, query-by-attribute, and low-latency c
 - Keys are deterministic; retries do not mint copies.
 - Versioning or immutability on objects that are the system of record.
 - Cross-region is called out as async; range GET for large blobs.
+
+## A worked failure mode
+
+A pipeline writes `latest.json` then immediately reads it from another region. Intermittently the reader sees yesterday. Another job lists a prefix to find new objects during a flood of writes and misses keys; it never recovers because there is no inventory or event. Overwrites of the same key hide poison data with no versioning. The failure is using object storage like a POSIX filesystem. Prefer unique keys, listings via inventory or notifications, and read-after-write only on the patterns the provider actually guarantees.
+
+## When this is the wrong tool
+
+Object storage is the wrong tool for a high-rate compare-and-swap lock, for POSIX semantics, and for tiny chatty files as a database. Do not implement a queue with list-and-delete on a hot prefix. Use a database for mutable rows and S3 for immutable blobs with explicit versions. If you need POSIX, use a file system.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Object Storage Consistency and the Request Patterns That Survive It" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

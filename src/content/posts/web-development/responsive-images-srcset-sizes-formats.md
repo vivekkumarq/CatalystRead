@@ -105,3 +105,11 @@ Using 100vw for a sidebar image.
 ## When this is the wrong tool
 
 Tiny icons should be SVG or a sprite, not five raster srcsets. Do not srcset a 20 KB logo five ways. User-generated images without an image pipeline cannot magically grow srcset. Background videos are a different problem. If the image is decorative CSS, `image-set` may fit better than `<img>`. Skip AVIF if encode time in the upload path is the product bottleneck and WebP is enough.
+
+## A worked failure mode
+
+`srcset` lists widths but `sizes` is `100vw` for a 200px column; mobile downloads a 2000px image. Art direction is skipped and a cropped face is unreadable. A WebP is served without a JPEG fallback to an old webview. The failure is srcset without sizes. Match sizes to layout, provide fallbacks, and test DPR.
+
+Responsive images are the wrong tool for a 12kb SVG icon. Do not generate 20 variants for a tiny thumbnail. Use them when photographic bytes dominate LCP.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Responsive Images: srcset, sizes, and Modern Formats", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

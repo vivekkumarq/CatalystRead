@@ -76,3 +76,13 @@ Token-level contextual models own modern NLP. Character-level SKUs and code iden
 - Frequent-word subsampling is on for language-like data.
 - Eval is a product task, not only a t-SNE screenshot.
 - Rare-tail behavior was inspected (skip-gram vs CBOW choice).
+
+## A worked failure mode
+
+Skip-gram with negative sampling is trained on a tiny corpus with a huge embedding size. Frequent words get decent vectors; rare SKUs collapse to noise. Cosine is then used as a recommender without checking that antonyms often sit near each other because they share contexts. A product team ships "similar items" that are opposites. The failure is an unsupervised geometry treated as a catalog of meaning. Use domain tokenization, subsample frequent tokens, and evaluate with labeled similar/dissimilar pairs, not a t-SNE screenshot.
+
+## When this is the wrong tool
+
+Word2Vec is the wrong tool for contextual meaning ("bank" river vs finance) and for sentence similarity. It is outdated as a general NLP backbone versus pretrained transformers. Do not Word2Vec a 200-document corpus. Use it for cheap co-occurrence vectors on large unlabeled text when you will measure a downstream task.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "word2vec: Skip-gram, Negative Sampling, and Why Embeddings Went Mainstream" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

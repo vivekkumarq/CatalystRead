@@ -73,3 +73,11 @@ Expecting typo-tolerance like Elasticsearch by default.
 ## When this is the wrong tool
 
 100M documents, faceted search, per-user scoring: a search engine. Fuzzy log search. Need of near-real-time at huge ingest. Polyglot analyzers. If the "search" is an exact id lookup, use the PK. Do not FTS as a cache of another system of record you already query by id. Elasticsearch is also the wrong first tool for 2k rows.
+
+## A worked failure mode
+
+A product catalog uses `to_tsvector` on a column that concatenates title and HTML. Rank is dominated by boilerplate. Updates rewrite the vector on every keystroke-sized save, blocking writers. Queries use `OR` of many terms without gin and time out. A user searches an SKU; stemming turns it into a stop word. The failure is FTS as a dump of strings without dictionaries, weights, and an update policy. Weighted vectors, unaccent/simple for SKUs, and async update of a search document column would have kept it honest.
+
+In-database FTS is the wrong tool at web-search scale with facets, or when you need relevance research. It is the wrong tool for log analytics. Do not FTS as a substitute for a unique index on SKU. Stay in the DB while the corpus is modest and the queries are language search plus SQL filters; leave when relevance and ops demand a search engine.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Full-Text Search Inside Your Database (Before You Reach for Elasticsearch)" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

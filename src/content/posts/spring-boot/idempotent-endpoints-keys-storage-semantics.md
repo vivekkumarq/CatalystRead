@@ -3,6 +3,7 @@ title: "Designing Idempotent Endpoints: Keys, Storage, and Semantics"
 slug: "idempotent-endpoints-keys-storage-semantics"
 description: "A concrete pattern for idempotency keys in Spring Boot APIs, covering storage choice, request matching, and what to return on a replayed request."
 publishedAt: "2025-12-15"
+updatedAt: "2026-09-16"
 category: "Spring Boot"
 tags:
   - Spring Boot
@@ -80,3 +81,13 @@ Keys don't need to live forever. A retention window of 24–72 hours covers real
 ## Idempotency Keys Are Not a Substitute for Database Constraints
 
 Treat the idempotency layer as a fast-path optimization that catches the overwhelming majority of retries cleanly, not as the only correctness guarantee. Keep a real unique constraint on the underlying business data too — an `order_number` or a payment's provider transaction ID — as the last line of defense for the rare gap the idempotency table doesn't catch, such as a key that legitimately expired between a client's first attempt and its retry.
+
+## A worked failure mode
+
+Idempotency keys are stored in memory per pod. Retries hit another pod and double-charge. Keys expire in 10 seconds while the client retries in 30. The key is derived from user id only, colliding unrelated payments. The failure is a key store that is not shared and a key that is not unique per intent. Shared TTL store, client-generated keys per attempt bundle, same request hash.
+
+## When this is the wrong tool
+
+Idempotency keys are the wrong tool for GET. They will not fix a non-atomic downstream. Do not key only on user. Use them on money and create endpoints clients retry.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Designing Idempotent Endpoints: Keys, Storage, and Semantics" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

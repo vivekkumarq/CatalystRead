@@ -72,3 +72,11 @@ Every replica needs a stable ID for G-Counters and unique tags. Recycling a repl
 - Tombstone/compaction story for any set or sequence type.
 - Replica IDs are durable and not reused.
 - Inventory-like invariants have a non-CRDT reservation path.
+
+## A worked failure mode
+
+A collaborative editor uses a last-write-wins map for a bank-like balance because "CRDT" was on the slide. Two offline clients both apply -50; both win in different orders; money is created or destroyed depending on merge. Another team uses an OR-set for unique emails and cannot explain why a re-added email resurrected. The failure is picking a CRDT whose algebra does not match the business invariant. Counters, sets, and text have different laws. If you need a total order on money, you need a primary or a consensus log, not a casual merge.
+
+## When this is the wrong tool
+
+CRDTs are the wrong tool for unique constraints, double-entry bookkeeping, and any invariant that is not preserved by the merge function. They are overkill for a single-region CRUD app. Do not CRDT a document if you can lock a row. Use CRDTs when concurrent edits without a primary are a true requirement and you can prove the merge is the product behavior you want.

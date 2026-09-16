@@ -109,3 +109,11 @@ Returning `Optional` from a getter of a required field.
 ## When this is the wrong tool
 
 Fields, parameters, DTOs, arrays. `null` in a local 5-line method is fine. Optional is not a Maybe monad for all errors — exceptions or Result types. Do not wrap `int` (use `OptionalInt` only if you must). If the API is a Map get, `getOrDefault` may be enough. Avoid Optional in serializable messages.
+
+## A worked failure mode
+
+`Optional` is a field on a JPA entity, serialized as an empty object, and used as `Optional<Optional<T>>` in an API. `orElse(expensive())` always runs expensive. `get()` is called because "we know." The failure is Optional as a type for everything. Return it from methods that may lack a value, never as fields in entities, and use `orElseGet`.
+
+Optional is the wrong tool for collections (empty list) and for primitive streams (`OptionalInt` maybe). Do not use it to hide nulls from a poorly modeled domain. Use it at API returns, sparingly.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Optional in Java: Intended Use and Common Abuse" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

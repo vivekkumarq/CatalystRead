@@ -3,6 +3,7 @@ title: "HTTP Caching: Cache-Control, ETags, and CDN Interplay"
 slug: "http-caching-cache-control-etags-cdn"
 description: "How Cache-Control directives and ETags interact with browser and CDN caches, and where each layer disagrees in ways that cause stale content bugs."
 publishedAt: "2026-07-07"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - HTTP
@@ -57,3 +58,14 @@ Even with `s-maxage` set correctly, updating content before its TTL expires requ
 ## Vary: the header people forget
 
 If a response differs by `Accept-Encoding`, `Accept-Language`, or an auth-dependent header, `Vary` tells caches to key on that header too — omitting it is how a CDN ends up serving one user's gzip-negotiated or localized response to someone else entirely.
+
+## A worked failure mode
+
+`Cache-Control: public` on HTML with user names. ETags are weak and generated from timestamps so they never match. A CDN ignores `Vary: Cookie` and serves mixed users. The failure is caching personalized responses. Private/no-store for personalized; hashed assets with long cache; CDNs that honor Vary or split caches.
+
+## When this is the wrong tool
+
+HTTP caching is the wrong tool to hide a missing index. ETags are the wrong validator if you can hash content. Do not cache POSTs. Cache immutable bytes aggressively; be conservative on HTML.
+
+Treat the counterexample as part of the spec. Someone will apply "HTTP Caching: Cache-Control, ETags, and CDN Interplay" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.
+A CDN that ignores `Cache-Control` because a legacy page rule says "cache everything" will outrank your origin headers. Inventory those rules the same week you ship new directives, and test with a logged-in cookie and a logged-out request. If those two responses can ever share a cache key, you have a privacy incident, not a performance win.

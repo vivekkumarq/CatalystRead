@@ -3,6 +3,7 @@ title: "The Regular Expressions Engineers Actually Need"
 slug: "regular-expressions-engineers-actually-need"
 description: "A practical tour of the regex features worth mastering — named groups, lookaround, sticky matching, Unicode properties — and when to reach for a parser instead."
 publishedAt: "2025-12-14"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Regular Expressions
@@ -73,3 +74,13 @@ isLetters("hello1");  // false
 ## When to stop using regex
 
 Regex is a poor tool for anything with nesting or recursive structure — matching balanced parentheses, parsing JSON, or extracting values from HTML. It's not that it's impossible for simple cases, it's that the pattern becomes unreadable and fragile faster than you'd expect. The rule of thumb: if you find yourself writing a regex to validate or extract from a format that has its own grammar (JSON, HTML, a config DSL), stop and use an actual parser or the format's official library. Regex is for flat, line-oriented, or token-level matching — not for structure.
+
+## A worked failure mode
+
+An email regex from a wiki is catastrophic backtracking on a long `a@a.a.a...` string and pins the event loop. A parser uses regex to match HTML. Unicode is forgotten; `\w` misses letters. The failure is unbounded regex on untrusted input and the wrong parser. Use possessive/`atomic` where available, timeouts, and a real parser for grammars.
+
+## When this is the wrong tool
+
+Regex is the wrong tool for nested HTML, CSV with quotes, and email validation per RFC. Do not paste 20-year-old patterns. Use regex for simple tokens and bounded line patterns.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "The Regular Expressions Engineers Actually Need", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

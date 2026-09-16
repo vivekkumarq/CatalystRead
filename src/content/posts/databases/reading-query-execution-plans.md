@@ -3,6 +3,7 @@ title: "Reading Query Execution Plans Without Guessing"
 slug: "reading-query-execution-plans"
 description: "A field guide to reading EXPLAIN output, spotting sequential scans that shouldn't be there, and turning a query plan into an actual fix."
 publishedAt: "2024-09-24"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -42,3 +43,13 @@ The `cost=` numbers on each node are arbitrary units, not milliseconds — usefu
 ## Turning a plan into a fix
 
 A plan tells you what happened, not what to change, so translate it into one of a few concrete actions: add or reorder a composite index to match the leading predicate, run `ANALYZE` if estimates are off, rewrite a query so a `WHERE` clause is sargable instead of wrapping the column in a function, or accept that the plan is already close to optimal and the real fix is fetching less data. Treating the plan as a diagnostic tool rather than an oracle is what separates fixing the actual bottleneck from cargo-culting an index that doesn't move the number at all.
+
+## A worked failure mode
+
+`EXPLAIN` without `ANALYZE` is used to "prove" an index is used. Production has different statistics; the plan seq-scans. Another team sees a nested loop and rewrites to a CTE that the planner inlines back into the same loop. They never look at actual rows vs estimated rows. The failure is reading the shape and ignoring estimates and buffers. Use `EXPLAIN (ANALYZE, BUFFERS)`, check row estimate ratios, and only then add hints or rewrite.
+
+## When this is the wrong tool
+
+Plan-reading is the wrong first step if you have not logged the slow query. It will not help a lock wait. Do not `ANALYZE` a destructive statement on prod without a transaction you can roll back. Use plans when you have a statement and a scale problem, not to decorate a PR.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Reading Query Execution Plans Without Guessing" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

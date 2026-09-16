@@ -3,6 +3,7 @@ title: "MVCC: How Postgres Handles Concurrency Without Locking Everything"
 slug: "mvcc-how-postgres-handles-concurrency"
 description: "How Postgres lets readers and writers proceed without blocking each other, what a snapshot actually is, and where MVCC's costs show up later."
 publishedAt: "2024-10-29"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -45,3 +46,13 @@ Old row versions don't vanish on their own — something has to physically remov
 ## Practical takeaways
 
 MVCC means you generally don't need to reach for explicit read locks to get consistent reporting queries against a live system — a plain snapshot already gives you that. But it also means long-running transactions are more dangerous than they look: an old open transaction holds back the point up to which vacuum can safely clean up dead versions, so a forgotten `BEGIN` left open in a psql session can quietly cause bloat across the entire database, not just the tables it touched.
+
+## A worked failure mode
+
+A long transaction is opened by a forgotten admin session. VACUUM cannot reclaim dead tuples; bloat explodes; a reporting query sees a snapshot from hours ago and double-counts. Another app uses `SELECT ... FOR UPDATE` on a hot row for a cache fill, serializing the site. The failure is ignoring snapshot age and lock duration. Keep transactions short, watch `n_dead_tup` and idle-in-transaction, and do not hold row locks while calling the network.
+
+## When this is the wrong tool
+
+Reasoning about MVCC is the wrong rabbit hole if you need a queue; use `FOR UPDATE SKIP LOCKED` or a real queue. MVCC will not make a lost-update go away if you read-modify-write without a version check. Do not raise isolation to SERIALIZABLE as a first fix for application bugs. Understand MVCC when you operate Postgres; use application-level versioning for business invariants.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "MVCC: How Postgres Handles Concurrency Without Locking Everything", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

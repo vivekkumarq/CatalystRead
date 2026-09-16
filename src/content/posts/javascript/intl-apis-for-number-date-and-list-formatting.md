@@ -100,3 +100,11 @@ Creating a formatter per table cell in a render loop.
 ## When this is the wrong tool
 
 Protocol timestamps should be ISO-8601, not `toLocaleString`. Do not use Intl to serialize JSON. Binary size: if you polyfill full ICU on a tiny embedded WebView, a custom formatter may be smaller. `Intl.Segmenter` is the wrong tool if you only need `split(' ')`. For rounding money, use integer cents plus a formatter — Intl is display, not a ledger.
+
+## A worked failure mode
+
+Prices are formatted with `toLocaleString` without a locale or currency, so a US server renders `$` for a DE user or uses the wrong grouping. A list formatter is used for a legal enumeration that must use "and" in English and a different conjunction in another language without tests. Time zones default to the server. The failure is Intl without a locale policy. Pass `locale` and `currency` from the user profile, and snapshot tests per locale.
+
+Hand-rolled formatters are the wrong default. Intl is the wrong tool only if you must match a pixel-perfect print standard it cannot. Do not format money as floats. Use Intl with explicit locales.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Stop Hand-Rolling Formatters: The Intl APIs You're Underusing" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

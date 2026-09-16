@@ -3,6 +3,7 @@ title: "Batch vs. Streaming Feature Computation"
 slug: "batch-vs-streaming-feature-computation"
 description: "How to decide when features need real-time streaming computation versus a scheduled batch job, and how to keep the two consistent with each other."
 publishedAt: "2026-05-11"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -63,3 +64,13 @@ The most damaging mistake in this space isn't picking the wrong one — it's imp
 ## The architecture that avoids the skew
 
 The durable fix is a shared feature definition, expressed once, that both pipelines execute — a framework like Feast or a feature-store platform that lets you write the transformation logic once and compile it to both a batch job and a streaming job, rather than hand-writing the same logic twice in different languages or frameworks. If your team can't yet invest in that shared abstraction, the fallback is at minimum a shared test suite that runs both implementations against the same sample events and asserts identical output — cheap insurance against a bug that would otherwise hide for months.
+
+## A worked failure mode
+
+Training uses T-1 day batch features; serving uses a stream that includes a click that is almost the label. Offline AUC is 0.94; production is chance. A stream lag then fills zeros and scores collapse. The failure is skew and freshness. Share pipelines, ban future-adjacent features, and SLO the stream.
+
+## When this is the wrong tool
+
+Streaming feature platforms are the wrong tool for a daily batch. Batch point-in-time is the wrong tool if you promised sub-second features you do not compute. Pick the decision cadence first.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Batch vs. Streaming Feature Computation" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

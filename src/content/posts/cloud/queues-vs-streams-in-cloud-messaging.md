@@ -3,6 +3,7 @@ title: "Queues vs Streams in Cloud Messaging: Picking the Right Primitive"
 slug: "queues-vs-streams-in-cloud-messaging"
 description: "The real architectural differences between message queues and event streams, and why picking the wrong one causes problems that only show up under load."
 publishedAt: "2025-11-03"
+updatedAt: "2026-09-16"
 category: "Cloud"
 tags:
   - Cloud
@@ -74,3 +75,12 @@ kinesis.put_record(
 ```
 
 Choosing the partition key deliberately — here, `order_id` — is what makes per-order ordering hold. Using a random or evenly-distributed key for load-balancing purposes while assuming global ordering is a mistake that only surfaces once traffic is high enough to actually interleave across partitions.
+
+## A worked failure mode
+
+A team puts order events on a queue and fans out by having each consumer delete the message. A second consumer never sees the event; inventory and email diverge. They "fix" it by switching to a stream but treat it like a queue: no consumer groups, one pointer, and a poison event blocks everyone. The failure is the delivery and fan-out model. Queues are for competing consumers on a task. Streams are for replayable facts with independent offsets. Choose with the failure in mind: lost secondary consumer vs stuck partition.
+
+## When this is the wrong tool
+
+A stream is the wrong tool for 20 jobs a day; a table plus a worker is enough. A queue is the wrong tool if you need multiple independent readers of the same history. Do not use either as a database. HTTP retries with idempotency keys may beat both for a single downstream. Pick the primitive that matches competing work vs replay.
+If a dry-run in staging with production-like volume does not reproduce the benefit, do not scale the idea on a hope and a dashboard. Ship the smaller version that you can revert in one deploy.

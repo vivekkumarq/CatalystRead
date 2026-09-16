@@ -102,3 +102,11 @@ Clock skew `nbf` failures.
 ## When this is the wrong tool
 
 First-party browser apps often want BFF + cookie session. Service-to-service may want mTLS. If you need instant revoke, a session store or token introspection beats a 12h JWT. Opaque tokens plus introspection at the gateway can be simpler. Do not JWT-encode a shopping cart. Login for humans is OIDC; do not hand-roll JWT password grants.
+
+## A worked failure mode
+
+A JWT filter trusts `alg` and a symmetric secret in a repo. There is no audience check. Logout is a client delete while the token is valid for 24h. The failure is stateless as unrevocable. Short TTL, rotate, pin alg, validate iss/aud, and a denylist if you must kill tokens.
+
+JWTs are the wrong session for a simple server-rendered app. Do not put roles you cannot revoke for a day in a token without a plan. Use opaque sessions when you need instant kill.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Building Stateless JWT Authentication with Spring Security" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

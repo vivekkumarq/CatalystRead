@@ -3,6 +3,7 @@ title: "The Strangler Fig Pattern for Legacy Replacement"
 slug: "the-strangler-fig-pattern-for-legacy-replacement"
 description: "How the strangler fig pattern lets you replace a legacy system incrementally behind a routing layer, avoiding the failure modes of a big-bang rewrite."
 publishedAt: "2026-05-11"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -44,3 +45,13 @@ The router itself needs real investment, not a quick shim thrown together to unb
 ## Knowing when it's done
 
 The pattern's name implies an ending: the legacy system, gradually stripped of functionality as pieces are strangled away, eventually has nothing left to do. In practice, teams should set an explicit target for what "done" means and treat any remaining sliver of legacy functionality as a deliberate, documented decision rather than an indefinitely deferred cleanup — otherwise a genuinely well-run incremental migration can stall out in a permanent partial state that carries the maintenance cost of two systems instead of the benefit of either.
+
+## A worked failure mode
+
+A strangler proxy is added and never routes more than 2% of traffic; both systems grow. Dual writes diverge; a customer sees old balances. There is no kill date for the legacy path. The failure is a pattern without a strangulation metric. Route by a clear dimension, compare outputs, and delete the old path.
+
+## When this is the wrong tool
+
+Strangler is the wrong tool for a 2,000-line app you could rewrite in a week. Big-bang is the wrong tool for a core ledger, but strangler is also wrong if you cannot proxy. Use it when you can intercept and incrementally replace.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The Strangler Fig Pattern for Legacy Replacement" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

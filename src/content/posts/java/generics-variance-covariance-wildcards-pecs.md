@@ -90,3 +90,11 @@ Raw types. `List<List<?>>` confusion. Arrays of parameterized types. `Class<T>` 
 ## When this is the wrong tool
 
 If all types are the same concrete class, skip wildcards. Reflection-heavy code will fight generics. Do not PECS a public API into unreadability for one call site. Kotlin declaration-site variance is not Java — do not copy the syntax. If you need heterogeneous trees, visitors or sealed types may be clearer than `?`.
+
+## A worked failure mode
+
+An API is `List<Animal>` and callers cannot pass `List<Dog>`. Someone uses raw `List` to silence the compiler and heap pollution follows. `List<? extends T>` is used in a setter that needs to add. The failure is PECS ignored and raw types as an escape. Producer extends, consumer super, and no raw types in new code.
+
+Variance gymnastics are the wrong tool if a precise type or a copy would do. Do not wildcard every parameter. Use PECS at API boundaries where it removes casts; keep internals simple.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Generics Variance: Covariance, Wildcards, and PECS" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

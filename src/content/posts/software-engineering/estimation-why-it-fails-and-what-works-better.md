@@ -3,6 +3,7 @@ title: "Estimation: Why It Fails and What Works Better"
 slug: "estimation-why-it-fails-and-what-works-better"
 description: "Why software estimates are systematically wrong in the same direction, and the practices that produce more useful forecasts than a single number ever could."
 publishedAt: "2026-07-19"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -41,3 +42,13 @@ Calibrating against your own team's actual historical throughput — velocity, c
 ## Reframing what estimates are actually for
 
 The organizational habit that causes the most damage is treating an estimate as a commitment rather than a forecast, and then punishing the team when reality — which was always going to include some unknowns — diverges from the number given under incomplete information weeks or months earlier. Estimates are useful for sequencing, prioritization, and rough capacity planning. They stop being useful, and start being actively harmful, the moment they're treated as a promise that gets held against the team that made an honest guess.
+
+## A worked failure mode
+
+Story points are multiplied into a date that sales sold. Unknowns are estimated as if they were known. A buffer is consumed by scope, not risk. The failure is a number without a cone of uncertainty. Give ranges, spike unknowns, cut scope, and re-estimate after learning.
+
+## When this is the wrong tool
+
+Detailed estimates are the wrong tool for a research spike. Do not estimate to three decimals. Dates that are commitments need buffers and cuts, not tighter Fibonacci. Use forecasts when you have historical throughput; use dates as decisions, not as wishes.
+
+Treat the counterexample as part of the spec. Someone will apply "Estimation: Why It Fails and What Works Better" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.

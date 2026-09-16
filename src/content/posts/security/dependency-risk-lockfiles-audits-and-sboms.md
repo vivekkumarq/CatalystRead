@@ -3,6 +3,7 @@ title: "Dependency Risk: Lockfiles, Audits, and SBOMs"
 slug: "dependency-risk-lockfiles-audits-and-sboms"
 description: "How lockfiles, dependency audits, and software bills of materials work together to manage the risk of running someone else's code in production."
 publishedAt: "2026-04-22"
+updatedAt: "2026-09-16"
 category: "Security"
 tags:
   - Security
@@ -39,3 +40,13 @@ Generating one is largely automatable as part of your build pipeline, and severa
 ## Practices worth adopting beyond the tooling
 
 Minimize the dependency surface deliberately — a small utility function copied in is sometimes a better choice than a package with its own deep dependency tree, especially for something trivial. Pin and review updates to build tooling and CI scripts with the same scrutiny as application dependencies, since a compromised build step can inject malicious code without ever touching the application's own source. And treat a dependency's maintenance signals — last publish date, open security issues, number of maintainers — as part of the decision to adopt it in the first place, not just something to react to after a problem surfaces. The cheapest fix for supply chain risk is not adding it to begin with.
+
+## A worked failure mode
+
+`npm audit` is ignored except to add `--force`. A lockfile is not committed; CI and laptops diverge. An SBOM is generated but never used at deploy. A malicious transitive version is pulled by a floating range. The failure is artifacts without policy. Commit lockfiles, pin, review high advisories with context, and block deploys that do not match the SBOM you signed.
+
+## When this is the wrong tool
+
+Audit theater is the wrong tool if you still `curl | bash` in Docker. SBOMs you never query are paperwork. Do not freeze all upgrades forever. Use lockfiles and SBOMs when you will actually refuse unknown bits.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Dependency Risk: Lockfiles, Audits, and SBOMs", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

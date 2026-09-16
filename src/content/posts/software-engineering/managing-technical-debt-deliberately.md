@@ -58,3 +58,13 @@ Using debt as an excuse to skip tests.
 ## When this is the wrong tool
 
 If the product is dying, do not pay debt. A greenfield rewrite is usually the wrong payment. Do not create a "debt sprint" with no user-visible risk reduction. Metrics like "TODO count" are the wrong KPI. When the issue is staffing or unclear ownership, a rewrite will not help. Skip architecture astronomy.
+
+## A worked failure mode
+
+A "debt sprint" rewrites a module nobody asked to change while the actual debt is a missing backup. Interest is not measured (incidents, lead time). The failure is debt as vibes. List the interest, time-box, and stop when the metric moves.
+
+A debt program is the wrong tool if the issue is understaffing. Do not rewrite instead of deleting. Pay down debt that burns you; leave scars that do not.
+
+Treat the counterexample as part of the spec. Someone will apply "Managing Technical Debt Deliberately" to a problem that only looks similar at the noun level—same words, different constraints. Require a one-page fit check: scale, consistency, failure domains, and who is on call. If two of those are guesses, run a spike, not a rewrite. The expensive bugs are not the ones in the happy-path tutorial; they are the ones where the tutorial's silent assumptions were load-bearing.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Managing Technical Debt Deliberately" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

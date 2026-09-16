@@ -3,6 +3,7 @@ title: "Date/Time Handling With the Temporal API"
 slug: "date-time-handling-with-the-temporal-api"
 description: "Why the legacy Date object keeps causing bugs, what Temporal's PlainDate, ZonedDateTime, and Instant types fix, and how to plan a real migration."
 publishedAt: "2026-01-11"
+updatedAt: "2026-09-16"
 category: "JavaScript"
 tags:
   - Temporal API
@@ -56,3 +57,13 @@ Duration arithmetic is also explicit about calendar vs. exact time — adding "1
 Temporal shipped in Firefox and is available in current Node LTS releases behind no flag as of recent versions; Safari and Chrome support have been landing incrementally, so as of early 2026 you should verify actual coverage against your target browser matrix rather than assuming universal support — it's close, but not yet safe to assume for browser-facing code without a check. For server-side Node code, adoption is generally safe today. If you need to ship to older browsers now, the `@js-temporal/polyfill` package implements the full proposal and is a reasonable bridge — use it with the plan to drop it once your minimum supported browser versions catch up, not as a permanent dependency.
 
 For new code, model dates and times as what they actually are — a plain calendar date, a wall-clock time, or a precise instant — rather than defaulting to `Date` out of habit. It removes an entire category of "which timezone did I mean here" bugs before they can happen.
+
+## A worked failure mode
+
+A booking app uses `Temporal.PlainDate` then converts with the system time zone on the server (UTC) and the browser (local) inconsistently; a user in UTC-12 loses a day. Another mixes `Date` and Temporal in the same arithmetic. DST on `PlainTime` plus a zone is ignored. The failure is types without a zone policy. Store Instant or zoned civil time on purpose, convert at the edge, and test a DST spring-forward.
+
+## When this is the wrong tool
+
+Temporal is the wrong tool if you only need Unix ms for logs. Polyfills may be the wrong size for a tiny page. Do not rewrite a working UTC-only pipeline for fashion. Adopt Temporal when civil dates and zones are the product.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Date/Time Handling With the Temporal API" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

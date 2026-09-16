@@ -89,3 +89,11 @@ OSIV hiding the problem until a thread pool.
 ## When this is the wrong tool
 
 If the access path is reporting, SQL/jOOQ is better than fetch graphs. Caching entities to hide N+1 still hits memory. Do not disable lazy loading globally. For one-off admin pages, N+1 of 20 rows is fine. GraphQL resolvers can reintroduce N+1 — use DataLoader, not JPA magic. If you migrated to JDBC aggregates, this ticket may already be dead.
+
+## A worked failure mode
+
+`open-in-view` hides lazy loads in a view; a JSON serializer triggers hundreds of queries. `join fetch` of two bags cartesian-explodes. A batch size is set globally and surprises a tiny association. The failure is lazy as a default on APIs. Detect with p6spy/hibernate stats, fetch graphs for list endpoints, turn OSIV off for APIs.
+
+JPA fetch tricks are the wrong tool if the endpoint should be a SQL projection. Do not EAGER globally. Use query-per-use-case for lists.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Hunting Down N+1 Queries in JPA Before They Hunt You" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

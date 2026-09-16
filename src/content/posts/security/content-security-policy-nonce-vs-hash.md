@@ -71,3 +71,13 @@ Use **nonces** when the HTML is assembled per request (SSR, user-specific boot d
 - Pipeline can recompute hashes when the boot snippet changes.
 - `style-src` is an explicit decision, not an accident of copying `script-src`.
 - Enforce is behind a rollout switch, not a Friday README change.
+
+## A worked failure mode
+
+A nonce is generated once at server boot and reused for every response; an attacker who saw one page can reuse it. Hashes are computed on pretty-printed source while the browser sees minified. `'unsafe-inline'` is added to "make Stripe work" and stays forever. The failure is CSP as a string you do not test. Per-response nonces, hashes of the exact bytes, report-only first, and a documented exception list with owners.
+
+## When this is the wrong tool
+
+A strict CSP is the wrong first week if you still reflect HTML. Nonces are the wrong tool for static files you could hash. Do not CSP-theater while XSS sinks remain. Use CSP as defense in depth after you stop building HTML from untrusted strings.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "CSP Nonces versus Hashes: Shipping a Policy That Survives a Real Frontend Build" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

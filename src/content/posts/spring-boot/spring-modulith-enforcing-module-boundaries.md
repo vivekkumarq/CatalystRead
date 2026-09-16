@@ -105,3 +105,13 @@ Multi-module Maven that still imports impl jars.
 ## When this is the wrong tool
 
 A 6-class app. Modulith is not a mesh. If you already have real microservices, package rules in one repo are a different problem. Do not use it as a substitute for code review of API design. Hexagonal ports may overlap — pick a vocabulary. If the team ignores the failing ArchUnit/Modulith test, the tool is theater.
+
+## A worked failure mode
+
+Modulith tests are skipped in CI; a cycle returns. Events are used but payloads include JPA entities that pull the graph across modules. The failure is a linter you do not run. Keep tests on, pass IDs not entities, and treat cycles as build breaks.
+
+Modulith is the wrong tool for a 4-class app. It will not replace product thinking. Use it when the codebase is large enough to cheat boundaries.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "Enforcing Module Boundaries in Spring Boot with Spring Modulith" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Enforcing Module Boundaries in Spring Boot with Spring Modulith" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

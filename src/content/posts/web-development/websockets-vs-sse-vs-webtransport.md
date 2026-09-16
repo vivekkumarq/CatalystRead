@@ -92,3 +92,11 @@ JSON-per-message without a size cap.
 ## When this is the wrong tool
 
 Polling every 30s is enough for a badge count. SSE cannot push binary easily or client-to-server. WebSockets are the wrong tool for request/response CRUD — use HTTP. WebTransport is the wrong default for a CRUD dashboard in 2026 if Safari support or intermediaries are unknown. Do not use any of them to replace a job queue between services; use a broker.
+
+## A worked failure mode
+
+A WebSocket is used for one-way server ticks; proxies buffer and kill idle connections; there is no heartbeat. SSE is used for a binary upload. WebTransport is chosen for a form that needed HTTP. The failure is the wrong channel. SSE for one-way text with auto-reconnect; WebSockets for duplex with pings; HTTP for request/response.
+
+WebSockets are the wrong tool for a stock quote you can poll every 30s. WebTransport is overkill without a need. Match the primitive to direction and payload.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "WebSockets vs. Server-Sent Events vs. WebTransport" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

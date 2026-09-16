@@ -1,8 +1,9 @@
-﻿---
+---
 title: "Multimodal Models in Real Products: Use Cases and Constraints"
 slug: "multimodal-models-in-real-products"
 description: "Where multimodal LLMs earn their cost in production products today, and the practical constraints around images, documents, and audio."
 publishedAt: "2026-07-30"
+updatedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
@@ -52,3 +53,11 @@ Images consume a meaningful number of tokens depending on resolution â€” a 
 ## Design the product around graceful degradation
 
 Multimodal extraction should never be a silent, trust-the-output pipeline for anything consequential. Surface confidence where the model can express it, validate extracted structured data against sane ranges the same way you would for text-based structured output, and give users an easy correction path for extracted fields rather than assuming perfect accuracy. Products that succeed with multimodal features tend to treat the model as a fast first-pass assistant that a human or a downstream validator checks, not as the final authority â€” the same pattern that works for text-based LLM features generalizes here, the failure modes are just visual instead of textual.
+
+## A worked failure mode
+
+An expense product sends phone photos of receipts to a multimodal model and books amounts from the generated JSON. In a dim photo the model reads `89.00` as `39.00` and invents a merchant that "looks similar" to a logo it knows. There is no second pass that checks OCR digits against the image crop, and no confidence threshold that routes low-quality photos to a human. A user with a handwritten tip line gets a confident wrong total. The failure is trusting open-ended visual reasoning for money. Constrain output to a schema, require the model to quote bounding boxes or raw crops for amounts, reject blurry inputs, and keep a human queue for totals above a limit or below a confidence score.
+
+## When this is the wrong tool
+
+If the document is a fixed-layout PDF with a template, classical OCR plus fields may be cheaper and more stable. Multimodal models are the wrong tool for medical imaging diagnosis without a regulated pipeline, and the wrong tool for "describe this meme" as a billed product feature. Do not send full-resolution video when a keyframe and transcript will do. If the image is only used to extract a barcode, use a barcode library. Reach for multimodal when layout varies and you can validate the extraction against business rules.

@@ -57,3 +57,9 @@ Tiny sequences (hundreds of tokens) may already be compute-bound; fusion wins le
 - Masks and packing are actually consumed by the fused kernel.
 - Decode/KV-cache IO is a separate discussion from training attention.
 - Kernel arch matches the GPU you run; fallbacks are visible in profiles.
+
+## A worked failure mode
+
+An inference stack enables a new attention kernel on GPUs that do not have the required tensor-core path, falls back silently to a memory-heavy implementation, and OOMs at context 8k after a "successful" deploy. Another team copies a fused kernel into a training job with custom masking and gets wrong gradients on padded tokens because the mask was not plumbed. Loss still decreases; a few sequence positions are systematically ignored. The failure is treating FlashAttention as a compiler switch with no golden test. Compare logits and a short training step against a reference attention on padded, packed, and variable-length batches before celebrating IO savings.
+
+IO-aware kernels are the wrong lever if you are bound on network all-reduce or on a CPU runtime. They will not fix a 100k-token prompt you should not send. Do not vendor-kernel hop weekly on the production trainer without numerical checks. If you call a hosted API, you do not pick the kernel. Use fused attention when you own the GPU path, have tests, and context length is actually the memory bottleneck.

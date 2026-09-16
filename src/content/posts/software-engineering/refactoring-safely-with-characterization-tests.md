@@ -68,3 +68,13 @@ Throwing away goldens because they are "ugly."
 ## When this is the wrong tool
 
 New code should have intent tests first. Characterization will not tell you the spec is wrong. Do not use it to freeze a UI you want to redesign. If you can extract a pure function and specify it, do that. Snapshot tests of entire pages are a cousin — use with care. Skip if the code is 20 lines and you can read it.
+
+## A worked failure mode
+
+Characterization tests snapshot a bug; the refactor preserves the bug and is called success. Coverage is of getters, not of the money path. The failure is characterizing without later tightening. Pin behavior, refactor, then replace pins with real specs as you learn.
+
+Characterization tests are the wrong tool for greenfield. Do not freeze garbage forever. Use them to get a foothold on untested legacy, then improve the spec.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Refactoring Safely With Characterization Tests" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Refactoring Safely With Characterization Tests" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

@@ -88,3 +88,13 @@ Reporting queries that join five tables never belonged in either repository. The
 - No `save` after a partial select of children.
 - `@Version` on roots that concurrent users edit.
 - One write stack per table.
+
+## A worked failure mode
+
+Spring Data JDBC is used with a graph of aggregates that JPA would have loaded; N queries appear and there is no persistence context to hide them. A 1:N is modeled as a root that is too large and every save rewrites children. The failure is pretending JDBC is JPA-lite. Model aggregates small, write joins yourself, enjoy the explicitness.
+
+## When this is the wrong tool
+
+JDBC is the wrong tool if you need lazy graphs and dirty checking and you accept that complexity. JPA is the wrong tool if you are fighting the session all day. Choose JDBC when SQL and aggregates are simple and explicit.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Spring Data JDBC: When JPA's Persistence Context Is the Bug" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.

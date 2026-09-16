@@ -3,6 +3,7 @@ title: "Service Workers and Offline Strategies That Don't Serve Stale Garbage"
 slug: "service-workers-offline-strategies"
 description: "A service worker with the wrong caching strategy is worse than no service worker at all. Here's how to pick the right one per resource type."
 publishedAt: "2026-03-27"
+updatedAt: "2026-09-16"
 category: "Web Development"
 tags:
   - Web Development
@@ -113,3 +114,13 @@ self.addEventListener('activate', (event) => {
 ## Offline Doesn't Mean "Everything Works"
 
 Realistic offline support means deciding, per feature, what degrades gracefully and what fails honestly. A cached product catalog viewable offline is achievable; a checkout flow that requires a live payment API is not, and the honest answer is a clear "you're offline, this needs a connection" message rather than a form that silently fails to submit. `navigator.onLine` and the `online`/`offline` events let you surface that state proactively instead of letting the user discover it through a failed request.
+
+## A worked failure mode
+
+A service worker caches `index.html` forever; users cannot escape a broken deploy. API POST is cached. Offline fallback is a blank page with no skip-waiting. The failure is a worker without versioning. Precache hashed assets, network-first for HTML, never cache mutations, and a kill switch.
+
+## When this is the wrong tool
+
+A service worker is the wrong tool for a mostly-online internal tool that now has stale bugs. It is not a CDN. Skip it until you need offline or controlled caching you will maintain.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Service Workers and Offline Strategies That Don't Serve Stale Garbage", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

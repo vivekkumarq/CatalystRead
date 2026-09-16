@@ -3,6 +3,7 @@ title: "Blameless Postmortems That Actually Change Things"
 slug: "blameless-postmortems-that-actually-change-things"
 description: "Why most postmortems produce a document nobody acts on, and what separates a blameless postmortem process that genuinely prevents repeat incidents."
 publishedAt: "2025-08-28"
+updatedAt: "2026-09-16"
 category: "Software Engineering"
 tags:
   - Software Engineering
@@ -34,3 +35,13 @@ Track completion rate across postmortems as its own metric. A team that closes 9
 ## Making the practice sustainable
 
 Postmortems for genuinely minor incidents, run with the same ceremony as a major outage, burn goodwill fast and teach people to dread the process. Calibrate the depth of review to the severity and novelty of the incident — a well-understood failure mode that's already been fixed once doesn't need the same five-whys treatment as something the team has never seen before. And share postmortems broadly, not just within the team that owned the incident; the most valuable ones are read by people on entirely different teams who realize they have the exact same latent risk in their own system, and fix it before it becomes their incident.
+
+## A worked failure mode
+
+A postmortem is blameless in tone and empty in action items. "Be more careful" is assigned to everyone. The same incident repeats. Another doc blames a named intern in a private channel. The failure is no mechanism. Actions have owners, due dates, and a review; contributing factors are systemic.
+
+## When this is the wrong tool
+
+A full postmortem is the wrong tool for a trivial, well-understood flake you already fixed. Theater docs are worse than none. Do not skip them when customers were impacted. Write them when you need the org to change a condition.
+
+A second, quieter failure is operational: the idea is copied from a talk into a path that has no rollback, no owner, and no metric that would show the invariant breaking. For "Blameless Postmortems That Actually Change Things", that usually means a Friday deploy with production as the first realistic test. Write down the user-visible symptom, the invariant, and the revert before you scale the pattern. If revert is a data rewrite, you do not have a revert—you have a project. Practice the failure in staging with production-sized data at least once, or you will practice it on customers.

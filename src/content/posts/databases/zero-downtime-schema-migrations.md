@@ -3,6 +3,7 @@ title: "Zero-Downtime Schema Migrations in Production"
 slug: "zero-downtime-schema-migrations"
 description: "Techniques for adding columns, changing types, and backfilling data on a live table without locking it or breaking the app mid-deploy."
 publishedAt: "2025-02-25"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -71,3 +72,13 @@ CREATE INDEX CONCURRENTLY idx_orders_priority ON orders (priority);
 ## The deploy-ordering half of the problem
 
 The other half of zero-downtime migrations isn't SQL at all — it's making sure the application code deployed *before* the migration and the code deployed *after* it can both run correctly against whichever schema version happens to be live during the rollout. That means additive changes first (new nullable column, deployed and backfilled) with application code updated to write to both old and new in a middle deploy, and only removing the old column in a final deploy once nothing references it. Skipping that staging and doing the rename or drop in the same deploy as the code change is what turns an otherwise lock-safe migration into a rolling-deploy outage anyway.
+
+## A worked failure mode
+
+A migration `ALTER TABLE ... ADD COLUMN ... DEFAULT {big expression}` rewrites a 200M-row table and takes an ACCESS EXCLUSIVE lock. Checkouts stop. Another drop of a column still referenced by a running old binary 500s. The expand/contract sequence was skipped. The failure is treating migrations like local dev. Add nullable columns, backfill in batches, dual-write, switch reads, then drop after the last old binary is gone. Practice on a prod-sized clone.
+
+## When this is the wrong tool
+
+Zero-downtime ceremony is the wrong tool for an internal tool with a maintenance window nobody uses. Do not dual-write forever. A rewrite lock is the wrong tool when a metadata-only default exists in your version. Use expand/contract when you have a real SLA and rolling deploys.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Zero-Downtime Schema Migrations in Production" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

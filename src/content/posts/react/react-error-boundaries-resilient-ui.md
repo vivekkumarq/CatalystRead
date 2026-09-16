@@ -111,3 +111,11 @@ Using an error boundary as control flow for expected 404s.
 ## When this is the wrong tool
 
 Error boundaries do not catch errors in event handlers, server actions unless rethrown into render, or the boundary's own fallback. They are the wrong tool for form validation. `try/catch` around await in an effect is still required. If you need isolation between micro-frontends, you need more than a React boundary (runtime and CSS). Do not use a boundary to hide a broken deploy — page and rollback.
+
+## A worked failure mode
+
+A single boundary wraps the app; a chart throw blanks the whole product including checkout. Event-handler errors are expected to be caught (they are not). A boundary's fallback throws. The failure is granularity and misunderstanding what boundaries catch. Isolate islands, log, and recover the rest of the page.
+
+Error boundaries are the wrong tool for expected validation. They do not catch async without help. Do not swallow errors without a report. Use them around optional UI.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Error Boundaries and Resilient UI Architecture in React" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

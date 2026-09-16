@@ -74,3 +74,13 @@ A single-author stylesheet of a few hundred lines does not need seven layers. Sp
 - No unlayered author CSS in app templates; leftover is a named, shrinking layer.
 - Vendor CSS enters through `layer()`.
 - A PR that adds three classes “to win” is sent back to change layer or use a utility.
+
+## A worked failure mode
+
+`@layer` is adopted but a third-party stylesheet is unlayered and always wins. `!important` is still used inside layers, undoing the point. Order of layers is declared differently in two bundles. The failure is layers without a total order. Define layer order once, import third parties into a layer, and ban important except overrides you document.
+
+## When this is the wrong tool
+
+Cascade layers are the wrong tool for a 20-line page. They will not fix inline styles from a CMS. Do not mix layers and a CSS-in-JS soup without a plan. Use layers when many sources compete.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "CSS Cascade Layers: Ending Specificity Wars Without !important" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

@@ -3,6 +3,7 @@ title: "API Batching and the DataLoader Pattern"
 slug: "api-batching-and-the-dataloader-pattern"
 description: "How request batching and the DataLoader pattern eliminate N+1 query storms in APIs, with a look at when batching helps and when it just adds latency."
 publishedAt: "2025-10-30"
+updatedAt: "2026-09-16"
 category: "Performance"
 tags:
   - Performance
@@ -50,3 +51,13 @@ The same idea applies outside GraphQL. REST APIs can expose batch endpoints (`PO
 Batching adds a small amount of latency to the fastest individual request because it waits to collect a batch before firing. For latency-critical single-item lookups where batching opportunities are rare, that wait doesn't pay for itself. Batching also assumes the downstream system actually benefits from bulk requests — some legacy APIs or poorly indexed tables perform batch queries no better than N individual ones, in which case you've added complexity without gains.
 
 The real signal that you need batching is a request pattern where the same expensive operation, keyed differently, executes many times within one logical request. Profile before adding a DataLoader layer everywhere; add it where the query counts actually spike with data volume, and measure the before-and-after query count, not just wall-clock time, since query count reduction is the leading indicator that the fix is actually working.
+
+## A worked failure mode
+
+A GraphQL page triggers 200 resolvers; each hits the DB. A DataLoader is added but keyed only on id, ignoring viewer ACL, so batching leaks a private row into another user's map. Another loader has no max batch size and builds a 10k-id `IN` that times out. Cache TTL is 5 minutes on a mutating object. The failure is batching without a key that includes auth and a bound. Include tenant and permission in the key, cap batches, and do not cache what you cannot invalidate.
+
+## When this is the wrong tool
+
+DataLoader is the wrong tool for a single query you can write as one SQL join. It will not fix an N+1 to a remote API with no batch endpoint. Do not batch writes that must be independent transactions. Use it for per-request coalescing of identical reads.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "API Batching and the DataLoader Pattern" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

@@ -75,3 +75,11 @@ Microservices split only because CQRS was on a slide.
 ## When this is the wrong tool
 
 A single Postgres with a SQL view is enough for most apps. CQRS is the wrong tool for a 3-table app. If you need reporting, a warehouse is better than a second OLTP model. Do not CQRS to avoid learning indexes. When writes and reads have the same shape and SLOs, one model wins. Event sourcing is optional and heavier — do not bundle them as a kit.
+
+## A worked failure mode
+
+A team splits reads and writes into two databases on day one of a CRUD app. The projection lags; users do not see their writes. There is no rebuild. The failure is ceremony. Start with one model; split when read load or model mismatch is real, and define lag SLOs and rebuilds.
+
+CQRS is the wrong tool for a to-do list. Event-sourcing-plus-CQRS is even more so. Use a read model when the query shape fights the write model.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "CQRS Without the Ceremony" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

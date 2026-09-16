@@ -103,3 +103,9 @@ CDK overlay attaching to `body` without copying the active `aria-hidden` on the 
 ## When this is the wrong tool
 
 Do not invent a focus trap for a native `<dialog>` that already has one. ARIA cannot fix a non-keyboardable canvas; provide a DOM alternative. If the control is a native checkbox, do not wrap it in a custom role. Accessibility overlays that "fix ARIA globally" are the wrong tool. For purely decorative motion, `aria-hidden` is enough — do not announce it.
+
+## A worked failure mode
+
+A custom dropdown sets `aria-expanded` but never moves focus into the list. Keyboard users open it, Tab lands on the page behind the overlay, and choosing an option leaves focus on a destroyed button. A screen reader announces the trigger twice because both the native button and a nested `<div role="button">` exist. Automated axe checks were green because they ran on the closed state. The failure is accessibility as attributes without a focus model. Trap or restore focus on open/close, one tab stop per control, test with a keyboard and a reader on the open state, and prefer CDK a11y primitives over reinvented roles.
+
+ARIA on a `<div>` is the wrong tool when a native `<select>` or `<button>` already does the job. Do not add `aria-label` that contradicts visible text. Custom widgets are the wrong default for date picking if the native picker meets the need. Ship native semantics first; add ARIA when you truly custom-draw the control.

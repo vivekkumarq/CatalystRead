@@ -3,6 +3,7 @@ title: "Defining SLOs and Error Budgets That Teams Actually Use"
 slug: "defining-slos-and-error-budgets"
 description: "How to set service level objectives and error budgets that drive real engineering decisions, instead of becoming a number nobody looks at after launch."
 publishedAt: "2026-01-12"
+updatedAt: "2026-09-16"
 category: "DevOps"
 tags:
   - SRE
@@ -54,3 +55,13 @@ This does two useful things simultaneously: it gives engineering an objective, p
 ## Setting the target realistically
 
 A target set too aggressively (99.99% for a service that has never measured above 99.7%) guarantees the budget is perpetually blown, which trains the team to ignore it entirely — the same failure mode as an alert that pages constantly and gets muted. Start by measuring current performance for a few weeks before setting any target, set the SLO slightly above the current baseline, and revisit it quarterly as the service and its usage patterns change. An SLO is a living target tied to actual user tolerance, not a one-time aspirational number picked in a planning meeting.
+
+## A worked failure mode
+
+An SLO is 99.99% on all HTTP 200s, including a health check that runs every second. The error budget never burns while users fail checkout on a 2-second timeout that still returns 200 with an error body. Another team sets a 99.9% SLO and pages on every budget burn in a week of experiments they approved. The failure is an SLO that does not match user pain, and a budget that is not a decision tool. Measure the user journey, exclude probes, and spend budget on launches you choose.
+
+## When this is the wrong tool
+
+SLOs are the wrong tool for a three-user internal script. They will not replace a missing owner. Do not copy Google's 99.99% if you cannot staff it. Error budgets are the wrong stick if product cannot actually freeze features. Use SLOs when leadership will honor the freeze and the metric is a user-visible success.
+
+The wrong-tool test is easier with a concrete customer. If a user can lose money, lose access, or see someone else's data when "Defining SLOs and Error Budgets That Teams Actually Use" is slightly misapplied, do not let the pattern ride on defaults. Tighten the API, add an assertion in CI, and refuse silent fallbacks that look like success. Most production failures here are not exotic; they are a missing bound, a missing key, or a missing check that the original paper assumed a careful operator would have.

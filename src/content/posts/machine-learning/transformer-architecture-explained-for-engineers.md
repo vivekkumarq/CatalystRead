@@ -68,3 +68,13 @@ The causal mask in decoder-only models is just an additive matrix of negative in
 If you're fine-tuning rather than building from scratch, the two knobs that matter most day to day are context length (which scales attention cost quadratically, so doubling context roughly quadruples the attention FLOPs) and the number of layers versus heads per layer, which trades depth of reasoning against breadth of parallel relational tracking. Neither is free, and neither is "more is strictly better" — profile before you scale either one.
 
 The 2017 paper is short by modern standards and still worth reading end to end. The architecture table, the scaled-dot-product formula, and the argument against recurrence are the parts that aged; later papers (FlashAttention, RoPE, grouped-query attention, mixture-of-experts) are mostly about making that same core cheaper or longer-context, not replacing it.
+
+## A worked failure mode
+
+An engineer copies a transformer block into a latency-critical ranker with 8k tokens of unstructured text per request, no pooling plan, and a CPU. p99 is seconds. Another drops positional encodings because "attention is permutation-invariant" and then cannot tell order-dependent queries apart. The failure is architecture tourism. Transformers cost quadratic attention unless you window or otherwise restrict; positions are part of the model. Start from the sequence length you can afford.
+
+## When this is the wrong tool
+
+A transformer is the wrong tool for a handful of numeric features. It is the wrong first model on 500 labeled rows. Do not use one to replace a SQL lookup. Use it when sequence structure matters and you have compute, data, and a serving budget.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "The Transformer Architecture, Explained for Engineers" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

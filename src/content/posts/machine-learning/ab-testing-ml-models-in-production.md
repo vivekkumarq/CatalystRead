@@ -3,6 +3,7 @@ title: "A/B Testing Machine Learning Models in Production"
 slug: "ab-testing-ml-models-in-production"
 description: "Offline metrics tell you a new model is better in theory. A/B testing tells you whether it actually moves the numbers that matter — here's how to do it right."
 publishedAt: "2026-05-17"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -63,3 +64,13 @@ Before exposing real users to a new model's decisions, run it in shadow mode: se
 | Full rollout | Ship | Full |
 
 Skipping straight from offline evaluation to full rollout is the step most postmortems trace back to. The A/B test isn't bureaucracy — it's the only stage that actually answers "does this model make the product better," as opposed to "does this model predict historical labels more accurately."
+
+## A worked failure mode
+
+A new ranker is A/B tested while training still uses all traffic, so treatment leaks into the next control model. Assignment is per request, users see both. The win metric is clicks; revenue falls. The failure is contamination and a proxy. User-level assignment, isolated training data, and a metric that matches money or retention.
+
+## When this is the wrong tool
+
+A/B tests are the wrong tool for n=80 or for irreversible launches. Do not A/B a crash fix. Offline eval catches catastrophes. Use online tests when assignment is stable and the metric is user-level.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "A/B Testing Machine Learning Models in Production" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.

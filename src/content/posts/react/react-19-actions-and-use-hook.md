@@ -97,3 +97,11 @@ Passing uncached fetch promises from a client component.
 ## When this is the wrong tool
 
 `use` is not a replacement for TanStack Query on a highly interactive client-only SPA. Do not use Actions for a search-as-you-type GET. Class components cannot `use`. If you must support browsers without the form action behavior you need, keep a client fetch path. `use` for non-promise thenables that never settle will hang the tree.
+
+## A worked failure mode
+
+`use()` is called conditionally after a hook, violating rules; another `use(promise)` in render without a cache creates a waterfalls of new promises each time. An Action succeeds on the client optimistic path and fails on the server; the form does not recover. The failure is new APIs without cache and error UI. Deduplicate promises, keep hooks unconditional, and reconcile Actions with errors.
+
+Actions/`use` are the wrong tool for a local toggle. Do not `use()` a new Promise each render. Prefer them for framework-integrated data and forms you will test.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "React 19 Actions and the use() Hook Explained" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

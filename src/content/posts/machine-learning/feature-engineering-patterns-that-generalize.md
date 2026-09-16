@@ -3,6 +3,7 @@ title: "Feature Engineering Patterns That Actually Generalize"
 slug: "feature-engineering-patterns-that-generalize"
 description: "A field guide to feature engineering techniques that hold up outside the notebook, from ratios and windowed aggregates to target encoding done safely."
 publishedAt: "2026-03-25"
+updatedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -66,3 +67,14 @@ Tree-based models can approximate interactions between features through successi
 ## The test that matters more than any individual technique
 
 Before trusting any engineered feature, ask: could I compute this exact value, from exactly this data, at the moment of prediction in production, with no access to anything that happens after that moment? Features that pass an offline cross-validation check but fail this test are the single most common cause of a model that looks great in evaluation and collapses in production.
+
+## A worked failure mode
+
+Target encoding uses the row's own label. Cities are one-hot with `handle_unknown='error'` and production hits a new city. A feature cannot be computed at serve time because it needed a future join. The failure is features that do not survive new keys or time. Out-of-fold encodings, unknown buckets, and serve-time availability checks.
+
+## When this is the wrong tool
+
+Clever features are the wrong tool if they only work via leakage. Do not one-hot unbounded IDs. Engineer what you can compute when the model must score.
+
+Copy-paste from an internal success is still a failure mode. The last team had different traffic, a different datastore, and six months of scars. "Feature Engineering Patterns That Actually Generalize" should be adopted with the scars attached: the dashboard they wished they had, the migration they feared, the incident that made the rule. If those artifacts are missing, you are adopting a slide. Spend a day interviewing the last on-call before you spend a quarter implementing their diagram.
+A feature that needs a join you cannot run in the 20ms scoring budget will be replaced by a zero in production and silently degrade. Inventory serve-time dependencies the way you inventory model files. If a feature cannot be computed from the request plus a point-in-time store, it does not belong in the training table.

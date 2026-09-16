@@ -93,3 +93,11 @@ Expecting runtime checks — these erase.
 ## When this is the wrong tool
 
 Runtime routers should parse URLs with a library. Do not type every pixel of CSS. If the set is finite, a string union is clearer. Template literals are the wrong tool for email validation. Codegen from a routes file is better than inferring from a giant template. Skip them when the team is fighting the checker more than bugs.
+
+## A worked failure mode
+
+A template literal type is used to parse real URLs; it becomes a 10k-instantiation error and the compiler dies. Runtime still does not validate. The failure is types as parsers. Use templates for small, closed sets (event names); parse URLs at runtime.
+
+Template literal types are the wrong tool for unbounded strings. They will not replace a schema. Use them for autocomplete of finite patterns.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Template Literal Types in Practice" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

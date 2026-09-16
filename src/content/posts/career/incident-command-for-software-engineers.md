@@ -81,3 +81,11 @@ Game days should practice handoff and comms, not only the technical inject. The 
 - One person with keyboard for mutating production.
 - Timeboxed hypotheses; failed ones stay on the timeline.
 - Handoff is written; postmortem facilitator is not the IC.
+
+## A worked failure mode
+
+Checkout is down. Six engineers debug in one thread. The person who knows payments also drafts the status page, forgets to post for 25 minutes, and customers tweet screenshots of a blank spinner. Someone restarts a pod that was the only remaining healthy replica because there was no IC to say "stop changing the system until we have a snapshot." A later handoff is "still looking" with no timeline or next action. The failure is missing roles. Name an IC, a comms owner, and investigators. Write the first customer sentence and the current hypothesis in fifteen minutes. Handoff with a paste of facts, not a vibe.
+
+## When this is the wrong tool
+
+Full ICS theater is the wrong tool for a three-person company at 11am on a staging bug. Do not appoint an IC who then also owns every mitigation. Incident command will not fix a missing pager or a system with no metrics. If the event is a known feature flag rollback, a short runbook beats a command structure. Use IC when coordination cost exceeds debugging cost: multiple teams, customers waiting, and changes that can make it worse.

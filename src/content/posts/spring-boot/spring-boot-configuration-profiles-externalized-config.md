@@ -100,3 +100,11 @@ Profile-specific files that override each other mysteriously (`last wins`). Secr
 ## When this is the wrong tool
 
 Feature flags are not Spring profiles. Do not use profiles for tenant customization at runtime. A 200-key yaml is a smell — split modules. Kubernetes ConfigMaps vs Spring Cloud Config: pick one source of truth. If the process must reconfigure live, you need a watch, not a profile. Skip XML `applicationContext` for new apps.
+
+## A worked failure mode
+
+`prod` secrets sit in `application-prod.yml` in git. Profile `dev` is active in prod because of an env typo. A relaxed binding maps the wrong property. The failure is profiles as secret stores. Use env/KMS, fail fast on missing props, and print the effective config at boot (redacted).
+
+Profiles are the wrong tool for per-tenant config at scale. Do not compile secrets. Externalize and verify.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Configuration Profiles and Externalized Config, Done Right" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

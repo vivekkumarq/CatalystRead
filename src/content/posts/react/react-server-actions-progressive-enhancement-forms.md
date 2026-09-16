@@ -112,3 +112,11 @@ Using GET forms for mutations because it "worked in demo."
 ## When this is the wrong tool
 
 A rich SPA canvas editor is not a form action. Search-as-you-type should not be a server action per key. If the backend is a public JSON API for mobile too, keep a shared handler, not only a Next-style action. Progressive enhancement is the wrong hill if the product is a WebGL game. Do not replace a well-tested REST mutation layer overnight for a single form.
+
+## A worked failure mode
+
+A Server Action is called from a client without a form; JS fails and the mutation cannot run. The action trusts hidden fields the client can edit (price). No revalidate, so the list stays stale. The failure is enhancement as optional security. Validate on the server, use real forms for the critical path, and revalidate.
+
+Server Actions are the wrong tool for a high-frequency slider. They are not a substitute for an API with a contract for third parties. Use them for first-party mutations with a no-JS story where it matters.
+
+When this pattern is stretched past its assumptions, the first outage looks like a mysterious performance cliff instead of a design limit. "Form Handling with Server Actions and Progressive Enhancement" fails that way when traffic mix, data shape, or team skill does not match the blog that sold the approach. Keep a kill switch: feature flag, smaller blast radius, or an older path that still works. Measure the thing the idea claims to improve, not a vanity graph. If you cannot name a workload where you would refuse to use it, you have not finished the design.

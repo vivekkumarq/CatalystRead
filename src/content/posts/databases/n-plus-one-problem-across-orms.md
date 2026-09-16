@@ -3,6 +3,7 @@ title: "The N+1 Problem Across ORMs, and How to Actually Fix It"
 slug: "n-plus-one-problem-across-orms"
 description: "Why the N+1 query problem keeps reappearing across every ORM, how to spot it before production does, and the fixes that actually hold up."
 publishedAt: "2025-03-13"
+updatedAt: "2026-09-16"
 category: "Databases"
 tags:
   - Databases
@@ -64,3 +65,13 @@ Eager loading everything by default has its own cost — fetching relations you 
 ## Catching it before production
 
 The durable fix isn't vigilance, it's automation: tools like Rails' `bullet` gem or Django's `select_related`-detection linters raise the alarm in development or CI the moment a lazy load happens inside a loop, which catches the pattern at the point it's introduced instead of after it's degraded a production page for months.
+
+## A worked failure mode
+
+A list page loads 50 orders; each lazily loads customer and 20 lines. 1,000 queries, p99 2s. The ORM dashboard looks "fine" because each query is 2ms. A naive `join fetch` then cartesian-products lines and customers and allocates a 200MB graph. The failure is lazy defaults plus unmeasured pages. Log query count per request, use a batch IN / dataloader, or a dedicated query with aggregation. Fix the page, not a global EAGER that destroys other endpoints.
+
+## When this is the wrong tool
+
+Micro-optimizing the ORM is the wrong tool when the page should not load 50 full graphs. An ORM is the wrong layer for a reporting cube. Do not "solve N+1" by prefetching the entire database. Use explicit queries for list endpoints and keep the ORM for simple CRUD.
+
+A worked anti-pattern: the team ships the architecture, then staffs it like a toy. "The N+1 Problem Across ORMs, and How to Actually Fix It" needs boring operations—backups, timeouts, ownership, and a budget for the tax the idea always charges (compaction, replay, dual writes, extra latency, extra types). Unstaffed taxes come due at 2am. Put the tax in the design doc's cost section. If leadership wants the benefit without the tax, the honest answer is a smaller idea, not a heroic on-call rotation.
