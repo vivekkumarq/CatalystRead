@@ -3,6 +3,7 @@ title: "Being a Great Mentee and Mentor"
 slug: "being-a-great-mentee-and-mentor"
 description: "Mentorship advice usually addresses only one side of the relationship — the skills that make it work are different depending on which seat you're in."
 publishedAt: "2025-03-16"
+updatedAt: "2026-09-12"
 category: "Career"
 tags:
   - Career
@@ -30,3 +31,15 @@ This doesn't mean withholding answers as a rule — sometimes the fastest, kinde
 ## The part both roles share
 
 Both sides of a mentoring relationship benefit from treating it as a two-way exchange rather than a one-directional transfer of wisdom. A mentee who only ever asks and never offers a different perspective, a piece of context from their own experience, or even just genuine engagement with the mentor's reasoning, makes the relationship feel extractive over time. A mentor who never learns anything from the relationship — a fresh perspective, an unfamiliar tool the mentee is using, a question that makes them reconsider something they'd stopped questioning — is missing half of why the best mentoring relationships tend to last. The strongest pairings tend to look less like teacher and student and more like two people thinking out loud together, with one of them further along a particular path.
+
+## Cadence beats intensity
+
+A monthly hour that actually happens outperforms a weekly slot that gets cancelled three times out of four. Put the meeting on a calendar with a standing agenda: what you shipped, where you got stuck, one decision you want pressure-tested. If you only meet when something is on fire, the relationship never accumulates enough shared context to be useful on the hard, non-urgent questions — career direction, how to push back on a design, whether a project is actually growing you.
+
+Protect the time the way you would protect a production on-call rotation. Reschedule explicitly instead of ghosting. When you do skip, send a short written update anyway so the thread does not go cold.
+
+## What to measure, informally
+
+Mentorship that never changes behavior is just a pleasant conversation. After three months you should be able to point at something concrete: a design you wrote without being asked, a review habit you dropped, a scope conversation you handled differently, a promotion packet that now has evidence instead of adjectives. If nothing moved, the pairing may be a poor fit — different working styles, not enough overlapping technical ground, or a cadence that never survived the calendar. Ending a mentoring relationship politely is better than letting it become a monthly apology.
+
+A useful closing question for either side: "If we stopped meeting next month, what would you miss?" If neither of you has an answer, you already have the data.

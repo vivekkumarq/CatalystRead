@@ -12,7 +12,7 @@ It is built as a **fully static, Markdown-driven site** with no backend, no data
 
 ## ✨ Highlights
 
-- 📚 **220+ technical articles** across 30+ topics — from JVM internals and Spring Boot patterns to RAG architectures, Kafka's origin story at LinkedIn, and Netflix's chaos engineering
+- 📚 **470+ technical articles** across 30+ topics — from JVM internals and Spring Boot patterns to RAG architectures, Kafka's origin story at LinkedIn, and Netflix's chaos engineering
 - ⚡ **Fully static & fast** — every route is prerendered to plain HTML at build time; the initial page transfer is ~120 kB
 - ✍️ **Publish by pushing** — drop a `.md` file in the repo, push, and CI builds and deploys automatically
 - 🎨 **Premium reading experience** — editorial typography, dark mode, reader-adjustable fonts, and subtle motion design

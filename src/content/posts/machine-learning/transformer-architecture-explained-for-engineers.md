@@ -3,6 +3,7 @@ title: "The Transformer Architecture, Explained for Engineers"
 slug: "transformer-architecture-explained-for-engineers"
 description: "A practical walkthrough of self-attention, multi-head attention, and positional encoding for engineers who need to reason about transformers, not just use them."
 publishedAt: "2026-03-02"
+updatedAt: "2026-09-12"
 category: "Machine Learning"
 tags:
   - Machine Learning
@@ -10,6 +11,11 @@ tags:
   - Transformers
   - NLP
 trending: true
+sources:
+  - title: "Attention Is All You Need"
+    author: "Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez, Łukasz Kaiser, Illia Polosukhin"
+    publisher: "NeurIPS 2017"
+    url: "https://arxiv.org/abs/1706.03762"
 ---
 
 Every modern language model you've touched, from code completion tools to translation systems, is built on the same core idea introduced in 2017: replace recurrence with attention. Once you understand why that trade worked, the rest of the architecture stops feeling like magic and starts feeling like an engineering decision you'd have made too, given the constraints.
@@ -60,3 +66,5 @@ The causal mask in decoder-only models is just an additive matrix of negative in
 ## Practical implications
 
 If you're fine-tuning rather than building from scratch, the two knobs that matter most day to day are context length (which scales attention cost quadratically, so doubling context roughly quadruples the attention FLOPs) and the number of layers versus heads per layer, which trades depth of reasoning against breadth of parallel relational tracking. Neither is free, and neither is "more is strictly better" — profile before you scale either one.
+
+The 2017 paper is short by modern standards and still worth reading end to end. The architecture table, the scaled-dot-product formula, and the argument against recurrence are the parts that aged; later papers (FlashAttention, RoPE, grouped-query attention, mixture-of-experts) are mostly about making that same core cheaper or longer-context, not replacing it.

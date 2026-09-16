@@ -3,6 +3,7 @@ title: "Colossus: What Google Built After GFS Ran Out of Runway"
 slug: "google-colossus-gfs-successor"
 description: "Why Google's original GFS design hit a scaling wall and how its successor, Colossus, fixed the single-master bottleneck underneath nearly every Google product."
 publishedAt: "2025-09-10"
+updatedAt: "2026-09-12"
 category: "Google"
 tags:
   - Engineering at Scale
@@ -10,9 +11,17 @@ tags:
   - Distributed Systems
   - Storage
 sources:
-  - title: "Google Cloud Blog"
-    publisher: "Google"
-    url: "https://cloud.google.com"
+  - title: "The Google File System"
+    author: "Sanjay Ghemawat, Howard Gobioff, Shun-Tak Leung"
+    publisher: "SOSP 2003"
+    url: "https://research.google/pubs/pub51/"
+  - title: "Spanner: Google's Globally-Distributed Database"
+    author: "James C. Corbett et al."
+    publisher: "OSDI 2012"
+    url: "https://research.google/pubs/pub39966/"
+  - title: "Colossus under the hood: a peek into Google's scalable storage system"
+    publisher: "Google Cloud Blog"
+    url: "https://cloud.google.com/blog/products/storage-data-transfer/a-peek-behind-colossus-googles-file-system"
 ---
 
 The original Google File System was a genuine breakthrough, but its own success created the problem that eventually retired it. GFS's single-master design, one node holding all filesystem metadata for a cluster, was simple and effective when Google's storage footprint was merely enormous. By the mid-2000s it was approaching genuinely planetary, and a single master, however well-optimized, has a ceiling: metadata operations throughput, memory to hold the namespace, and failover time all bottleneck on one machine. Google needed a successor that kept GFS's core lessons — replication, tolerance of commodity hardware failure, huge sequential throughput — while removing the architectural ceiling. That successor was Colossus, and unlike GFS, Bigtable, and Spanner, Google never published a dedicated academic paper describing it in full; what's publicly known comes from conference talks, engineering blog posts, and references inside later papers like Spanner's.

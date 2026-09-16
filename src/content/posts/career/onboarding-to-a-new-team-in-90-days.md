@@ -3,6 +3,7 @@ title: "Onboarding to a New Team Effectively in 90 Days"
 slug: "onboarding-to-a-new-team-in-90-days"
 description: "A practical framework for the first 90 days on a new engineering team, from mapping the codebase to earning trust before shipping big changes."
 publishedAt: "2026-01-15"
+updatedAt: "2026-09-12"
 category: "Career"
 tags:
   - Career
@@ -30,3 +31,9 @@ By the third month you should have enough context to weigh in on decisions, not 
 ## The trust curve underneath all of it
 
 Every team calibrates trust based on evidence, and in the first 90 days you have almost none banked. Each well-scoped, well-executed contribution deposits a little; each overconfident misstep withdraws a lot more than it should, because early impressions carry disproportionate weight. The pace that feels frustratingly slow in week two is usually exactly what's needed to be moving fast and trusted by week twelve, and skipping that sequencing to look productive sooner almost always costs more time later than it saves.
+
+## A 90-day note you write for yourself
+
+On day 90, write a page: what the system actually does, where pages still go, which docs were lies, and one bet you would place for the next quarter. Share a trimmed version with your manager. That artifact does two jobs — it proves you learned the terrain, and it is the outline of your first real roadmap item. If you cannot write the page, you optimized for looking busy rather than for orientation, and the next 90 days will repeat the first.
+
+Keep a running list of "I do not know why this is like this" items. Retire them with answers, not with shrugs. Unresolved mysteries become the landmines in month four.

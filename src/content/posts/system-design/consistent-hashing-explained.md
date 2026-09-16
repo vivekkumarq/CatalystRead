@@ -3,12 +3,22 @@ title: "Consistent Hashing, Explained From First Principles"
 slug: "consistent-hashing-explained"
 description: "How consistent hashing limits data movement when nodes join or leave, and why virtual nodes are what makes it actually balanced."
 publishedAt: "2025-06-19"
+updatedAt: "2026-09-12"
 category: "System Design"
 tags:
   - System Design
   - Distributed Systems
   - Scalability
   - Databases
+sources:
+  - title: "Consistent Hashing and Random Trees: Distributed Caching Protocols for Relieving Hot Spots on the World Wide Web"
+    author: "David Karger, Eric Lehman, Tom Leighton, Matthew Levine, Daniel Lewin, Rina Panigrahy"
+    publisher: "STOC 1997"
+    url: "https://dl.acm.org/doi/10.1145/258533.258660"
+  - title: "Dynamo: Amazon's Highly Available Key-value Store"
+    author: "Giuseppe DeCandia et al."
+    publisher: "SOSP 2007"
+    url: "https://www.allthingsdistributed.com/files/amazon-dynamo-sosp2007.pdf"
 ---
 
 Naive hash-based sharding — `server = hash(key) % N` — works fine until N changes. Add or remove one node and the modulo shifts for nearly every key, which means nearly every cache entry misses at once and every piece of data needs to move. Consistent hashing exists specifically to make that number small.
@@ -65,3 +75,9 @@ Consistent hashing shows up under three recurring names, and it's the same mecha
 | Load balancer session affinity | Backend servers, hashed by server identity |
 
 The property that matters in each case is the same: node count changes affect *O(keys/N)* of the data, not *O(keys)*. That's the whole pitch — not perfect balance, not zero data movement, just proportional data movement instead of catastrophic reshuffling. If your system already tolerates a full rehash on scaling events (a nightly batch job, a system with a maintenance window), the added complexity of a hash ring may not be worth it. It earns its place specifically when nodes join and leave while the system stays live.
+
+## Where the original papers still matter
+
+Karger et al. introduced consistent hashing in 1997 for web caches: the ring was a way to keep a cache hit rate from collapsing when servers appeared and disappeared. Amazon's Dynamo paper later made virtual nodes (they called them "tokens") the default production story — not because the math changed, but because real clusters are small enough that a handful of physical positions on the ring leave hot shards. Cassandra, Riak, and a generation of client-side memcached libraries inherited that same picture.
+
+Jump hashing and rendezvous hashing (HRW) solve the same "minimal remapping" problem with different data structures. They are worth knowing when you cannot cheaply store a large virtual-node map, or when you need weighted nodes without painting hundreds of extra points on a ring. The interview-friendly ring diagram is still the right mental model; production systems often pick a later variant once the metadata cost shows up.
