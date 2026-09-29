@@ -100,9 +100,15 @@ export class SearchDialog {
 
   @HostListener('document:keydown', ['$event'])
   onGlobalKeydown(event: KeyboardEvent): void {
+    const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(
+      (event.target as HTMLElement | null)?.tagName ?? '',
+    );
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       this.search.dialogOpen.update((open) => !open);
+    } else if (event.key === '/' && !typing && !this.search.dialogOpen()) {
+      event.preventDefault();
+      this.search.dialogOpen.set(true);
     } else if (event.key === 'Escape' && this.search.dialogOpen()) {
       this.close();
     }

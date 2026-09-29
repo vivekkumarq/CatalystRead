@@ -51,7 +51,7 @@ import { Reveal } from '../../shared/directives/reveal.directive';
                 {{ post.category }}
               </a>
 
-              <h1 class="mt-4 text-[1.75rem] font-extrabold leading-[1.18] tracking-tight text-ink sm:text-4xl lg:text-[2.6rem]">
+              <h1 class="cr-title mt-4 font-extrabold text-ink">
                 {{ post.title }}
               </h1>
 

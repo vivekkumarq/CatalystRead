@@ -30,7 +30,7 @@ const PAGE_SIZE = 24;
             <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
               {{ kindLabel() }}
             </p>
-            <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-5xl">
+            <h1 class="cr-title mt-2 font-extrabold text-ink">
               {{ topic.name }}
             </h1>
             <p class="mt-3 text-[15px] text-ink-soft">

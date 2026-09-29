@@ -16,7 +16,7 @@ import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcru
         <div class="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
           <app-breadcrumbs [crumbs]="crumbs" />
           <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">About</p>
-          <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+          <h1 class="mt-2 cr-heading font-extrabold text-ink">
             {{ site.name }}
           </h1>
           <p class="mt-4 text-lg italic leading-relaxed text-ink-soft">{{ site.tagline }}</p>

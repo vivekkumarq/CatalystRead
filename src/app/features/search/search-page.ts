@@ -19,7 +19,7 @@ import { ArticleCard } from '../../shared/components/article-card/article-card';
     <div class="animate-page">
       <section class="cr-band">
         <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-          <h1 class="text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Search</h1>
+          <h1 class="cr-heading font-extrabold text-ink">Search</h1>
           <p class="mt-3 text-[15px] text-ink-soft">
             Find articles by title, description, topic, or tag.
           </p>

@@ -24,7 +24,7 @@ import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcru
           <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
             Contribute
           </p>
-          <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+          <h1 class="mt-2 cr-heading font-extrabold text-ink">
             Write for {{ site.name }}
           </h1>
           <p class="mt-4 text-[15px] leading-relaxed text-ink-soft sm:text-lg">

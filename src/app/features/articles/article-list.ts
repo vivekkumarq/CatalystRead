@@ -22,7 +22,7 @@ const PAGE_SIZE = 24;
       <section class="cr-band">
         <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
           <app-breadcrumbs [crumbs]="crumbs" />
-          <h1 class="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">
+          <h1 class="mt-4 cr-heading font-extrabold text-ink">
             All articles
           </h1>
           <p class="mt-3 max-w-2xl text-[15px] text-ink-soft">

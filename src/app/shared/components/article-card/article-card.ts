@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PostMeta } from '../../../core/models/post.model';
+import { PostsService } from '../../../core/services/posts.service';
 import { FormatDatePipe } from '../../pipes/format-date.pipe';
 
 @Component({
@@ -11,6 +12,8 @@ import { FormatDatePipe } from '../../pipes/format-date.pipe';
     <article class="group h-full">
       <a
         [routerLink]="['/articles', post().slug]"
+        (mouseenter)="posts.prefetch(post().slug)"
+        (focus)="posts.prefetch(post().slug)"
         class="relative flex h-full flex-col overflow-hidden rounded-2xl border border-edge bg-surface/70 p-5 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:bg-surface hover:shadow-xl hover:shadow-accent-soft sm:p-6"
       >
         <span
@@ -49,4 +52,5 @@ import { FormatDatePipe } from '../../pipes/format-date.pipe';
 })
 export class ArticleCard {
   readonly post = input.required<PostMeta>();
+  protected readonly posts = inject(PostsService);
 }

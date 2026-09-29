@@ -14,7 +14,7 @@ import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcru
       <section class="cr-band">
         <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
           <app-breadcrumbs [crumbs]="crumbs" />
-          <h1 class="mt-4 text-3xl font-extrabold tracking-tight text-ink sm:text-4xl">Topics</h1>
+          <h1 class="mt-4 cr-heading font-extrabold text-ink">Topics</h1>
           <p class="mt-3 max-w-2xl text-[15px] text-ink-soft">
             Every article, organized by category, company, and tag.
           </p>

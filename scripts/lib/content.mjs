@@ -46,7 +46,15 @@ function renderMarkdown(markdown) {
     renderer: {
       heading({ tokens, depth }) {
         const html = this.parser.parseInline(tokens);
-        const plain = html.replace(/<[^>]+>/g, '');
+        /* parseInline escapes entities; headings are reused as plain text for
+           the table of contents and the anchor id, so decode them back. */
+        const plain = html
+          .replace(/<[^>]+>/g, '')
+          .replace(/&#39;/g, "'")
+          .replace(/&quot;/g, '"')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&amp;/g, '&');
         const id = uniqueId(slugify(plain));
         if (depth === 2 || depth === 3) {
           headings.push({ id, text: plain, level: depth });

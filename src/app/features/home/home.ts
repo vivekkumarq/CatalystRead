@@ -22,8 +22,8 @@ import { Reveal } from '../../shared/directives/reveal.directive';
               <span class="size-1.5 rounded-full bg-accent"></span>
               {{ site.name }}
             </p>
-            <h1 class="mt-5 text-[2rem] font-extrabold leading-[1.12] tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
-              Catalyzing ideas into <span class="text-accent">understanding</span>.
+            <h1 class="cr-display mt-5 font-extrabold text-ink">
+              Catalyzing ideas into <span class="text-accent">understanding</span>
             </h1>
             <p class="mx-auto mt-5 max-w-2xl text-[15px] leading-relaxed text-ink-soft sm:text-lg">
               {{ site.pitch }}

@@ -51,6 +51,17 @@ export class PostsService {
       .filter((related): related is PostMeta => related !== undefined);
   }
 
+  private readonly prefetched = new Set<string>();
+
+  /** Warms an article's lazy chunk so the click that follows feels instant. */
+  prefetch(slug: string): void {
+    if (this.prefetched.has(slug)) {
+      return;
+    }
+    this.prefetched.add(slug);
+    void POST_LOADERS[slug]?.().catch(() => this.prefetched.delete(slug));
+  }
+
   async loadContent(slug: string): Promise<PostContent> {
     const loader = POST_LOADERS[slug];
     if (!loader) {

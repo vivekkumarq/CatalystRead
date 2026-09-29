@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { PostMeta } from '../../../core/models/post.model';
+import { PostsService } from '../../../core/services/posts.service';
 import { FormatDatePipe } from '../../pipes/format-date.pipe';
 
 @Component({
@@ -11,6 +12,8 @@ import { FormatDatePipe } from '../../pipes/format-date.pipe';
     <article class="group h-full">
       <a
         [routerLink]="['/articles', post().slug]"
+        (mouseenter)="posts.prefetch(post().slug)"
+        (focus)="posts.prefetch(post().slug)"
         class="cr-band relative flex h-full flex-col justify-between rounded-3xl border border-edge bg-surface/70 p-6 backdrop-blur-sm transition-all duration-200 hover:-translate-y-1 hover:border-accent/40 hover:shadow-2xl hover:shadow-accent-soft sm:p-10"
       >
         <div>
@@ -26,7 +29,7 @@ import { FormatDatePipe } from '../../pipes/format-date.pipe';
             </span>
           </div>
 
-          <h2 class="mt-5 text-2xl font-extrabold leading-[1.15] tracking-tight text-ink transition-colors group-hover:text-accent sm:text-4xl">
+          <h2 class="cr-title mt-5 font-extrabold text-ink transition-colors group-hover:text-accent">
             {{ post().title }}
           </h2>
 
@@ -52,4 +55,5 @@ import { FormatDatePipe } from '../../pipes/format-date.pipe';
 })
 export class FeaturedArticle {
   readonly post = input.required<PostMeta>();
+  protected readonly posts = inject(PostsService);
 }
