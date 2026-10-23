@@ -13,7 +13,7 @@ It is built as a **fully static, Markdown-driven site** with no backend, no data
 ## ✨ Highlights
 
 - 📚 **700+ technical articles** across 30+ topics — from JVM internals and Spring Boot patterns to RAG architectures, Kafka's origin story at LinkedIn, and Netflix's chaos engineering
-- ⚡ **Fully static & fast** — every route is prerendered to plain HTML at build time; the initial page transfer is ~120 kB
+- ⚡ **Fully static & fast** — every route is prerendered to plain HTML at build time; the initial page transfer is ~250 kB gzipped
 - ✍️ **Publish by pushing** — drop a `.md` file in the repo, push, and CI builds and deploys automatically
 - 🎨 **Premium reading experience** — editorial typography, dark mode, reader-adjustable fonts, and subtle motion design
 
@@ -48,7 +48,7 @@ It is built as a **fully static, Markdown-driven site** with no backend, no data
 
 ### Engineering
 - **Fully prerendered** — 500+ routes rendered to static HTML at build time for real SEO and instant first paint
-- **Lightweight by design** — article bodies and tables of contents ship as tiny lazy chunks (~2 kB each); the metadata index keeps the initial bundle at ~120 kB transfer
+- **Lightweight by design** — article bodies and tables of contents ship as tiny lazy chunks (~2 kB each), so the initial bundle carries only the metadata index (~250 kB gzipped JS and CSS)
 - **Zero runtime dependencies** beyond Angular — no component libraries, no CSS frameworks at runtime, system font stacks only
 - **Guest contributions** — the [Contribute](https://vivekkumarq.github.io/CatalystRead/contribute/) page generates a ready-to-submit article file; submissions arrive by email or pull request and are published only after review
 
