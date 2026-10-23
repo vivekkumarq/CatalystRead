@@ -39,13 +39,16 @@ export class PostsService {
     );
   }
 
+  /** A category page also lists posts tagged with the category's name
+      (e.g. a Java post tagged "Performance"); see collectTopics. */
   postsForTopic(topic: TopicInfo): PostMeta[] {
-    if (topic.kind === 'category') {
-      return this.posts.filter((post) => post.categorySlug === topic.slug);
-    }
     /* Tags are grouped by slug at build time, so "Fine-tuning" and
        "Fine-Tuning" are one topic; match on the slug, not the spelling. */
-    return this.posts.filter((post) => post.tags.some((tag) => slugify(tag) === topic.slug));
+    return this.posts.filter(
+      (post) =>
+        (topic.kind === 'category' && post.categorySlug === topic.slug) ||
+        post.tags.some((tag) => slugify(tag) === topic.slug),
+    );
   }
 
   related(post: PostMeta): PostMeta[] {

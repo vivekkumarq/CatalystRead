@@ -299,10 +299,19 @@ export function collectTopics(posts) {
     };
     category.count += 1;
     categories.set(post.categorySlug, category);
+  }
 
-    for (const tagName of post.tags) {
-      const tagSlug = slugify(tagName);
+  for (const post of posts) {
+    const postTags = new Map(post.tags.map((tagName) => [slugify(tagName), tagName]));
+    for (const [tagSlug, tagName] of postTags) {
       if (tagSlug === post.categorySlug) continue;
+      /* A tag spelled like a category would share its /topics/<slug> URL,
+         so it counts toward that category page instead of its own. */
+      const category = categories.get(tagSlug);
+      if (category) {
+        category.count += 1;
+        continue;
+      }
       const tag = tags.get(tagSlug) ?? { name: tagName, slug: tagSlug, kind: 'tag', count: 0 };
       tag.count += 1;
       tags.set(tagSlug, tag);
