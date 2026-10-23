@@ -185,8 +185,7 @@ export class Home {
     },
     {
       title: 'Prepare for design interviews',
-      detail:
-        'System design fundamentals plus the real architecture stories behind Netflix, Uber, Stripe and thirteen other companies that built at scale.',
+      detail: `System design fundamentals plus the real architecture stories behind Netflix, Uber, Stripe and ${this.posts.companyCategories.length - 3} other companies that built at scale.`,
       icon: 'M3 3v16a2 2 0 0 0 2 2h16M7 15l4-5 3 3 5-7',
     },
   ];
