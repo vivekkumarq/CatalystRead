@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, inject } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { Header } from './shared/components/header/header';
 import { Footer } from './shared/components/footer/footer';
@@ -27,4 +28,14 @@ import { BackToTop } from './shared/components/back-to-top/back-to-top';
     <app-back-to-top />
   `,
 })
-export class App {}
+export class App {
+  constructor() {
+    /* The router scrolls to #fragments with window.scrollTo, which ignores
+       CSS scroll-padding; reuse that value so headings clear the sticky header. */
+    const root = inject(DOCUMENT).documentElement;
+    inject(ViewportScroller).setOffset(() => [
+      0,
+      parseFloat(getComputedStyle(root).scrollPaddingTop) || 0,
+    ]);
+  }
+}
