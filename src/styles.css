@@ -304,7 +304,8 @@ li {
 
 input:focus-visible,
 textarea:focus-visible,
-select:focus-visible {
+select:focus-visible,
+main:focus-visible {
   outline: none;
 }
 
