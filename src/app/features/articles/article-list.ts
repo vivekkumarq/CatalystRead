@@ -47,6 +47,7 @@ const PAGE_SIZE = 24;
             [class.text-accent]="activeCategory() === null"
             [class.border-edge]="activeCategory() !== null"
             [class.text-ink-soft]="activeCategory() !== null"
+            [attr.aria-pressed]="activeCategory() === null"
           >
             All
           </button>
@@ -60,6 +61,7 @@ const PAGE_SIZE = 24;
               [class.text-accent]="activeCategory() === category.slug"
               [class.border-edge]="activeCategory() !== category.slug"
               [class.text-ink-soft]="activeCategory() !== category.slug"
+              [attr.aria-pressed]="activeCategory() === category.slug"
             >
               {{ category.name }}
             </button>

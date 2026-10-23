@@ -114,6 +114,7 @@ import {
                   [class.text-accent]="prefs.fontMode() === option.value"
                   [class.border-edge]="prefs.fontMode() !== option.value"
                   [class.text-ink-soft]="prefs.fontMode() !== option.value"
+                  [attr.aria-pressed]="prefs.fontMode() === option.value"
                 >
                   <span class="block text-base leading-none" [style.font-family]="option.stack">Ag</span>
                   <span class="mt-1 block text-[10px] font-medium">{{ option.label }}</span>
@@ -135,6 +136,7 @@ import {
                   [class.text-accent]="prefs.textSize() === option.value"
                   [class.border-edge]="prefs.textSize() !== option.value"
                   [class.text-ink-soft]="prefs.textSize() !== option.value"
+                  [attr.aria-pressed]="prefs.textSize() === option.value"
                 >
                   <span class="block leading-none" [style.font-size]="option.preview">A</span>
                   <span class="mt-1 block text-[10px] font-medium">{{ option.label }}</span>
