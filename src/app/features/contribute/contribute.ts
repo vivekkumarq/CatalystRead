@@ -81,6 +81,10 @@ import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcru
           />
           @if (slug()) {
             <span class="mt-1 block text-xs text-ink-faint">URL: /articles/{{ slug() }}</span>
+          } @else if (title().trim()) {
+            <span class="mt-1 block text-xs text-accent">
+              Include at least one Latin letter or digit — the article URL is built from the title.
+            </span>
           }
         </label>
 
@@ -226,7 +230,7 @@ export class Contribute {
 
   protected readonly isComplete = computed(
     () =>
-      this.title().trim() !== '' &&
+      this.slug() !== '' &&
       this.category() !== '' &&
       this.description().trim() !== '' &&
       this.body().trim() !== '',
