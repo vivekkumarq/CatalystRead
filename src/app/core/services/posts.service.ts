@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { PostContent, PostMeta, TopicInfo } from '../models/post.model';
 import { CATEGORIES, POSTS, POST_LOADERS, TAGS } from '../../generated/posts.generated';
+import { slugify } from '../utilities/slugify';
 
 @Injectable({ providedIn: 'root' })
 export class PostsService {
@@ -42,7 +43,9 @@ export class PostsService {
     if (topic.kind === 'category') {
       return this.posts.filter((post) => post.categorySlug === topic.slug);
     }
-    return this.posts.filter((post) => post.tags.includes(topic.name));
+    /* Tags are grouped by slug at build time, so "Fine-tuning" and
+       "Fine-Tuning" are one topic; match on the slug, not the spelling. */
+    return this.posts.filter((post) => post.tags.some((tag) => slugify(tag) === topic.slug));
   }
 
   related(post: PostMeta): PostMeta[] {

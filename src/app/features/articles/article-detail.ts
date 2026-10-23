@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 import { PostContent } from '../../core/models/post.model';
 import { PostsService } from '../../core/services/posts.service';
 import { SeoService } from '../../core/services/seo.service';
+import { slugify } from '../../core/utilities/slugify';
 import { ArticleCard } from '../../shared/components/article-card/article-card';
 import { ReadingProgress } from '../../shared/components/reading-progress/reading-progress';
 import { TableOfContents } from '../../shared/components/table-of-contents/table-of-contents';
@@ -213,7 +214,7 @@ export class ArticleDetail {
     const post = this.post();
     if (!post) return [];
     return post.tags
-      .map((name) => this.postsService.tags.find((tag) => tag.name === name))
+      .map((name) => this.postsService.tags.find((tag) => tag.slug === slugify(name)))
       .filter((tag): tag is NonNullable<typeof tag> => tag !== undefined);
   });
 
