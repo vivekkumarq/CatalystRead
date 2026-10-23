@@ -33,7 +33,7 @@ import {
       @if (open()) {
         <div
           class="animate-pop fixed inset-x-3 top-[4.5rem] z-50 max-h-[75vh] overflow-y-auto rounded-2xl border border-edge bg-surface p-5 shadow-2xl shadow-black/10 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-80"
-          role="menu"
+          role="group"
           aria-label="Appearance settings"
           (click)="$event.stopPropagation()"
         >
