@@ -234,17 +234,19 @@ export class Contribute {
 
   protected readonly markdown = computed(() => {
     const tags = this.tags().length > 0 ? this.tags() : [this.category()];
-    const tagLines = tags.map((tag) => `  - ${tag}`).join('\n');
+    /* JSON strings are valid YAML scalars, so quotes, backslashes, colons or
+       a leading # or [ typed by the reader cannot break the frontmatter. */
+    const yaml = (value: string) => JSON.stringify(value);
     const today = new Date().toISOString().slice(0, 10);
     return [
       '---',
-      `title: "${this.title().trim().replaceAll('"', "'")}"`,
-      `slug: "${this.slug()}"`,
-      `description: "${this.description().trim().replaceAll('"', "'")}"`,
-      `publishedAt: "${today}"`,
-      `category: "${this.category()}"`,
+      `title: ${yaml(this.title().trim())}`,
+      `slug: ${yaml(this.slug())}`,
+      `description: ${yaml(this.description().trim())}`,
+      `publishedAt: ${yaml(today)}`,
+      `category: ${yaml(this.category())}`,
       'tags:',
-      tagLines,
+      ...tags.map((tag) => `  - ${yaml(tag)}`),
       '---',
       '',
       this.body().trim(),
