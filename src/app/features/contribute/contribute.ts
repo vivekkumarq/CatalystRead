@@ -288,7 +288,9 @@ export class Contribute {
       `Title: ${this.title().trim()}\n` +
       `Category: ${this.category()}\n\n` +
       `--- article file below (or attached) ---\n\n`;
-    const body = (intro + this.markdown()).slice(0, 1800);
+    /* Cutting through an emoji leaves half a surrogate pair, which makes
+       encodeURIComponent throw; drop the orphaned half. */
+    const body = (intro + this.markdown()).slice(0, 1800).replace(/[\uD800-\uDBFF]$/, '');
     const mailto =
       `mailto:${this.site.contributeEmail}` +
       `?subject=${encodeURIComponent(`Article submission: ${this.title().trim()}`)}` +
