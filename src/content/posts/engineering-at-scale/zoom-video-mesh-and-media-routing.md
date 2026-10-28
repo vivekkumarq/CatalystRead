@@ -2,8 +2,8 @@
 title: "Zoom Video Mesh: Keeping Media Close When the Meeting Is Not in One Region"
 slug: "zoom-video-mesh-and-media-routing"
 description: "How Zoom's Video Mesh and cloud media routing try to keep RTP local to an enterprise while still reaching the global meeting fabric."
-publishedAt: "2026-11-19"
-updatedAt: "2026-11-19"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Zoom"
 tags:
   - Engineering at Scale

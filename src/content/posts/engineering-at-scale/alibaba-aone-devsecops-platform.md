@@ -2,8 +2,8 @@
 title: "Aone: Alibaba's Internal DevSecOps Platform When Every Team Would Otherwise Invent Jenkins"
 slug: "alibaba-aone-devsecops-platform"
 description: "How Alibaba's Aone platform centralized build, change, and security gates so thousands of applications could ship without each business unit owning a unique CI snowflake."
-publishedAt: "2026-12-06"
-updatedAt: "2026-12-06"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Alibaba"
 tags:
   - Engineering at Scale

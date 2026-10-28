@@ -2,8 +2,8 @@
 title: "GitLab Feature Flags: Progressive Rollout Without a Second Deploy Train"
 slug: "gitlab-feature-flags-and-progressive-rollout"
 description: "How GitLab built feature flags on an Unleash-compatible model so code can ship dark and roll out by percentage, actor, or environment."
-publishedAt: "2026-11-18"
-updatedAt: "2026-11-18"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "GitLab"
 tags:
   - Engineering at Scale

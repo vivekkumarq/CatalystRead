@@ -2,8 +2,8 @@
 title: "Elasticsearch: Lucene Shards, Replicas, and the Cluster That Is a Distributed Index"
 slug: "elasticsearch-lucene-shards-and-replicas"
 description: "How Elasticsearch wraps Lucene indexes as shards with replicas so search can scale out — and why shard count is a decision you will live with."
-publishedAt: "2026-12-14"
-updatedAt: "2026-12-14"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Elastic"
 tags:
   - Engineering at Scale

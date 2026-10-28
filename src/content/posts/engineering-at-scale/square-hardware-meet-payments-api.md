@@ -2,8 +2,8 @@
 title: "Square: When the Hardware Reader and the Payments API Have to Be One System"
 slug: "square-hardware-meet-payments-api"
 description: "How Square joined card readers, firmware, and a cloud payments API so a tap at the counter still produced an idempotent, reconcilable charge."
-publishedAt: "2026-11-28"
-updatedAt: "2026-11-28"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Square"
 tags:
   - Engineering at Scale

@@ -2,7 +2,7 @@
 title: "MAE: Mask Most of the Image, Reconstruct Pixels, Get a Strong ViT Encoder"
 slug: "mae-masked-autoencoders"
 description: "He et al. mask a large fraction of patches, encode the visible few, and decode pixels with a light decoder. Why 75% masking is the point, and how MAE pretraining changed vision self-supervision."
-publishedAt: "2026-11-20"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

@@ -2,8 +2,8 @@
 title: "Ingest Pipelines and ILM: How Elastic Moves Documents In and Indexes Out Without a Cron Wiki"
 slug: "elastic-ingest-pipelines-and-ilms"
 description: "How Elasticsearch ingest pipelines transform documents on the way in, and how Index Lifecycle Management rolls data from hot to delete without custom jobs."
-publishedAt: "2026-12-15"
-updatedAt: "2026-12-15"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Elastic"
 tags:
   - Engineering at Scale

@@ -2,7 +2,7 @@
 title: "AlphaGo: Search, Value, and Policy Networks in One Competitive Loop"
 slug: "alphago-mastering-go"
 description: "Silver et al. combined SL policy nets, a value net, RL self-play, and Monte Carlo tree search to beat a top human at Go. What to steal for decision systems that are not board games."
-publishedAt: "2026-11-27"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

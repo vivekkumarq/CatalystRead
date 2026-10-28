@@ -2,8 +2,8 @@
 title: "JStorm: Alibaba's Storm Fork When the In-House Stream Had to Outrun the Upstream"
 slug: "alibaba-jstorm-stream-processing"
 description: "How Alibaba forked Apache Storm into JStorm to get a faster, more operable stream processor for commerce and logging pipelines at internal scale."
-publishedAt: "2026-12-05"
-updatedAt: "2026-12-05"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Alibaba"
 tags:
   - Engineering at Scale

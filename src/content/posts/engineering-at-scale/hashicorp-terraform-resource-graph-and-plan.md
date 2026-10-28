@@ -2,8 +2,8 @@
 title: "Terraform's Plan: A Dependency Graph You Can Read Before You Break Production"
 slug: "hashicorp-terraform-resource-graph-and-plan"
 description: "How Terraform turned infrastructure changes into a directed graph of resources with an explicit plan step, so apply is not a surprise."
-publishedAt: "2026-11-13"
-updatedAt: "2026-11-13"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "HashiCorp"
 tags:
   - Engineering at Scale

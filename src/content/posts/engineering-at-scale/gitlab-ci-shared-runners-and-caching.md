@@ -2,8 +2,8 @@
 title: "GitLab Shared Runners: Fair CI Capacity, and the Cache That Lies"
 slug: "gitlab-ci-shared-runners-and-caching"
 description: "How GitLab.com scaled CI with shared runners, isolation, and caching — and why a cache hit that skips a compile can still ship the wrong artifact."
-publishedAt: "2026-11-16"
-updatedAt: "2026-11-16"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "GitLab"
 tags:
   - Engineering at Scale

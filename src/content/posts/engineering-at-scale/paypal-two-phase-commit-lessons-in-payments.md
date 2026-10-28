@@ -2,8 +2,8 @@
 title: "PayPal and Two-Phase Commit: When Distributed Transactions Were the Wrong Kind of Safety"
 slug: "paypal-two-phase-commit-lessons-in-payments"
 description: "How PayPal's architecture outgrew two-phase commit across databases, and why eventual consistency with compensating actions became the payments pattern."
-publishedAt: "2026-11-26"
-updatedAt: "2026-11-26"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "PayPal"
 tags:
   - Engineering at Scale

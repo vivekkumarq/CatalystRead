@@ -2,8 +2,8 @@
 title: "Gitaly: Git Storage as an RPC Service Instead of NFS on a Prayer"
 slug: "gitlab-gitaly-git-storage-service"
 description: "How GitLab extracted Git disk operations into Gitaly so the Rails app no longer spoke filesystem paths to a shared NFS server."
-publishedAt: "2026-11-17"
-updatedAt: "2026-11-17"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "GitLab"
 tags:
   - Engineering at Scale

@@ -2,8 +2,8 @@
 title: "Boundary: Privileged Access Without a Bastion Full of Standing Keys"
 slug: "hashicorp-boundary-privileged-access"
 description: "How HashiCorp Boundary brokers sessions to infrastructure so engineers get just-in-time access instead of a shared SSH key on a jump box."
-publishedAt: "2026-11-15"
-updatedAt: "2026-11-15"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "HashiCorp"
 tags:
   - Engineering at Scale

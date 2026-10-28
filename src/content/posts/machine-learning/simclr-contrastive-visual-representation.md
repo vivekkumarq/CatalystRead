@@ -2,7 +2,7 @@
 title: "SimCLR: Contrastive Visual Learning With Augmentations as the Task"
 slug: "simclr-contrastive-visual-representation"
 description: "Chen et al. showed that a simple InfoNCE setup with strong augmentations, a projection head, and large batches learns ImageNet features without labels. What to copy, and why the batch is part of the algorithm."
-publishedAt: "2026-11-21"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

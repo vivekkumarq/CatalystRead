@@ -2,8 +2,8 @@
 title: "Consul: Cataloguing Services With Gossip at the Edge and Raft at the Core"
 slug: "hashicorp-consul-service-discovery-and-raft"
 description: "How HashiCorp Consul combined Serf gossip for membership with a Raft-backed catalog so services could find healthy peers without a shared hosts file."
-publishedAt: "2026-11-11"
-updatedAt: "2026-11-11"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "HashiCorp"
 tags:
   - Engineering at Scale

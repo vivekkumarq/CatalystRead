@@ -2,8 +2,8 @@
 title: "Coinbase Custody: Key Ceremonies, HSMs, and the Human Protocol Around Crypto Keys"
 slug: "coinbase-crypto-custody-and-key-ceremony"
 description: "How Coinbase-style crypto custody treats private keys as a ceremony-backed system of HSMs, quorums, and air gaps rather than a string in a config file."
-publishedAt: "2026-11-30"
-updatedAt: "2026-11-30"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Coinbase"
 tags:
   - Engineering at Scale

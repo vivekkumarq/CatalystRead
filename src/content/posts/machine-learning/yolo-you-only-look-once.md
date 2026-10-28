@@ -2,7 +2,7 @@
 title: "YOLO: Detection as One Regression Over a Grid, Not a Multi-Stage Pipeline"
 slug: "yolo-you-only-look-once"
 description: "Redmon et al. framed object detection as a single CNN pass that predicts boxes and class probabilities on a spatial grid. Speed as a product constraint, and the localization trade that later YOLO versions kept renegotiating."
-publishedAt: "2026-11-13"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

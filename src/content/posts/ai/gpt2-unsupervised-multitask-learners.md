@@ -2,7 +2,7 @@
 title: "GPT-2: Unsupervised Multitask Learners and the End of Task-Specific Heads as a Default"
 slug: "gpt2-unsupervised-multitask-learners"
 description: "Radford et al. 2019 trained a decoder on WebText and showed zero-shot translation, QA, and summarization from next-token prediction. The interface shift that GPT-3 later scaled."
-publishedAt: "2026-11-03"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI

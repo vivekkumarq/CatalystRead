@@ -2,7 +2,7 @@
 title: "ImageNet: The Dataset That Turned Visual Recognition Into a Systems Problem"
 slug: "imagenet-large-scale-visual-recognition"
 description: "Deng et al. built a WordNet-organized image dataset at a scale that made large-scale classification a community sport. Why the benchmark still shapes models, and how its biases leaked into production."
-publishedAt: "2026-11-15"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

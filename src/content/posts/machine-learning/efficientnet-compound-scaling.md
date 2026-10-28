@@ -2,7 +2,7 @@
 title: "EfficientNet: Scale Depth, Width, and Resolution Together"
 slug: "efficientnet-compound-scaling"
 description: "Tan and Le replaced one-dimensional scaling with a compound coefficient that grows depth, width, and input size in a fixed ratio. NAS-found mobile blocks, and when compound scaling is the wrong knob."
-publishedAt: "2026-11-18"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

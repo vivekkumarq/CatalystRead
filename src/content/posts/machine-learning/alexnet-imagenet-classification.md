@@ -2,7 +2,7 @@
 title: "AlexNet: Deep ConvNets, GPUs, and the 2012 ImageNet Shock"
 slug: "alexnet-imagenet-classification"
 description: "Krizhevsky, Sutskever, and Hinton trained a deep ReLU CNN on two GPUs and crushed ILSVRC 2012. Dropout, data augmentation, and the moment vision switched to learned features."
-publishedAt: "2026-11-16"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

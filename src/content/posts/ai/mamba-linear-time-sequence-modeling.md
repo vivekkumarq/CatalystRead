@@ -2,7 +2,7 @@
 title: "Mamba: Linear-Time Sequence Mixing With Selective State Spaces"
 slug: "mamba-linear-time-sequence-modeling"
 description: "Gu and Dao replace attention's quadratic mixing with a selective SSM that filters information as a function of the input. When linear time is the point, and when you still want a transformer."
-publishedAt: "2026-11-01"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI

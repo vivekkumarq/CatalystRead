@@ -2,8 +2,8 @@
 title: "Vault: Identity-Based Secrets Instead of a Shared Password in Git"
 slug: "hashicorp-vault-identity-based-secrets"
 description: "How HashiCorp Vault replaced long-lived shared credentials with authenticated identities, dynamic leases, and revocation as a first-class operation."
-publishedAt: "2026-11-12"
-updatedAt: "2026-11-12"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "HashiCorp"
 tags:
   - Engineering at Scale

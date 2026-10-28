@@ -2,7 +2,7 @@
 title: "GANs: Adversarial Training as a Two-Player Game, and Why It Is Still Hard"
 slug: "generative-adversarial-nets-goodfellow"
 description: "Goodfellow et al. trained a generator against a discriminator so samples would match the data distribution. Mode collapse, unstable losses, and when diffusion replaced the GAN default."
-publishedAt: "2026-11-11"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

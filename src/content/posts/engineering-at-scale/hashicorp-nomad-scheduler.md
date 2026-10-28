@@ -2,8 +2,8 @@
 title: "Nomad: A Scheduler That Treats Bin Packing as the Product"
 slug: "hashicorp-nomad-scheduler"
 description: "How HashiCorp Nomad scheduled jobs across a fleet with evaluations, allocations, and bin packing — without requiring a control plane that looks like a second operating system."
-publishedAt: "2026-11-14"
-updatedAt: "2026-11-14"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "HashiCorp"
 tags:
   - Engineering at Scale

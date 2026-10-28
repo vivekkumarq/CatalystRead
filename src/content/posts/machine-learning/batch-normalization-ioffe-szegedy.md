@@ -2,7 +2,7 @@
 title: "Batch Normalization: Fix the Covariate Shift Story, Keep the Engineering Win"
 slug: "batch-normalization-ioffe-szegedy"
 description: "Ioffe and Szegedy normalize activations using minibatch statistics so deep nets train faster and tolerate higher learning rates. Population stats at test time, and why batch size became a hyperparameter of the layer."
-publishedAt: "2026-11-10"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

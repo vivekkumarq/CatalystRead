@@ -2,7 +2,7 @@
 title: "ViT: Image Patches as Tokens, and the Data Hunger That Came With Them"
 slug: "vision-transformer-vit-dosovitskiy"
 description: "Dosovitskiy et al. dropped the conv inductive bias, split images into patches, and trained a transformer on ImageNet-21k-scale data. When ViTs beat ResNets, and when they need the extra data or distillation."
-publishedAt: "2026-11-19"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

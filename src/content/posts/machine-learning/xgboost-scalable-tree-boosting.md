@@ -2,7 +2,7 @@
 title: "XGBoost: Regularized Tree Boosting That Became the Default for Tabular Work"
 slug: "xgboost-scalable-tree-boosting"
 description: "Chen and Guestrin engineered gradient boosting with a system: sparsity-aware splits, cache-aware blocking, and a regularized objective. Why it still wins many structured-data bake-offs against shallow nets."
-publishedAt: "2026-11-26"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

@@ -2,8 +2,8 @@
 title: "OceanBase: Alibaba's Distributed Database Built for a Night That Looks Like a DDoS"
 slug: "alibaba-oceanbase-distributed-database"
 description: "How Alibaba and Ant Group built OceanBase as a Paxos-replicated, shared-nothing SQL system that had to survive Singles' Day traffic without a single primary as the bottleneck."
-publishedAt: "2026-12-04"
-updatedAt: "2026-12-04"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Alibaba"
 tags:
   - Engineering at Scale

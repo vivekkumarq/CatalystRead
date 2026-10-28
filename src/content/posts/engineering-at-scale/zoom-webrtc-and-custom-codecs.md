@@ -2,8 +2,8 @@
 title: "Zoom on the Wire: WebRTC, Custom Codecs, and Why a Browser Is Never the Only Client"
 slug: "zoom-webrtc-and-custom-codecs"
 description: "How Zoom balanced WebRTC in the browser against native clients with aggressive codec and transport choices that a web stack alone would not allow."
-publishedAt: "2026-11-21"
-updatedAt: "2026-11-21"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Zoom"
 tags:
   - Engineering at Scale

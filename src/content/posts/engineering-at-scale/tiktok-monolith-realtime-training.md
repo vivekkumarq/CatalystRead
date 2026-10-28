@@ -2,8 +2,8 @@
 title: "TikTok Monolith: Training Recommendation Models While the Parameters Are Still Moving"
 slug: "tiktok-monolith-realtime-training"
 description: "How ByteDance's Monolith system trained sparse recommendation models online, with collisionless embeddings and a sync path from trainer to serving."
-publishedAt: "2026-12-09"
-updatedAt: "2026-12-09"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "ByteDance"
 tags:
   - Engineering at Scale

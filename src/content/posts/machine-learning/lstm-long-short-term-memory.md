@@ -2,7 +2,7 @@
 title: "LSTM: Gated Memory So Gradients Can Survive Long Sequences"
 slug: "lstm-long-short-term-memory"
 description: "Hochreiter and Schmidhuber introduced constant-error carousels and multiplicative gates so recurrent nets could learn lags far beyond vanilla RNN horizons. What still applies after transformers, and how to not implement a broken gate."
-publishedAt: "2026-11-23"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

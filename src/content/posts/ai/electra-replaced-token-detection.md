@@ -2,7 +2,7 @@
 title: "ELECTRA: Pretrain by Detecting Replaced Tokens, Not Only by Masking Them"
 slug: "electra-replaced-token-detection"
 description: "Clark et al. train a discriminator to tell original tokens from plausible replacements a small generator inserted. Sample-efficient encoder pretraining, and when MLM is still simpler."
-publishedAt: "2026-11-05"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI

@@ -2,8 +2,8 @@
 title: "Zoom's Meeting Keys: End-to-End Encryption When the Mixer Used to See Everything"
 slug: "zoom-end-to-end-encryption-meeting-keys"
 description: "How Zoom introduced true end-to-end meeting encryption by keeping media keys among clients instead of at the cloud mixer — and what that does to features."
-publishedAt: "2026-11-20"
-updatedAt: "2026-11-20"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Zoom"
 tags:
   - Engineering at Scale

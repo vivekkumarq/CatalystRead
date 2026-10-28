@@ -2,8 +2,8 @@
 title: "Ranking a Marketplace: Etsy's Search Between Relevance, Quality, and Fairness to Sellers"
 slug: "etsy-search-ranking-and-listing-quality"
 description: "How Etsy ranked listings so buyers could find a handmade needle in a haystack without letting spam and keyword stuffing define the marketplace."
-publishedAt: "2026-11-23"
-updatedAt: "2026-11-23"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Etsy"
 tags:
   - Engineering at Scale

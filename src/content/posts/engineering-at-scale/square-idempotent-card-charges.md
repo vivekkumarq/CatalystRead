@@ -2,8 +2,8 @@
 title: "Square's Idempotent Charges: The Same Tap Must Not Become Two Captures"
 slug: "square-idempotent-card-charges"
 description: "How Square's Payments API uses idempotency keys so retries from POS apps and readers do not double-charge cards."
-publishedAt: "2026-11-29"
-updatedAt: "2026-11-29"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Square"
 tags:
   - Engineering at Scale

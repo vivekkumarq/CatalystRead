@@ -2,8 +2,8 @@
 title: "WiredTiger: The Storage Engine That Made MongoDB's Document Model Fast Enough"
 slug: "mongodb-wiredtiger-storage-engine"
 description: "How MongoDB's WiredTiger engine brought document-level concurrency, compression, and checkpointing — replacing MMAPv1's collection-level locks."
-publishedAt: "2026-12-17"
-updatedAt: "2026-12-17"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "MongoDB"
 tags:
   - Engineering at Scale

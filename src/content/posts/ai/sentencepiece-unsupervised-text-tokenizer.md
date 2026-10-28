@@ -2,7 +2,7 @@
 title: "SentencePiece: Unsupervised Tokenization You Can Train on Raw Text"
 slug: "sentencepiece-unsupervised-text-tokenizer"
 description: "Kudo and Richardson built a language-independent trainer for subword models (BPE and unigram) that sits on raw sentences, not whitespace-tokenized words. Why tokenizer choice is a model API."
-publishedAt: "2026-11-07"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI
