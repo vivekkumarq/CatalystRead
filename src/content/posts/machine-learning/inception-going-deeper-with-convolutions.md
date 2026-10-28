@@ -2,7 +2,7 @@
 title: "Inception: Multi-Scale Convolutions in One Block, and the Cost of Naïve Width"
 slug: "inception-going-deeper-with-convolutions"
 description: "Szegedy et al. (GoogLeNet) stacked 1×1, 3×3, and 5×5 paths with pooling, using 1×1 bottlenecks to keep FLOPs in check. Auxiliary classifiers, and why multi-scale blocks still reappear."
-publishedAt: "2026-11-17"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

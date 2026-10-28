@@ -2,8 +2,8 @@
 title: "Forrest: ByteDance's Recommendation Architecture for a Feed That Cannot Be Stale"
 slug: "bytedance-forrest-recommendation-architecture"
 description: "How ByteDance's Forrest-style recommendation stack splits retrieval, ranking, and real-time features so a For You feed can update as user behavior arrives."
-publishedAt: "2026-12-07"
-updatedAt: "2026-12-07"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "ByteDance"
 tags:
   - Engineering at Scale

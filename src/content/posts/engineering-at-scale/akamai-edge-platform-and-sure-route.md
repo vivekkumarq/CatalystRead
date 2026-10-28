@@ -2,8 +2,8 @@
 title: "Akamai's Edge and SureRoute: Picking a Path When the Internet's Shortest Route Is Not the Fastest"
 slug: "akamai-edge-platform-and-sure-route"
 description: "How Akamai's edge platform caches and accelerates origin fetches, and how SureRoute measures real paths so a download does not follow a congested BGP default."
-publishedAt: "2026-12-24"
-updatedAt: "2026-12-24"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Akamai"
 tags:
   - Engineering at Scale

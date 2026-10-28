@@ -2,7 +2,7 @@
 title: "Seq2Seq: Encode the Source, Decode the Target, Train With Teacher Forcing"
 slug: "seq2seq-sequence-to-sequence-learning"
 description: "Sutskever, Vinyals, and Le mapped variable-length input to variable-length output with a stacked LSTM encoder-decoder. Reversing the source, beam search, and the bottleneck that attention soon fixed."
-publishedAt: "2026-11-24"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

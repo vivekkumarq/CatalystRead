@@ -2,7 +2,7 @@
 title: "T5: Every NLP Problem as Text-to-Text, With a Clean Encoder-Decoder"
 slug: "t5-text-to-text-transfer-transformer"
 description: "Raffel et al. cast translation, classification, and summarization as string-to-string tasks on a masked span-filling pretrained encoder-decoder. The framework still hiding behind a lot of seq2seq fine-tunes."
-publishedAt: "2026-11-04"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI

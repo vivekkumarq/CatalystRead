@@ -2,8 +2,8 @@
 title: "Booking.com's Experimentation Culture: When A/B Tests Are How the Company Thinks"
 slug: "booking-experimentation-culture-at-scale"
 description: "How Booking.com made controlled experiments the default decision tool, with a platform that had to assign, measure, and stop tests without wrecking the hotel funnel."
-publishedAt: "2026-12-02"
-updatedAt: "2026-12-02"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Booking.com"
 tags:
   - Engineering at Scale

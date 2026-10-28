@@ -2,8 +2,8 @@
 title: "Distributed ClickHouse: How a Query Becomes a Scatter-Gather Across Shards"
 slug: "clickhouse-distributed-query-processing"
 description: "How ClickHouse Distributed tables send query pieces to shards, merge results on a coordinator, and fail in ways a single-node MergeTree never will."
-publishedAt: "2026-12-19"
-updatedAt: "2026-12-19"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "ClickHouse"
 tags:
   - Engineering at Scale

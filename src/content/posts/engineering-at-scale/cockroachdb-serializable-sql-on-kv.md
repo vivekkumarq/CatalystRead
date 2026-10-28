@@ -2,8 +2,8 @@
 title: "Serializable SQL on a KV Layer: How CockroachDB Makes Transactions Look Like Postgres"
 slug: "cockroachdb-serializable-sql-on-kv"
 description: "How CockroachDB implements SQL — including serializable transactions — on a distributed key-value map, and why contention shows up as retries instead of silent anomalies."
-publishedAt: "2026-12-11"
-updatedAt: "2026-12-11"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "CockroachDB"
 tags:
   - Engineering at Scale

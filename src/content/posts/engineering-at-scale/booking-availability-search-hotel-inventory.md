@@ -2,8 +2,8 @@
 title: "Hotel Availability at Booking.com: Search That Must Not Sell a Room Twice"
 slug: "booking-availability-search-hotel-inventory"
 description: "How Booking.com's availability search combines cached hotel inventory, partner feeds, and last-minute checks so a search result still has a room at checkout."
-publishedAt: "2026-12-03"
-updatedAt: "2026-12-03"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Booking.com"
 tags:
   - Engineering at Scale

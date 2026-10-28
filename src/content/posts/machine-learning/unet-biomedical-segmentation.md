@@ -2,7 +2,7 @@
 title: "U-Net: Skip Connections That Keep Segmentation Spatial"
 slug: "unet-biomedical-segmentation"
 description: "Ronneberger et al. built an encoder-decoder with cropped skips so biomedical images could be segmented from few annotated slides. Why the U-shape still shows up in diffusion and medical stacks."
-publishedAt: "2026-11-12"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

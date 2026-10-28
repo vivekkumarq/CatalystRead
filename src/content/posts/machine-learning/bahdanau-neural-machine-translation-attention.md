@@ -2,7 +2,7 @@
 title: "Bahdanau Attention: Let the Decoder Look Back at Every Encoder State"
 slug: "bahdanau-neural-machine-translation-attention"
 description: "Bahdanau, Cho, and Bengio replaced the single seq2seq vector with a learned weighted sum of encoder states. Alignments you can plot, and the additive scoring function later papers simplified."
-publishedAt: "2026-11-25"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

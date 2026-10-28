@@ -2,8 +2,8 @@
 title: "Etsy's Continuous Deployment Culture: Shipping Small Because Reverting Had to Be Cheap"
 slug: "etsy-continuous-deployment-culture"
 description: "How Etsy made deploy-to-production a daily habit with small batches, shared responsibility, and tooling that made rollback less scary than waiting a week."
-publishedAt: "2026-11-22"
-updatedAt: "2026-11-22"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Etsy"
 tags:
   - Engineering at Scale

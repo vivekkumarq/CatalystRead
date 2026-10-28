@@ -2,8 +2,8 @@
 title: "Activity Feeds at Etsy: Fanout for a Marketplace That Never Stops Listing"
 slug: "etsy-activity-feeds-at-marketplace-scale"
 description: "How Etsy built activity and following feeds when millions of shops produce events and naive fanout would melt the write path."
-publishedAt: "2026-11-24"
-updatedAt: "2026-11-24"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Etsy"
 tags:
   - Engineering at Scale

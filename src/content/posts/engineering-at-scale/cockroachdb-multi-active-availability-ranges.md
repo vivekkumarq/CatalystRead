@@ -2,8 +2,8 @@
 title: "CockroachDB: Multi-Active Ranges Instead of a Single Primary in Another ZIP Code"
 slug: "cockroachdb-multi-active-availability-ranges"
 description: "How CockroachDB splits tables into ranges, replicates them with Raft, and serves from multiple regions without one global write master."
-publishedAt: "2026-12-10"
-updatedAt: "2026-12-10"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "CockroachDB"
 tags:
   - Engineering at Scale

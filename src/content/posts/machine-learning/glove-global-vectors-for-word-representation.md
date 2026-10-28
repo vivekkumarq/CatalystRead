@@ -2,7 +2,7 @@
 title: "GloVe: Word Vectors From a Global Co-Occurrence Matrix, Not Only From Local Windows"
 slug: "glove-global-vectors-for-word-representation"
 description: "Pennington, Socher, and Manning factorize a log co-occurrence matrix with a weighted least-squares objective. When count-based vectors still beat a hastily trained Word2Vec, and when contextual models replaced both."
-publishedAt: "2026-11-22"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

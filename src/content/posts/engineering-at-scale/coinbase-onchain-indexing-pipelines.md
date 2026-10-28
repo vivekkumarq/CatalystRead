@@ -2,8 +2,8 @@
 title: "Indexing Blockchains at Coinbase: Pipelines That Must Not Miss a Reorg"
 slug: "coinbase-onchain-indexing-pipelines"
 description: "How Coinbase-style onchain indexers ingest blocks, handle reorgs, and serve balances without treating a node RPC as a database."
-publishedAt: "2026-12-01"
-updatedAt: "2026-12-01"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Coinbase"
 tags:
   - Engineering at Scale

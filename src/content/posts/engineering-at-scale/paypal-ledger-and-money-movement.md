@@ -2,8 +2,8 @@
 title: "PayPal's Ledger: Money Movement as Journal Entries, Not a Balance Column"
 slug: "paypal-ledger-and-money-movement"
 description: "How PayPal's scale forced an accounting-shaped ledger for balances and transfers so money could move across instruments without a single mutable number as the truth."
-publishedAt: "2026-11-25"
-updatedAt: "2026-11-25"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "PayPal"
 tags:
   - Engineering at Scale

@@ -2,8 +2,8 @@
 title: "Redis Replication and Sentinel: Failover That Is Fast, and Split Brain That Is Forever"
 slug: "redis-replication-and-sentinel-failover"
 description: "How Redis async replication and Sentinel (or Cluster) elect a new primary, and why a missed replica can still accept writes you will never see again."
-publishedAt: "2026-12-13"
-updatedAt: "2026-12-13"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Redis"
 tags:
   - Engineering at Scale

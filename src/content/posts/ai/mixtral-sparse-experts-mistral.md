@@ -2,7 +2,7 @@
 title: "Mixtral: Sparse Experts in a Dense-Looking Decoder You Can Actually Serve"
 slug: "mixtral-sparse-experts-mistral"
 description: "Jiang et al. replace some MLP blocks with a Mixture-of-Experts router (Mixtral 8×7B). Active parameters per token stay modest; capacity and serving constraints do not. How to think about MoE without the hype."
-publishedAt: "2026-11-02"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI

@@ -2,8 +2,8 @@
 title: "ksqlDB: Stream Processing That Looks Like SQL Until the Watermark"
 slug: "confluent-ksqldb-stream-processing-sql"
 description: "How Confluent's ksqlDB turned Kafka topics into tables and streams you can query with SQL, and why event-time windows still leak through the syntax."
-publishedAt: "2026-12-20"
-updatedAt: "2026-12-20"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Confluent"
 tags:
   - Engineering at Scale

@@ -2,8 +2,8 @@
 title: "MongoDB Replica Sets: Elections, the Oplog, and What 'Primary' Actually Means"
 slug: "mongodb-replication-elections-and-oplog"
 description: "How MongoDB replica sets elect a primary, copy operations through the oplog, and expose write concern as a durability choice rather than a default you ignore."
-publishedAt: "2026-12-16"
-updatedAt: "2026-12-16"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "MongoDB"
 tags:
   - Engineering at Scale

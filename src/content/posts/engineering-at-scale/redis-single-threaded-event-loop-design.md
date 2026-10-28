@@ -2,8 +2,8 @@
 title: "Redis's Single-Threaded Event Loop: Simplicity as a Scaling Story (Until I/O Threads)"
 slug: "redis-single-threaded-event-loop-design"
 description: "How Redis kept a single-threaded command loop to make operations atomic and latency predictable — and where that design still bites under big keys and slow commands."
-publishedAt: "2026-12-12"
-updatedAt: "2026-12-12"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Redis"
 tags:
   - Engineering at Scale

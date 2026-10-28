@@ -2,8 +2,8 @@
 title: "ClickHouse MergeTree: Why Analytics Inserts Are a Background Merge, Not a B-Tree Update"
 slug: "clickhouse-mergetree-analytic-engine"
 description: "How ClickHouse's MergeTree family stores data in immutable parts and merges them in the background, which is why inserts are fast and mutations are not."
-publishedAt: "2026-12-18"
-updatedAt: "2026-12-18"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "ClickHouse"
 tags:
   - Engineering at Scale

@@ -2,8 +2,8 @@
 title: "Fastly VCL: The Edge as a Programmable Cache, Not a Folder of Files"
 slug: "fastly-vcl-edge-compute"
 description: "How Fastly exposed Varnish Configuration Language so request routing, caching, and synthetic responses could run in POP memory close to the user."
-publishedAt: "2026-12-22"
-updatedAt: "2026-12-22"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Fastly"
 tags:
   - Engineering at Scale

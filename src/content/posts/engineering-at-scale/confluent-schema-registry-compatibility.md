@@ -2,8 +2,8 @@
 title: "Schema Registry: Compatibility Rules That Keep a Kafka Topic From Becoming a Truce"
 slug: "confluent-schema-registry-compatibility"
 description: "How Confluent Schema Registry stores Avro/Protobuf/JSON schemas with compatibility modes so producers and consumers can evolve without a coordinated outage."
-publishedAt: "2026-12-21"
-updatedAt: "2026-12-21"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Confluent"
 tags:
   - Engineering at Scale

@@ -2,8 +2,8 @@
 title: "Instant Purge and Surrogate Keys: Fastly's Answer to 'TTL of 0 or Wait an Hour'"
 slug: "fastly-instant-purge-and-surrogate-keys"
 description: "How Fastly surrogate keys tag cache objects so a CMS publish can purge a graph of pages in seconds instead of waiting out a long TTL."
-publishedAt: "2026-12-23"
-updatedAt: "2026-12-23"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "Fastly"
 tags:
   - Engineering at Scale

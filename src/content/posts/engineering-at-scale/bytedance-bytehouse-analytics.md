@@ -2,8 +2,8 @@
 title: "ByteHouse: Analytics Warehousing at ByteDance, in the Shadow of ClickHouse"
 slug: "bytedance-bytehouse-analytics"
 description: "How ByteDance's ByteHouse built an analytics warehouse experience on ClickHouse-shaped execution for internal and cloud customers who needed interactive SQL on huge event streams."
-publishedAt: "2026-12-08"
-updatedAt: "2026-12-08"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "ByteDance"
 tags:
   - Engineering at Scale

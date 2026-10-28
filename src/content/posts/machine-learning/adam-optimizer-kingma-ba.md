@@ -2,7 +2,7 @@
 title: "Adam: Adaptive Moments That Became the Default Optimizer — With the Caveats Intact"
 slug: "adam-optimizer-kingma-ba"
 description: "Kingma and Ba combined RMSProp-style second moments with momentum and a bias correction. Why Adam trains transformers, and when the paper's own advice still says to try SGD."
-publishedAt: "2026-11-08"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

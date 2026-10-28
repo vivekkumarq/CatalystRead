@@ -2,8 +2,8 @@
 title: "PayPal Risk: Machine Learning in the Path of a Payment Without Becoming the Outage"
 slug: "paypal-risk-machine-learning-fraud"
 description: "How PayPal's risk systems score payments with models and rules so fraud can be stopped in milliseconds without freezing legitimate commerce."
-publishedAt: "2026-11-27"
-updatedAt: "2026-11-27"
+publishedAt: "2026-09-16"
+updatedAt: "2026-09-16"
 category: "PayPal"
 tags:
   - Engineering at Scale

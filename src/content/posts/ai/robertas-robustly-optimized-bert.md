@@ -2,7 +2,7 @@
 title: "RoBERTa: BERT's Recipe, Cooked Longer, Without the Sacred Cows"
 slug: "robertas-robustly-optimized-bert"
 description: "Liu et al. showed BERT was undertrained: more data, bigger batches, no NSP, dynamic masking. A reminder that 'the architecture' is often the optimization and the dataset."
-publishedAt: "2026-11-06"
+publishedAt: "2026-09-16"
 category: "AI"
 tags:
   - AI

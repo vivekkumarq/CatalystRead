@@ -2,7 +2,7 @@
 title: "AdamW: Decouple Weight Decay From the Adaptive Gradient Step"
 slug: "adamw-decoupled-weight-decay"
 description: "Loshchilov and Hutter showed that L2 regularization is not weight decay once the optimizer is adaptive. The decoupled decay every transformer schedule actually uses."
-publishedAt: "2026-11-09"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning

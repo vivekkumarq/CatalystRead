@@ -2,7 +2,7 @@
 title: "Faster R-CNN: Make Region Proposals a Network, Not an External Search"
 slug: "faster-rcnn-real-time-object-detection"
 description: "Ren et al. added a Region Proposal Network that shares features with Fast R-CNN so two-stage detection could run in near real time. Anchors, RoI pooling, and when two stages still beat one shot."
-publishedAt: "2026-11-14"
+publishedAt: "2026-09-16"
 category: "Machine Learning"
 tags:
   - Machine Learning
