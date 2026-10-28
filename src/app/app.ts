@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, inject } from '@angular/core';
+import { ViewportScroller } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { Header } from './shared/components/header/header';
 import { Footer } from './shared/components/footer/footer';
@@ -13,13 +14,14 @@ import { BackToTop } from './shared/components/back-to-top/back-to-top';
     <a
       [routerLink]="[]"
       fragment="main-content"
+      (click)="main.focus()"
       class="sr-only z-50 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white focus:not-sr-only focus:fixed focus:left-4 focus:top-4"
     >
       Skip to content
     </a>
     <div class="cr-ambient" aria-hidden="true"></div>
     <app-header />
-    <main id="main-content" class="min-h-[70vh]">
+    <main #main id="main-content" tabindex="-1" class="min-h-[70vh]">
       <router-outlet />
     </main>
     <app-footer />
@@ -27,4 +29,14 @@ import { BackToTop } from './shared/components/back-to-top/back-to-top';
     <app-back-to-top />
   `,
 })
-export class App {}
+export class App {
+  constructor() {
+    /* The router scrolls to #fragments with window.scrollTo, which ignores
+       CSS scroll-padding; reuse that value so headings clear the sticky header. */
+    const root = inject(DOCUMENT).documentElement;
+    inject(ViewportScroller).setOffset(() => [
+      0,
+      parseFloat(getComputedStyle(root).scrollPaddingTop) || 0,
+    ]);
+  }
+}

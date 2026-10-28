@@ -81,6 +81,10 @@ import { Breadcrumbs, Crumb } from '../../shared/components/breadcrumbs/breadcru
           />
           @if (slug()) {
             <span class="mt-1 block text-xs text-ink-faint">URL: /articles/{{ slug() }}</span>
+          } @else if (title().trim()) {
+            <span class="mt-1 block text-xs text-accent">
+              Include at least one Latin letter or digit — the article URL is built from the title.
+            </span>
           }
         </label>
 
@@ -226,7 +230,7 @@ export class Contribute {
 
   protected readonly isComplete = computed(
     () =>
-      this.title().trim() !== '' &&
+      this.slug() !== '' &&
       this.category() !== '' &&
       this.description().trim() !== '' &&
       this.body().trim() !== '',
@@ -234,17 +238,19 @@ export class Contribute {
 
   protected readonly markdown = computed(() => {
     const tags = this.tags().length > 0 ? this.tags() : [this.category()];
-    const tagLines = tags.map((tag) => `  - ${tag}`).join('\n');
+    /* JSON strings are valid YAML scalars, so quotes, backslashes, colons or
+       a leading # or [ typed by the reader cannot break the frontmatter. */
+    const yaml = (value: string) => JSON.stringify(value);
     const today = new Date().toISOString().slice(0, 10);
     return [
       '---',
-      `title: "${this.title().trim().replaceAll('"', "'")}"`,
-      `slug: "${this.slug()}"`,
-      `description: "${this.description().trim().replaceAll('"', "'")}"`,
-      `publishedAt: "${today}"`,
-      `category: "${this.category()}"`,
+      `title: ${yaml(this.title().trim())}`,
+      `slug: ${yaml(this.slug())}`,
+      `description: ${yaml(this.description().trim())}`,
+      `publishedAt: ${yaml(today)}`,
+      `category: ${yaml(this.category())}`,
       'tags:',
-      tagLines,
+      ...tags.map((tag) => `  - ${yaml(tag)}`),
       '---',
       '',
       this.body().trim(),
@@ -282,7 +288,9 @@ export class Contribute {
       `Title: ${this.title().trim()}\n` +
       `Category: ${this.category()}\n\n` +
       `--- article file below (or attached) ---\n\n`;
-    const body = (intro + this.markdown()).slice(0, 1800);
+    /* Cutting through an emoji leaves half a surrogate pair, which makes
+       encodeURIComponent throw; drop the orphaned half. */
+    const body = (intro + this.markdown()).slice(0, 1800).replace(/[\uD800-\uDBFF]$/, '');
     const mailto =
       `mailto:${this.site.contributeEmail}` +
       `?subject=${encodeURIComponent(`Article submission: ${this.title().trim()}`)}` +

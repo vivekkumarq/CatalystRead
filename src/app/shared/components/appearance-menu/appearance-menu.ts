@@ -33,7 +33,7 @@ import {
       @if (open()) {
         <div
           class="animate-pop fixed inset-x-3 top-[4.5rem] z-50 max-h-[75vh] overflow-y-auto rounded-2xl border border-edge bg-surface p-5 shadow-2xl shadow-black/10 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-80"
-          role="menu"
+          role="group"
           aria-label="Appearance settings"
           (click)="$event.stopPropagation()"
         >
@@ -114,6 +114,7 @@ import {
                   [class.text-accent]="prefs.fontMode() === option.value"
                   [class.border-edge]="prefs.fontMode() !== option.value"
                   [class.text-ink-soft]="prefs.fontMode() !== option.value"
+                  [attr.aria-pressed]="prefs.fontMode() === option.value"
                 >
                   <span class="block text-base leading-none" [style.font-family]="option.stack">Ag</span>
                   <span class="mt-1 block text-[10px] font-medium">{{ option.label }}</span>
@@ -135,6 +136,7 @@ import {
                   [class.text-accent]="prefs.textSize() === option.value"
                   [class.border-edge]="prefs.textSize() !== option.value"
                   [class.text-ink-soft]="prefs.textSize() !== option.value"
+                  [attr.aria-pressed]="prefs.textSize() === option.value"
                 >
                   <span class="block leading-none" [style.font-size]="option.preview">A</span>
                   <span class="mt-1 block text-[10px] font-medium">{{ option.label }}</span>
