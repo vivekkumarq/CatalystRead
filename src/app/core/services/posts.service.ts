@@ -28,6 +28,18 @@ export class PostsService {
     (category) => !this.companyCategories.includes(category),
   );
 
+  /** Total reading time across the library, in hours. */
+  readonly readingHours = Math.round(POSTS.reduce((sum, post) => sum + post.readingTimeMinutes, 0) / 60);
+
+  isCompany(slug: string): boolean {
+    return this.companyCategories.some((company) => company.slug === slug);
+  }
+
+  /** A random article slug for "Surprise me". */
+  randomSlug(): string {
+    return this.posts[Math.floor(Math.random() * this.posts.length)].slug;
+  }
+
   bySlug(slug: string): PostMeta | undefined {
     return this.posts.find((post) => post.slug === slug);
   }

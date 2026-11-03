@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { SearchService } from '../../../core/services/search.service';
+import { LibraryService } from '../../../core/services/library.service';
 import { SITE } from '../../../core/constants/site';
 import { AppearanceMenu } from '../appearance-menu/appearance-menu';
 import { BrandMark } from '../brand-mark/brand-mark';
@@ -63,6 +64,22 @@ import { BrandMark } from '../brand-mark/brand-mark';
             </svg>
           </button>
 
+          <a
+            routerLink="/library"
+            routerLinkActive="!border-accent !text-accent"
+            class="relative hidden size-9 place-items-center rounded-xl border border-edge bg-surface/60 text-ink-soft transition-colors hover:border-accent hover:text-accent sm:grid"
+            [attr.aria-label]="'Your library' + (library.saved().length ? ', ' + library.saved().length + ' saved' : '')"
+          >
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+              <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
+            </svg>
+            @if (library.saved().length > 0) {
+              <span class="animate-pop absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-bold leading-none text-white" aria-hidden="true">
+                {{ library.saved().length > 99 ? '99+' : library.saved().length }}
+              </span>
+            }
+          </a>
+
           <app-appearance-menu />
 
           <button
@@ -89,7 +106,7 @@ import { BrandMark } from '../brand-mark/brand-mark';
           aria-label="Primary mobile"
         >
           <div class="flex flex-col gap-0.5">
-            @for (link of links; track link.path) {
+            @for (link of mobileLinks; track link.path) {
               <a
                 [routerLink]="link.path"
                 routerLinkActive="!text-accent !bg-accent-soft"
@@ -111,6 +128,7 @@ import { BrandMark } from '../brand-mark/brand-mark';
 })
 export class Header {
   protected readonly search = inject(SearchService);
+  protected readonly library = inject(LibraryService);
   protected readonly site = SITE;
   protected readonly menuOpen = signal(false);
   protected readonly links = [
@@ -120,4 +138,6 @@ export class Header {
     { path: '/about', label: 'About' },
     { path: '/contribute', label: 'Contribute' },
   ];
+  /* Small screens reach the library from the menu instead of a header icon. */
+  protected readonly mobileLinks = [...this.links, { path: '/library', label: 'Your library' }];
 }
