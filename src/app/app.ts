@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component, DOCUMENT, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DOCUMENT, afterNextRender, inject } from '@angular/core';
 import { ViewportScroller } from '@angular/common';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { Header } from './shared/components/header/header';
 import { Footer } from './shared/components/footer/footer';
 import { SearchDialog } from './shared/components/search-dialog/search-dialog';
 import { BackToTop } from './shared/components/back-to-top/back-to-top';
+import { LibraryService } from './core/services/library.service';
 
 @Component({
   selector: 'app-root',
@@ -38,5 +39,9 @@ export class App {
       0,
       parseFloat(getComputedStyle(root).scrollPaddingTop) || 0,
     ]);
+
+    /* After hydration, so the prerendered HTML and the first client render match. */
+    const library = inject(LibraryService);
+    afterNextRender(() => library.load());
   }
 }

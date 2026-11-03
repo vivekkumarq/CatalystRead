@@ -2,17 +2,22 @@ import {
   ChangeDetectionStrategy,
   Component,
   DOCUMENT,
+  DestroyRef,
+  afterNextRender,
   computed,
   effect,
   inject,
   input,
+  linkedSignal,
   signal,
+  untracked,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { PostContent } from '../../core/models/post.model';
 import { PostsService } from '../../core/services/posts.service';
 import { SeoService } from '../../core/services/seo.service';
+import { LibraryService } from '../../core/services/library.service';
 import { slugify } from '../../core/utilities/slugify';
 import { ArticleCard } from '../../shared/components/article-card/article-card';
 import { ReadingProgress } from '../../shared/components/reading-progress/reading-progress';
@@ -21,6 +26,7 @@ import { TopicChip } from '../../shared/components/topic-chip/topic-chip';
 import { Breadcrumbs } from '../../shared/components/breadcrumbs/breadcrumbs';
 import { FormatDatePipe } from '../../shared/pipes/format-date.pipe';
 import { Reveal } from '../../shared/directives/reveal.directive';
+import { TopicMark } from '../../shared/components/topic-mark/topic-mark';
 
 @Component({
   selector: 'app-article-detail',
@@ -33,10 +39,41 @@ import { Reveal } from '../../shared/directives/reveal.directive';
     Breadcrumbs,
     FormatDatePipe,
     Reveal,
+    TopicMark,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <app-reading-progress />
+    <app-reading-progress [minutes]="post()?.readingTimeMinutes ?? 0" />
+
+    @if (resume(); as resumeAt) {
+      <div class="animate-pop fixed inset-x-4 bottom-5 z-40 mx-auto flex max-w-md items-center gap-3 rounded-2xl border border-edge bg-surface/95 p-3 pl-4 shadow-2xl shadow-black/20 backdrop-blur-xl" role="status">
+        <span class="grid size-9 shrink-0 place-items-center rounded-xl bg-accent-soft text-accent" aria-hidden="true">
+          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
+          </svg>
+        </span>
+        <p class="min-w-0 flex-1 text-sm text-ink-soft">
+          You were <span class="font-semibold text-ink">{{ resumeAt }}%</span> through this one.
+        </p>
+        <button
+          type="button"
+          (click)="resumeReading(resumeAt)"
+          class="shrink-0 rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-accent-strong"
+        >
+          Resume
+        </button>
+        <button
+          type="button"
+          (click)="resume.set(null)"
+          class="grid size-7 shrink-0 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-raised hover:text-ink"
+          aria-label="Dismiss"
+        >
+          <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+      </div>
+    }
 
     @if (post(); as post) {
       <div class="animate-page">
@@ -47,8 +84,9 @@ import { Reveal } from '../../shared/directives/reveal.directive';
 
               <a
                 [routerLink]="['/topics', post.categorySlug]"
-                class="mt-5 inline-block rounded-md bg-accent-soft px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-accent transition-colors hover:text-accent-strong"
+                class="mt-5 inline-flex items-center gap-2 rounded-lg border border-edge bg-surface/70 py-1 pl-1 pr-3 text-[11px] font-bold uppercase tracking-wider text-accent backdrop-blur-sm transition-colors hover:border-accent/50 hover:text-accent-strong"
               >
+                <app-topic-mark [slug]="post.categorySlug" [name]="post.category" size="sm" />
                 {{ post.category }}
               </a>
 
@@ -70,6 +108,18 @@ import { Reveal } from '../../shared/directives/reveal.directive';
                 <span>{{ post.readingTimeMinutes }} min read</span>
 
                 <span class="flex w-full items-center gap-1.5 sm:ml-auto sm:w-auto">
+                  <button
+                    type="button"
+                    (click)="library.toggleSaved(post.slug)"
+                    class="flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-colors"
+                    [class]="saved() ? 'border-accent bg-accent-soft text-accent' : 'border-edge bg-surface/60 text-ink-soft hover:border-accent hover:text-accent'"
+                    [attr.aria-pressed]="saved()"
+                  >
+                    <svg class="size-3.5" viewBox="0 0 24 24" [attr.fill]="saved() ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1Z" />
+                    </svg>
+                    {{ saved() ? 'Saved' : 'Save' }}
+                  </button>
                   <button
                     type="button"
                     (click)="copyLink()"
@@ -202,8 +252,18 @@ export class ArticleDetail {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly seo = inject(SeoService);
   private readonly document = inject(DOCUMENT);
+  protected readonly library = inject(LibraryService);
 
   protected readonly linkCopied = signal(false);
+  protected readonly saved = computed(() => this.library.isSaved(this.slug()));
+
+  /** The unfinished position to offer resuming from, once per article opened. */
+  protected readonly resume = linkedSignal<number | null>(() => {
+    const slug = this.slug();
+    if (!this.library.ready()) return null;
+    const progress = untracked(() => this.library.entry(slug)?.progress ?? 0);
+    return progress >= 5 && progress < 90 ? progress : null;
+  });
 
   protected readonly post = computed(() => this.postsService.bySlug(this.slug()));
   protected readonly related = computed(() => {
@@ -241,6 +301,45 @@ export class ArticleDetail {
         this.seo.article(post);
       }
     });
+
+    /* Count the visit once the library has loaded (browser only). */
+    effect(() => {
+      const slug = this.slug();
+      if (this.library.ready()) {
+        untracked(() => this.library.record(slug, 0));
+      }
+    });
+
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const save = () => {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        if (max > 0 && this.library.ready()) {
+          const progress = Math.min(100, (window.scrollY / max) * 100);
+          this.library.record(this.slug(), progress);
+          /* Reading on unprompted: the resume offer has served its purpose. */
+          if (progress > 10) this.resume.set(null);
+        }
+      };
+      /* Debounced, so the router's smooth scroll-to-top on navigation is
+         judged by where it settles, not the positions it passes through. */
+      const onScroll = () => {
+        clearTimeout(timer);
+        timer = setTimeout(save, 400);
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      destroyRef.onDestroy(() => {
+        clearTimeout(timer);
+        window.removeEventListener('scroll', onScroll);
+      });
+    });
+  }
+
+  protected resumeReading(progress: number): void {
+    const max = this.document.documentElement.scrollHeight - window.innerHeight;
+    window.scrollTo({ top: (max * progress) / 100, behavior: 'smooth' });
+    this.resume.set(null);
   }
 
   protected copyLink(): void {

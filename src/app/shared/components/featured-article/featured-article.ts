@@ -3,10 +3,11 @@ import { RouterLink } from '@angular/router';
 import { PostMeta } from '../../../core/models/post.model';
 import { PostsService } from '../../../core/services/posts.service';
 import { FormatDatePipe } from '../../pipes/format-date.pipe';
+import { TopicMark } from '../topic-mark/topic-mark';
 
 @Component({
   selector: 'app-featured-article',
-  imports: [RouterLink, FormatDatePipe],
+  imports: [RouterLink, FormatDatePipe, TopicMark],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <article class="group h-full">
@@ -24,7 +25,8 @@ import { FormatDatePipe } from '../../pipes/format-date.pipe';
               </svg>
               Featured
             </span>
-            <span class="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-ink-faint">
+              <app-topic-mark [slug]="post().categorySlug" [name]="post().category" size="sm" />
               {{ post().category }}
             </span>
           </div>

@@ -44,6 +44,7 @@ import { BrandMark } from '../brand-mark/brand-mark';
               <li><a routerLink="/about" class="text-ink-soft transition-colors hover:text-accent">About</a></li>
               <li><a routerLink="/contribute" class="text-ink-soft transition-colors hover:text-accent">Contribute</a></li>
               <li><a routerLink="/search" class="text-ink-soft transition-colors hover:text-accent">Search</a></li>
+              <li><a routerLink="/library" class="text-ink-soft transition-colors hover:text-accent">Your library</a></li>
               <li><a href="feed.xml" class="text-ink-soft transition-colors hover:text-accent">RSS feed</a></li>
             </ul>
           </nav>
@@ -54,6 +55,10 @@ import { BrandMark } from '../brand-mark/brand-mark';
           <p>© {{ year }} {{ site.name }} · {{ site.author }}</p>
           <p>Written and published from Markdown, one commit at a time.</p>
         </div>
+        <p class="mt-3 text-[11px] leading-relaxed text-ink-faint/80">
+          Company names and logos are trademarks of their respective owners, shown only to identify
+          the company an article is about. CatalystRead is independent and not affiliated with them.
+        </p>
       </div>
     </footer>
   `,

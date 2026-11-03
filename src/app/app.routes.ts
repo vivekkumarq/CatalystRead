@@ -28,6 +28,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/search/search-page').then((m) => m.SearchPage),
   },
   {
+    path: 'library',
+    loadComponent: () => import('./features/library/library').then((m) => m.Library),
+  },
+  {
     path: 'about',
     loadComponent: () => import('./features/about/about').then((m) => m.About),
   },

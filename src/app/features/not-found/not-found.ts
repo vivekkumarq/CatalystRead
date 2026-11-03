@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { PostsService } from '../../core/services/posts.service';
 import { SeoService } from '../../core/services/seo.service';
 
 @Component({
@@ -28,11 +29,25 @@ import { SeoService } from '../../core/services/seo.service';
         >
           Browse articles
         </a>
+        <button
+          type="button"
+          (click)="surprise()"
+          class="rounded-xl border border-edge px-6 py-3 text-sm font-semibold text-ink-soft transition-colors hover:border-accent hover:text-accent"
+        >
+          Surprise me
+        </button>
       </div>
     </div>
   `,
 })
 export class NotFound {
+  private readonly router = inject(Router);
+  private readonly posts = inject(PostsService);
+
+  protected surprise(): void {
+    void this.router.navigate(['/articles', this.posts.randomSlug()]);
+  }
+
   constructor() {
     inject(SeoService).page('Page not found');
   }

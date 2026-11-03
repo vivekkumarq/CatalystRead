@@ -130,6 +130,9 @@
   --cr-line: color-mix(in srgb, var(--cr-ink) 5%, transparent);
   --cr-veil: color-mix(in srgb, var(--cr-paper) 82%, transparent);
   --cr-shadow: color-mix(in srgb, var(--cr-ink) 10%, transparent);
+  /* Two companion hues for gradients, rotated off the theme accent. */
+  --cr-hue-2: var(--cr-accent-strong);
+  --cr-hue-3: var(--cr-accent);
 
   --hl-comment: #6a737d;
   --hl-keyword: #d73a49;
@@ -152,6 +155,13 @@
   --cr-dot: color-mix(in srgb, var(--cr-ink) 12%, transparent);
   --cr-line: color-mix(in srgb, var(--cr-ink) 7%, transparent);
   --cr-shadow: rgba(0, 0, 0, 0.45);
+}
+
+@supports (color: oklch(from red l c h)) {
+  :root {
+    --cr-hue-2: oklch(from var(--cr-accent) l c calc(h - 38));
+    --cr-hue-3: oklch(from var(--cr-accent) calc(l + 0.06) c calc(h + 34));
+  }
 }
 
 @theme inline {
@@ -392,6 +402,205 @@ input[type='search']::-webkit-search-results-button {
   filter: blur(28px);
 }
 
+/* Aurora: three slow-drifting colour washes behind a band's content. */
+.cr-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.cr-aurora span {
+  position: absolute;
+  width: 40rem;
+  height: 40rem;
+  border-radius: 9999px;
+}
+
+.cr-aurora span:nth-child(1) {
+  top: -20rem;
+  left: -12rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cr-accent) 22%, transparent), transparent 66%);
+  animation: cr-drift-a 22s ease-in-out infinite alternate;
+}
+
+.cr-aurora span:nth-child(2) {
+  top: -14rem;
+  right: -14rem;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cr-hue-2) 20%, transparent), transparent 66%);
+  animation: cr-drift-b 27s ease-in-out infinite alternate;
+}
+
+.cr-aurora span:nth-child(3) {
+  bottom: -26rem;
+  left: 32%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--cr-hue-3) 18%, transparent), transparent 66%);
+  animation: cr-drift-c 31s ease-in-out infinite alternate;
+}
+
+@keyframes cr-drift-a {
+  to {
+    transform: translate(14rem, 6rem) scale(1.15);
+  }
+}
+
+@keyframes cr-drift-b {
+  to {
+    transform: translate(-12rem, 8rem) scale(0.9);
+  }
+}
+
+@keyframes cr-drift-c {
+  to {
+    transform: translate(-10rem, -6rem) scale(1.2);
+  }
+}
+
+/* Accent gradient type */
+.cr-gradient-text,
+.cr-gradient-num {
+  color: var(--cr-accent);
+}
+
+@supports ((background-clip: text) or (-webkit-background-clip: text)) {
+  .cr-gradient-text {
+    background-image: linear-gradient(
+      100deg,
+      var(--cr-accent) 0%,
+      var(--cr-hue-2) 32%,
+      var(--cr-hue-3) 62%,
+      var(--cr-accent) 100%
+    );
+    background-size: 220% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    color: transparent;
+    animation: cr-shine 8s ease-in-out infinite alternate;
+  }
+
+  .cr-gradient-num {
+    background-image: linear-gradient(150deg, var(--cr-ink) 25%, var(--cr-accent) 130%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@keyframes cr-shine {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+.cr-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cr-accent);
+}
+
+/* Topic marks: a logo or icon on a tile tinted with its brand colour.
+   The brand hue is kept, its lightness clamped so it reads on any theme. */
+.cr-mark-tile {
+  --brand-c: var(--brand, var(--cr-accent));
+  color: var(--brand-c);
+  background-color: color-mix(in srgb, var(--brand-c) 11%, var(--cr-surface));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-c) 20%, transparent);
+}
+
+@supports (color: oklch(from red l c h)) {
+  .cr-mark-tile {
+    color: oklch(from var(--brand-c) min(l, 0.58) c h);
+  }
+
+  .dark .cr-mark-tile {
+    color: oklch(from var(--brand-c) max(l, 0.8) c h);
+  }
+}
+
+/* Cards that lift on hover — accent-tinted, or brand-tinted for companies */
+.cr-lift,
+.cr-brand-card {
+  --brand-c: var(--brand, var(--cr-accent));
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.cr-lift:hover,
+.cr-brand-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--brand-c) 45%, transparent);
+  box-shadow: 0 16px 34px -18px color-mix(in srgb, var(--brand-c) 60%, transparent);
+}
+
+.cr-brand-card:hover {
+  background-color: color-mix(in srgb, var(--brand-c) 6%, var(--cr-surface));
+}
+
+.cr-glow-ring:hover,
+.cr-glow-ring:focus-visible {
+  box-shadow:
+    0 0 0 4px var(--cr-accent-soft),
+    0 18px 40px -18px color-mix(in srgb, var(--cr-accent) 55%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cr-mark-tile {
+    transition: transform 0.25s ease;
+  }
+
+  .group:hover .cr-mark-tile {
+    transform: scale(1.08) rotate(-4deg);
+  }
+}
+
+/* Logo marquee: two copies of the list scroll by half their width, so the
+   loop is seamless. Hover or focus pauses it. */
+.cr-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 7%, #000 93%, transparent);
+}
+
+.cr-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: cr-marquee 80s linear infinite;
+}
+
+.cr-marquee-reverse .cr-marquee-track {
+  animation-direction: reverse;
+  animation-duration: 90s;
+}
+
+.cr-marquee:hover .cr-marquee-track,
+.cr-marquee:focus-within .cr-marquee-track {
+  animation-play-state: paused;
+}
+
+.cr-marquee-set {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.25rem 0.75rem 0.25rem 0;
+}
+
+@keyframes cr-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.cr-progress-bar {
+  background-image: linear-gradient(90deg, var(--cr-accent), var(--cr-hue-3));
+  box-shadow: 0 0 12px var(--cr-accent-glow);
+}
+
 /* ------------------------------------------------------------------ */
 /* Motion — subtle, professional, reduced-motion aware                 */
 /* ------------------------------------------------------------------ */
@@ -529,6 +738,34 @@ body,
   body,
   .cr-band {
     transition: none;
+  }
+
+  .cr-aurora span,
+  .cr-gradient-text {
+    animation: none;
+  }
+
+  /* No motion: the rows stand still and scroll sideways by hand, shown once. */
+  .cr-marquee {
+    mask-image: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .cr-marquee::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cr-marquee-track {
+    animation: none;
+  }
+
+  .cr-marquee-set {
+    padding: 0.25rem 1rem;
+  }
+
+  .cr-marquee-set[aria-hidden='true'] {
+    display: none;
   }
 }
 

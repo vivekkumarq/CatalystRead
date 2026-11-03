@@ -21,12 +21,14 @@ It is built as a **fully static, Markdown-driven site** with no backend, no data
 
 | | |
 | :---: | :---: |
-| **Dark mode** — remembers your choice, zero flash on load | **Trending & Latest** — a `trending: true` flag in frontmatter drives the ranked list |
-| ![Dark mode](docs/screenshots/home-dark.png) | ![Trending section](docs/screenshots/trending.png) |
+| **Eight themes, light and dark** — remembers your choice, zero flash on load | **Trending & Latest** — a `trending: true` flag in frontmatter drives the ranked list |
+| ![Home page in light mode](docs/screenshots/home-light.png) | ![Trending section](docs/screenshots/trending.png) |
 | **Article pages** — scrollspy table of contents, copy-link & share actions, reading progress | **Build-time syntax highlighting** — zero highlighting JavaScript shipped to the browser |
 | ![Article page](docs/screenshots/article.png) | ![Code blocks in dark mode](docs/screenshots/article-code-dark.png) |
 | **Instant search** (`Ctrl+K`) — keyboard-navigable, across titles, topics, and tags | **Topics** — tech categories plus per-company "Engineering at Scale" pages |
 | ![Search dialog](docs/screenshots/search.png) | ![Topics page](docs/screenshots/topics.png) |
+| **Your library** — saved articles, reading history and progress, kept in the browser | **Engineering at scale** — company logos drift across the home page; each links to that company's stories |
+| ![Library page](docs/screenshots/library.png) | ![Home page in dark mode with the company logo marquee](docs/screenshots/home-dark.png) |
 
 ## 🚀 Features
 
@@ -35,13 +37,17 @@ It is built as a **fully static, Markdown-driven site** with no backend, no data
 - **Reader preferences** — an `aA` menu with six font styles (Editorial, Serif, Classic, Sans, Modern, Mono) and three text sizes, applied site-wide and persisted per reader
 - **Light & dark mode** — respects the system preference, remembers manual choice, no flash on load
 - **Reading progress bar**, **scrollspy table of contents**, **copy-link and share buttons** (X, LinkedIn), and **copy buttons on every code block**
-- **Subtle motion design** — staggered card entrances, scroll-reveal sections, animated page transitions, and a logo that reacts on hover; every animation is disabled automatically for `prefers-reduced-motion` users
+- **Your library** — save any article for later, see your reading history with per-article progress, and get offered a jump back to where you stopped; finished and part-read articles are marked on every card. It all lives in `localStorage`: no account, nothing leaves the browser
+- **Time left** — a small "N min left" ring follows you down every article
+- **Subtle motion design** — a slow aurora behind page headers, a drifting company-logo marquee, staggered card entrances, scroll-reveal sections, animated page transitions, and a logo that reacts on hover; every animation is disabled automatically for `prefers-reduced-motion` users
 
 ### Content & discovery
 - **Markdown-first publishing** — YAML frontmatter + Markdown body is the entire authoring format
 - **Instant search** — `Ctrl+K` opens a keyboard-navigable dialog; a dedicated `/search` page supports shareable `?q=` links
 - **Topics & tags** — every category and tag gets its own page automatically
-- **Engineering at Scale** — a per-company category set (Netflix, Google, Uber, Amazon, Stripe, Discord, and more) telling real, documented architecture stories
+- **Engineering at Scale** — a per-company category set (Netflix, Google, Uber, Amazon, Stripe, Discord, and more) telling real, documented architecture stories, each shown with the company's logo in its brand colour
+- **Topic marks** — technology categories carry their logo (Java, Spring Boot, React, Angular, TypeScript, JavaScript) or a line icon; all logos come from one cached SVG sprite (`public/assets/logos.svg`, from [Simple Icons](https://simpleicons.org), CC0)
+- **Topic filter** and **Surprise me** — filter 600+ topics as you type, or jump to a random article
 - **Trending** — a frontmatter flag curates the ranked home-page list
 - **Related articles** — recommended by shared tags and category, computed at build time
 - **RSS feed and sitemap** — regenerated on every build

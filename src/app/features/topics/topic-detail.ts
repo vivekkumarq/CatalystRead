@@ -14,28 +14,38 @@ import { PostsService } from '../../core/services/posts.service';
 import { SeoService } from '../../core/services/seo.service';
 import { ArticleCard } from '../../shared/components/article-card/article-card';
 import { Breadcrumbs } from '../../shared/components/breadcrumbs/breadcrumbs';
+import { TopicMark } from '../../shared/components/topic-mark/topic-mark';
 
 const PAGE_SIZE = 24;
 
 @Component({
   selector: 'app-topic-detail',
-  imports: [ArticleCard, Breadcrumbs],
+  imports: [ArticleCard, Breadcrumbs, TopicMark],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (topic(); as topic) {
       <div class="animate-page">
         <section class="cr-band">
+          <div class="cr-aurora" aria-hidden="true"><span></span><span></span><span></span></div>
           <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
             <app-breadcrumbs [crumbs]="crumbs()" />
-            <p class="mt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
-              {{ kindLabel() }}
-            </p>
-            <h1 class="cr-title mt-2 font-extrabold text-ink">
-              {{ topic.name }}
-            </h1>
-            <p class="mt-3 text-[15px] text-ink-soft">
-              {{ articles().length }} {{ articles().length === 1 ? 'article' : 'articles' }}
-            </p>
+            <div class="mt-5 flex items-center gap-4 sm:gap-6">
+              @if (topic.kind === 'category') {
+                <app-topic-mark [slug]="topic.slug" [name]="topic.name" size="xl" />
+              }
+              <div class="min-w-0">
+                <p class="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+                  {{ kindLabel() }}
+                </p>
+                <h1 class="cr-title mt-1 font-extrabold text-ink">
+                  {{ topic.name }}
+                </h1>
+                <p class="mt-2 text-[15px] text-ink-soft">
+                  {{ articles().length }} {{ articles().length === 1 ? 'article' : 'articles' }}
+                  · {{ totalMinutes() }} min of reading
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -76,9 +86,11 @@ export class TopicDetail {
     return topic ? this.posts.postsForTopic(topic) : [];
   });
 
-  protected readonly isCompany = computed(() =>
-    this.posts.companyCategories.some((company) => company.slug === this.slug()),
+  protected readonly totalMinutes = computed(() =>
+    this.articles().reduce((sum, post) => sum + post.readingTimeMinutes, 0),
   );
+
+  protected readonly isCompany = computed(() => this.posts.isCompany(this.slug()));
 
   protected readonly kindLabel = computed(() => {
     if (this.isCompany()) return 'Engineering at scale';
