@@ -14,6 +14,11 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  # The Pages custom domain (Settings → Pages). Served from the root, so the
+  # build uses base-href "/". Empty it to fall back to the github.io path.
+  CUSTOM_DOMAIN: catalystread.duckdns.org
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -38,7 +43,10 @@ jobs:
         run: |
           REPO_NAME="${GITHUB_REPOSITORY#*/}"
           OWNER_LOWER="$(echo "$GITHUB_REPOSITORY_OWNER" | tr '[:upper:]' '[:lower:]')"
-          if [[ "$REPO_NAME" == *.github.io ]]; then
+          if [[ -n "$CUSTOM_DOMAIN" ]]; then
+            echo "base_href=/" >> "$GITHUB_OUTPUT"
+            echo "site_url=https://${CUSTOM_DOMAIN}" >> "$GITHUB_OUTPUT"
+          elif [[ "$REPO_NAME" == *.github.io ]]; then
             echo "base_href=/" >> "$GITHUB_OUTPUT"
             echo "site_url=https://${OWNER_LOWER}.github.io" >> "$GITHUB_OUTPUT"
           else
