@@ -2,7 +2,7 @@
 
 > **Catalyzing ideas into understanding.**
 
-**🌐 Live site → [vivekkumarq.github.io/CatalystRead](https://vivekkumarq.github.io/CatalystRead/)**
+**🌐 Live site → [catalystread.duckdns.org](https://catalystread.duckdns.org/)**
 
 CatalystRead publishes in-depth engineering articles that explain how things actually work — the JVM, Spring Boot, Angular, React, databases, AI, DevOps, security, system design, and how the world's best product companies engineer at scale. The goal for every article: understand the concept properly, solve the problem in front of you, and walk into a design interview prepared.
 
@@ -56,7 +56,7 @@ It is built as a **fully static, Markdown-driven site** with no backend, no data
 - **Fully prerendered** — 500+ routes rendered to static HTML at build time for real SEO and instant first paint
 - **Lightweight by design** — article bodies and tables of contents ship as tiny lazy chunks (~2 kB each), so the initial bundle carries only the metadata index (~250 kB gzipped JS and CSS)
 - **Zero runtime dependencies** beyond Angular — no component libraries, no CSS frameworks at runtime, system font stacks only
-- **Guest contributions** — the [Contribute](https://vivekkumarq.github.io/CatalystRead/contribute/) page generates a ready-to-submit article file; submissions arrive by email or pull request and are published only after review
+- **Guest contributions** — the [Contribute](https://catalystread.duckdns.org/contribute/) page generates a ready-to-submit article file; submissions arrive by email or pull request and are published only after review
 
 ## 🛠 Tech stack
 
@@ -157,14 +157,14 @@ That's it. The article automatically appears in listings, search, its topic page
 
 ### Guest submissions
 
-Readers can draft an article on the [Contribute page](https://vivekkumarq.github.io/CatalystRead/contribute/), which generates a complete `.md` file (correct frontmatter included) and offers it for download, clipboard copy, an email draft, or a pull request against this repository. Publishing a submission is the same as publishing any article: the file is reviewed, dropped into `src/content/posts/`, and pushed — nothing goes live without that explicit step.
+Readers can draft an article on the [Contribute page](https://catalystread.duckdns.org/contribute/), which generates a complete `.md` file (correct frontmatter included) and offers it for download, clipboard copy, an email draft, or a pull request against this repository. Publishing a submission is the same as publishing any article: the file is reviewed, dropped into `src/content/posts/`, and pushed — nothing goes live without that explicit step.
 
 ## 🚢 Deployment
 
 Deployment is fully automated by [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
 
 1. Every push to `main` triggers the workflow (it can also be run manually).
-2. Content is validated, the site is built with the correct `--base-href` (auto-detected for project vs. user pages), and the sitemap and RSS feed are generated.
+2. Content is validated, the site is built with the correct `--base-href` (`/` for the custom domain set as `CUSTOM_DOMAIN` in the workflow, otherwise auto-detected for project vs. user pages), and the sitemap and RSS feed are generated.
 3. The static output is deployed to GitHub Pages.
 
 No secrets or configuration needed — forks only need **Settings → Pages → Source: GitHub Actions** enabled once.
